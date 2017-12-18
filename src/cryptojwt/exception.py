@@ -69,3 +69,7 @@ class HeaderError(JWKESTException):
 
 class UnSupported(JWKESTException):
     pass
+
+
+class MissingValue(JWKESTException):
+    pass

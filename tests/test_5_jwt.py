@@ -18,15 +18,15 @@ def full_path(local_file):
 k1 = import_private_rsa_key_from_file(full_path('rsa.key'))
 k2 = import_private_rsa_key_from_file(full_path('size2048.key'))
 
-ALICE_KEYS = [RSAKey(use='sig').load_key(k1),
-              RSAKey(use='enc').load_key(k2)]
-ALICE_PUB_KEYS = [RSAKey(use='sig').load_key(k1.public_key()),
-                  RSAKey(use='enc').load_key(k2.public_key())]
+ALICE_KEYS = [RSAKey(use='sig', kid='1').load_key(k1),
+              RSAKey(use='enc', kid='2').load_key(k2)]
+ALICE_PUB_KEYS = [RSAKey(use='sig', kid='1').load_key(k1.public_key()),
+                  RSAKey(use='enc', kid='2').load_key(k2.public_key())]
 
 k3 = import_private_rsa_key_from_file(full_path('server.key'))
 
-BOB_KEYS = [RSAKey(use='enc').load_key(k3)]
-BOB_PUB_KEYS = [RSAKey(use='enc').load_key(k3.public_key())]
+BOB_KEYS = [RSAKey(use='enc', kid='3').load_key(k3)]
+BOB_PUB_KEYS = [RSAKey(use='enc', kid='3').load_key(k3.public_key())]
 
 
 def _eq(l1, l2):
@@ -45,10 +45,10 @@ def test_jwt_pack_and_unpack():
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_KEYS})
+    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'jti', 'iat', 'iss', 'sub', 'kid'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}
 
 
 def test_jwt_pack_and_unpack_with_lifetime():
@@ -56,10 +56,10 @@ def test_jwt_pack_and_unpack_with_lifetime():
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_KEYS})
+    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'jti', 'iat', 'iss', 'sub', 'kid', 'exp'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp'}
 
 
 def test_jwt_pack_encrypt():
@@ -67,10 +67,10 @@ def test_jwt_pack_encrypt():
     payload = {'sub': 'sub', 'aud': BOB}
     _jwt = alice.pack(payload=payload, encrypt=True, recv=BOB)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_KEYS})
+    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'jti', 'iat', 'iss', 'sub', 'kid', 'aud'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
 
 def test_jwt_pack_unpack_sym():

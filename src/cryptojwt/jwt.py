@@ -5,6 +5,7 @@ import uuid
 
 from cryptojwt import jwe
 from cryptojwt import jws
+from cryptojwt.exception import MissingValue
 from cryptojwt.jwe import JWE
 from cryptojwt.jws import JWS
 from cryptojwt.jws import NoSuitableSigningKeys
@@ -57,11 +58,24 @@ def get_jwt_keys(jwt, keys, use):
     try:
         _kid = jwt.headers['kid']
     except KeyError:
-        _kid = ''
+        _kid = ''  # Unknown
 
-    # Pick issuers keys
+    # pick issuer keys
+    if use == 'sig':
+        payload = json.loads(jwt.part[1])
+        try:
+            _keys = keys[payload['iss']]
+        except KeyError:  # No issuer, not kosher
+            raise MissingValue('iss')
+        if not _kid:
+            try:
+                _kid = payload['kid']
+            except KeyError:
+                _kid = ''  # Unknown
+    else:
+        _keys = keys
 
-    return pick_key(keys, use, key_type=_key_type, kid=_kid)
+    return pick_key(_keys, use, key_type=_key_type, kid=_kid)
 
 
 class JWT(object):
@@ -150,7 +164,7 @@ class JWT(object):
         if payload is not None:
             _args.update(payload)
 
-        _jws = JWS(json.dumps(payload), alg=self.sign_alg)
+        _jws = JWS(json.dumps(_args), alg=self.sign_alg)
         _sjwt = _jws.sign_compact([_key])
         #_jws = _jwt.to_jwt([_key], self.sign_alg)
         if _encrypt:
