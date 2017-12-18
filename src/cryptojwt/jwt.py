@@ -6,7 +6,6 @@ import uuid
 from cryptojwt import jwe
 from cryptojwt import jws
 from cryptojwt.jwe import JWE
-from cryptojwt.jws import alg2keytype
 from cryptojwt.jws import JWS
 from cryptojwt.jws import NoSuitableSigningKeys
 
@@ -20,6 +19,15 @@ def utc_time_sans_frac():
 
 
 def pick_key(keys, use, alg='', key_type='', kid=''):
+    """
+
+    :param keys: List of keys
+    :param use: What the key is going to be used for
+    :param alg: crypto algorithm
+    :param key_type: Type of key
+    :param kid: Ley ID
+    :return: list of keys that match the pattern
+    """
     res = []
     if not key_type:
         if use == 'sig':
@@ -51,14 +59,17 @@ def get_jwt_keys(jwt, keys, use):
     except KeyError:
         _kid = ''
 
+    # Pick issuers keys
+
     return pick_key(keys, use, key_type=_key_type, kid=_kid)
 
 
 class JWT(object):
-    def __init__(self, keys, iss='', lifetime=0, sign_alg='RS256',
-                 encrypt=False, enc_enc="A128CBC-HS256",
+    def __init__(self, own_keys, iss='', rec_keys=None, lifetime=0,
+                 sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
                  enc_alg="RSA1_5"):
-        self.keys = keys
+        self.own_keys = own_keys
+        self.rec_keys = rec_keys or {}
         self.iss = iss
         self.lifetime = lifetime
         self.sign_alg = sign_alg
@@ -67,7 +78,7 @@ class JWT(object):
         self.enc_enc = enc_enc
         self.with_jti = False
 
-    def _encrypt(self, payload, cty='JWT'):
+    def _encrypt(self, payload, recv, cty='JWT'):
         kwargs = {"alg": self.enc_alg, "enc": self.enc_enc}
 
         if cty:
@@ -75,7 +86,7 @@ class JWT(object):
 
         # use the clients public key for encryption
         _jwe = JWE(payload, **kwargs)
-        return _jwe.encrypt(self.keys, context="public")
+        return _jwe.encrypt(self.rec_keys[recv], context="public")
 
     def pack_init(self):
         """
@@ -96,21 +107,20 @@ class JWT(object):
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.keys, 'sig', alg=self.sign_alg, kid=kid)
+        keys = pick_key(self.own_keys, 'sig', alg=self.sign_alg, kid=kid)
 
         if not keys:
             raise NoSuitableSigningKeys('kid={}'.format(kid))
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid='', owner='', cls_instance=None, **kwargs):
+    def pack(self, payload=None, kid='', owner='', recv='', **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
         :param owner: The owner of the the keys that are to be used for signing
-        :param cls_instance: This might be a instance of a class already
-            prepared with information
+        :param recv: The intended receiver
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted JsonWebtoken
         """
@@ -144,12 +154,12 @@ class JWT(object):
         _sjwt = _jws.sign_compact([_key])
         #_jws = _jwt.to_jwt([_key], self.sign_alg)
         if _encrypt:
-            return self._encrypt(_sjwt)
+            return self._encrypt(_sjwt, recv)
         else:
             return _sjwt
 
     def _verify(self, rj, token):
-        keys = get_jwt_keys(rj.jwt, self.keys, 'sig')
+        keys = get_jwt_keys(rj.jwt, self.rec_keys, 'sig')
         return rj.verify_compact(token, keys)
 
     def _decrypt(self, rj, token):
@@ -160,7 +170,7 @@ class JWT(object):
         :param token: The encrypted JsonWebToken
         :return: 
         """
-        keys = get_jwt_keys(rj.jwt, self.keys, 'enc')
+        keys = get_jwt_keys(rj.jwt, self.own_keys, 'enc')
         return rj.decrypt(token, keys=keys)
 
     def unpack(self, token):

@@ -145,8 +145,8 @@ def load_x509_cert(url, spec2key):
         return []
 
 
-def rsa_load(filename, passphrase):
-    """Read a PEM-encoded RSA key pair from a file."""
+def rsa_load(filename, passphrase=None):
+    """Read a PEM-encoded RSA private key from a file."""
     with open(filename, "rb") as key_file:
         pem_data = key_file.read()
         private_key = serialization.load_pem_private_key(
@@ -154,11 +154,7 @@ def rsa_load(filename, passphrase):
             password=passphrase,
             backend=default_backend())
 
-        public_key = serialization.load_pem_public_key(
-            pem_data,
-            backend=default_backend()
-        )
-    return private_key, public_key
+    return private_key
 
 
 def rsa_eq(key1, key2):
