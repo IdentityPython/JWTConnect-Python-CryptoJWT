@@ -74,12 +74,11 @@ def test_jwt_pack_encrypt():
 
 
 def test_jwt_pack_unpack_sym():
-    _sym_key = SYMKey('hemligt ord')
+    _sym_key = SYMKey(key='hemligt ord', use='sig')
     alice = JWT(own_keys=[_sym_key], iss=ALICE, sign_alg="HS256")
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=[SYMKey('hemligt ord')], iss=BOB,
-              rec_keys={ALICE: [_sym_key]})
+    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_sym_key]})
     info = bob.unpack(_jwt)
     assert info
