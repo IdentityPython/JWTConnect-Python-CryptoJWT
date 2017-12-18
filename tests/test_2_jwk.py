@@ -16,7 +16,7 @@ import os.path
 from cryptojwt import as_unicode
 from cryptojwt import b64e
 from cryptojwt import long2intarr
-from cryptojwt.jwk import base64url_to_long, NIST2SEC
+from cryptojwt.jwk import base64url_to_long
 from cryptojwt.jwk import base64_to_long
 from cryptojwt.jwk import DeSerializationNotPossible
 from cryptojwt.jwk import ECKey
@@ -27,7 +27,7 @@ from cryptojwt.jwk import jwk_wrap
 from cryptojwt.jwk import keyrep
 from cryptojwt.jwk import KEYS
 from cryptojwt.jwk import load_jwks
-from cryptojwt.jwk import rsa_eq
+from cryptojwt.jwk import NIST2SEC
 from cryptojwt.jwk import RSAKey
 from cryptojwt.jwk import sha256_digest
 from cryptojwt.jwk import SYMKey

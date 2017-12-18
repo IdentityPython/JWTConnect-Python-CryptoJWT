@@ -37,13 +37,6 @@ def intarr2bin(arr):
     return unhexlify(''.join(["%02x" % byte for byte in arr]))
 
 
-def long2hexseq(l):
-    try:
-        return unhexlify(hex(l)[2:])
-    except TypeError:
-        return unhexlify(hex(l)[2:-1])
-
-
 def intarr2long(arr):
     return int(''.join(["%02x" % byte for byte in arr]), 16)
 
