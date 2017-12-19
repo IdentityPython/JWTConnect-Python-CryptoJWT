@@ -79,7 +79,7 @@ def get_jwt_keys(jwt, keys, use):
 
 
 class JWT(object):
-    def __init__(self, own_keys, iss='', rec_keys=None, lifetime=0,
+    def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
                  sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
                  enc_alg="RSA1_5"):
         self.own_keys = own_keys
@@ -92,6 +92,15 @@ class JWT(object):
         self.enc_enc = enc_enc
         self.with_jti = False
 
+    def receiver_keys(self, recv):
+        return self.rec_keys[recv]
+
+    def receivers_keys(self):
+        return self.rec_keys
+
+    def my_keys(self):
+        return self.own_keys
+
     def _encrypt(self, payload, recv, cty='JWT'):
         kwargs = {"alg": self.enc_alg, "enc": self.enc_enc}
 
@@ -100,7 +109,7 @@ class JWT(object):
 
         # use the clients public key for encryption
         _jwe = JWE(payload, **kwargs)
-        return _jwe.encrypt(self.rec_keys[recv], context="public")
+        return _jwe.encrypt(self.receiver_keys(recv), context="public")
 
     def pack_init(self):
         """
@@ -121,7 +130,7 @@ class JWT(object):
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.own_keys, 'sig', alg=self.sign_alg, kid=kid)
+        keys = pick_key(self.my_keys(), 'sig', alg=self.sign_alg, kid=kid)
 
         if not keys:
             raise NoSuitableSigningKeys('kid={}'.format(kid))
@@ -173,7 +182,7 @@ class JWT(object):
             return _sjwt
 
     def _verify(self, rj, token):
-        keys = get_jwt_keys(rj.jwt, self.rec_keys, 'sig')
+        keys = get_jwt_keys(rj.jwt, self.receivers_keys(), 'sig')
         return rj.verify_compact(token, keys)
 
     def _decrypt(self, rj, token):

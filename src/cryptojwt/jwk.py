@@ -229,7 +229,7 @@ def rsa_construct_private(numbers):
     return rprivn.private_key(default_backend())
 
 
-def ec_contruct_public(num):
+def ec_construct_public(num):
     ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
                                          NIST2SEC[as_unicode(num['crv'])]())
     return ecpn.public_key(default_backend())
@@ -672,6 +672,7 @@ NIST2SEC = {
 
 SEC2NIST = dict([(s.name, n) for n, s in NIST2SEC.items()])
 
+
 class ECKey(Key):
     """
     JSON Web key representation of a Elliptic curve key
@@ -726,7 +727,7 @@ class ECKey(Key):
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
-            self.key = ec_contruct_public({'x': self.x, 'y': self.y,
+            self.key = ec_construct_public({'x': self.x, 'y': self.y,
                                            'crv': self.crv})
 
     def get_key(self, private=False, **kwargs):
