@@ -243,7 +243,8 @@ class SimpleJWT(object):
         part = split_token(token)
         self.b64part = part
         self.part = [b64d(p) for p in part]
-        self.headers = json.loads(self.part[0].decode())
+        #self.headers = json.loads(self.part[0].decode())
+        self.headers = json.loads(as_unicode(self.part[0]))
         return self
 
     def pack(self, parts=None, headers=None):

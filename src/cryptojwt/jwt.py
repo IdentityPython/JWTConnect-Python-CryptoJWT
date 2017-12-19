@@ -3,9 +3,11 @@ from datetime import datetime
 import json
 import uuid
 
+from cryptojwt import as_unicode
 from cryptojwt import jwe
 from cryptojwt import jws
 from cryptojwt.exception import MissingValue
+from cryptojwt.exception import VerificationError
 from cryptojwt.jwe import JWE
 from cryptojwt.jws import JWS
 from cryptojwt.jws import NoSuitableSigningKeys
@@ -62,7 +64,7 @@ def get_jwt_keys(jwt, keys, use):
 
     # pick issuer keys
     if use == 'sig':
-        payload = json.loads(jwt.part[1])
+        payload = json.loads(as_unicode(jwt.part[1]))
         try:
             _keys = keys[payload['iss']]
         except KeyError:  # No issuer, not kosher
@@ -79,6 +81,8 @@ def get_jwt_keys(jwt, keys, use):
 
 
 class JWT(object):
+    msg_cls = None
+
     def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
                  sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
                  enc_alg="RSA1_5"):
@@ -193,7 +197,7 @@ class JWT(object):
         :param token: The encrypted JsonWebToken
         :return: 
         """
-        keys = get_jwt_keys(rj.jwt, self.own_keys, 'enc')
+        keys = get_jwt_keys(rj.jwt, self.my_keys(), 'enc')
         return rj.decrypt(token, keys=keys)
 
     def unpack(self, token):
@@ -217,4 +221,10 @@ class JWT(object):
         else:
             raise Exception()
 
-        return info
+        if self.msg_cls:
+            _msg = self.msg_cls(**info)
+            if not _msg.verify():
+                raise VerificationError()
+            return _msg
+        else:
+            return info
