@@ -14,7 +14,7 @@ from cryptojwt.jws import NoSuitableSigningKeys
 
 __author__ = 'Roland Hedberg'
 
-logger  = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def utc_time_sans_frac():
@@ -81,11 +81,10 @@ def get_jwt_keys(jwt, keys, use):
 
 
 class JWT(object):
-    msg_cls = None
 
     def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
                  sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
-                 enc_alg="RSA1_5"):
+                 enc_alg="RSA1_5", msg_cls=None):
         self.own_keys = own_keys
         self.rec_keys = rec_keys or {}
         self.iss = iss
@@ -94,6 +93,7 @@ class JWT(object):
         self.encrypt = encrypt
         self.enc_alg = enc_alg
         self.enc_enc = enc_enc
+        self.msg_cls = msg_cls
         self.with_jti = False
 
     def receiver_keys(self, recv):
@@ -179,7 +179,7 @@ class JWT(object):
 
         _jws = JWS(json.dumps(_args), alg=self.sign_alg)
         _sjwt = _jws.sign_compact([_key])
-        #_jws = _jwt.to_jwt([_key], self.sign_alg)
+        # _jws = _jwt.to_jwt([_key], self.sign_alg)
         if _encrypt:
             return self._encrypt(_sjwt, recv)
         else:
