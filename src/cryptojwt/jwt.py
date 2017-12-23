@@ -84,7 +84,7 @@ class JWT(object):
 
     def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
                  sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
-                 enc_alg="RSA1_5", msg_cls=None):
+                 enc_alg="RSA1_5", msg_cls=None, iss2msg_cls=None):
         self.own_keys = own_keys
         self.rec_keys = rec_keys or {}
         self.iss = iss
@@ -95,6 +95,7 @@ class JWT(object):
         self.enc_enc = enc_enc
         self.msg_cls = msg_cls
         self.with_jti = False
+        self.iss2msg_cls = iss2msg_cls or {}
 
     def receiver_keys(self, recv):
         return self.rec_keys[recv]
@@ -200,6 +201,12 @@ class JWT(object):
         keys = get_jwt_keys(rj.jwt, self.my_keys(), 'enc')
         return rj.decrypt(token, keys=keys)
 
+    def verify_profile(self, msg_cls, **info):
+        _msg = self.msg_cls(**info)
+        if not _msg.verify():
+            raise VerificationError()
+        return _msg
+
     def unpack(self, token):
         """
         Unpack a received signed or signed and encrypted Json Web Token
@@ -222,9 +229,11 @@ class JWT(object):
             raise Exception()
 
         if self.msg_cls:
-            _msg = self.msg_cls(**info)
-            if not _msg.verify():
-                raise VerificationError()
-            return _msg
+            self.verify_profile(self.msg_cls, **info)
         else:
-            return info
+            try:
+                _msg_cls = self.iss2msg_cls[info['iss']]
+            except KeyError:
+                return info
+            else:
+                self.verify_profile(_msg_cls, **info)
