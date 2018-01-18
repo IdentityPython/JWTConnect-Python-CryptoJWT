@@ -229,11 +229,11 @@ class JWT(object):
             raise Exception()
 
         if self.msg_cls:
-            self.verify_profile(self.msg_cls, **info)
+            return self.verify_profile(self.msg_cls, **info)
         else:
             try:
                 _msg_cls = self.iss2msg_cls[info['iss']]
             except KeyError:
                 return info
             else:
-                self.verify_profile(_msg_cls, **info)
+                return self.verify_profile(_msg_cls, **info)
