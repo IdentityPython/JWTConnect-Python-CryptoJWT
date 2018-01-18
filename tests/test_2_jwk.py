@@ -16,7 +16,7 @@ import os.path
 from cryptojwt import as_unicode
 from cryptojwt import b64e
 from cryptojwt import long2intarr
-from cryptojwt.jwk import base64url_to_long
+from cryptojwt.jwk import base64url_to_long, deser
 from cryptojwt.jwk import base64_to_long
 from cryptojwt.jwk import DeSerializationNotPossible
 from cryptojwt.jwk import ECKey
@@ -84,7 +84,7 @@ def test_extract_rsa_from_cert_2():
     _key = RSAKey()
     _key.load_key(_ckey)
 
-    assert _ckey.public_numbers().n == _key.n
+    assert _ckey.public_numbers().n == base64_to_long(_key.n)
 
 
 def test_kspec():
@@ -108,8 +108,8 @@ def test_loads_0():
 
     _ckey = import_rsa_key_from_cert_file(CERT)
     pn = _ckey.public_numbers()
-    assert key.n == pn.n
-    assert key.e == pn.e
+    assert deser(key.n) == pn.n
+    assert deser(key.e) == pn.e
 
 
 def test_loads_1():
@@ -298,14 +298,14 @@ def test_private_key_from_jwk():
 
     key = keys[0]
 
-    assert isinstance(key.n, six.integer_types)
-    assert isinstance(key.e, six.integer_types)
-    assert isinstance(key.d, six.integer_types)
-    assert isinstance(key.p, six.integer_types)
-    assert isinstance(key.q, six.integer_types)
-    assert isinstance(key.dp, six.integer_types)
-    assert isinstance(key.dq, six.integer_types)
-    assert isinstance(key.qi, six.integer_types)
+    assert isinstance(key.n, (bytes, str))
+    assert isinstance(key.e, (bytes, str))
+    assert isinstance(key.d, (bytes, str))
+    assert isinstance(key.p, (bytes, str))
+    assert isinstance(key.q, (bytes, str))
+    assert isinstance(key.dp, (bytes, str))
+    assert isinstance(key.dq, (bytes, str))
+    assert isinstance(key.qi, (bytes, str))
 
     _d = key.to_dict()
 
@@ -363,7 +363,8 @@ def test_rsa_pubkey_verify_x509_thumbprint():
 EXPECTED = [
     b'iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA',
     b'kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI',
-    b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8'
+    b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8',
+    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8'
 ]
 
 
