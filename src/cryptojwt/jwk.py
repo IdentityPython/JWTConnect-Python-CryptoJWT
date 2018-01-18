@@ -21,7 +21,8 @@ from cryptojwt import base64url_to_long
 from cryptojwt import b64d
 from cryptojwt import b64e
 from cryptojwt import long_to_base64
-from cryptojwt.exception import UnknownAlgorithm, JWKException, HeaderError
+from cryptojwt.exception import UnknownAlgorithm, JWKException, HeaderError, \
+    JWKESTException
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import SerializationNotPossible
 
@@ -613,7 +614,7 @@ class RSAKey(Key):
         elif not self.n and not self.e:
             pass
         else:  # one of n or e but not both
-            raise DeSerializationNotPossible('Missing required parameter')
+            raise JWKESTException('Missing required parameter')
 
     def deserialize(self):
         """
@@ -842,7 +843,7 @@ class ECKey(Key):
             self.verify()
             self.deserialize()
         elif any([self.x, self.y, self.crv]):
-            raise DeSerializationNotPossible('Missing required parameter')
+            raise JWKESTException('Missing required parameter')
 
     def deserialize(self):
         """
