@@ -361,9 +361,7 @@ class JWx(object):
             _header["jwk"] = extra["jwk"].serialize()
 
         if "kid" in self:
-            try:
-                assert isinstance(self["kid"], six.string_types)
-            except AssertionError:
+            if not isinstance(self["kid"], six.string_types):
                 raise HeaderError("kid of wrong value type")
 
         return _header
@@ -430,11 +428,7 @@ class JWx(object):
                 "Picked: kid:{}, use:{}, kty:{}".format(
                     _key.kid, _key.use, _key.kty))
             if _kid:
-                try:
-                    assert _kid == _key.kid
-                except (KeyError, AttributeError):
-                    pass
-                except AssertionError:
+                if _kid != _key.kid:
                     continue
 
             if use and _key.use and _key.use != use:
@@ -699,7 +693,8 @@ class JWS(JWx):
             if _claim is None:
                 _claim = _tmp
             else:
-                assert _claim == _tmp
+                if _claim != _tmp:
+                    raise ValueError()
 
         return _claim
 
@@ -737,22 +732,18 @@ class JWS(JWx):
         except Exception:
             return False
 
-        try:
-            assert "alg" in jwt.headers
-        except AssertionError:
+        if "alg" not in jwt.headers:
             return False
-        else:
-            if jwt.headers["alg"] is None:
-                jwt.headers["alg"] = "none"
 
-            try:
-                assert jwt.headers["alg"] in SIGNER_ALGS
-            except AssertionError:
-                logger.debug("UnknownSignerAlg: %s" % jwt.headers["alg"])
-                return False
-            else:
-                self.jwt = jwt
-                return True
+        if jwt.headers["alg"] is None:
+            jwt.headers["alg"] = "none"
+
+        if jwt.headers["alg"] not in SIGNER_ALGS:
+            logger.debug("UnknownSignerAlg: %s" % jwt.headers["alg"])
+            return False
+
+        self.jwt = jwt
+        return True
 
 
 def factory(token):

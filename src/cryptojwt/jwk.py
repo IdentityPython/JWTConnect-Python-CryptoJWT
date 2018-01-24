@@ -395,25 +395,22 @@ class Key(object):
                     return False
 
         if self.kid:
-            try:
-                assert isinstance(self.kid, six.string_types)
-            except AssertionError:
+            if not isinstance(self.kid, six.string_types):
                 raise HeaderError("kid of wrong value type")
         return True
 
     def __eq__(self, other):
-        try:
-            if self.__class__ != other.__class__:
+        if self.__class__ != other.__class__:
+            return False
+
+        if set(self.__dict__.keys()) != set(other.__dict__.keys()):
+            return False
+
+        for key in self.public_members:
+            if getattr(other, key) != getattr(self, key):
                 return False
 
-            assert set(self.__dict__.keys()) == set(other.__dict__.keys())
-
-            for key in self.public_members:
-                assert getattr(other, key) == getattr(self, key)
-        except AssertionError:
-            return False
-        else:
-            return True
+        return True
 
     def keys(self):
         return list(self.to_dict().keys())

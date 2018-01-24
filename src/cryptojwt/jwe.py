@@ -383,18 +383,14 @@ class JWEnc(SimpleJWT):
         if "typ" in self.headers and self.headers["typ"].lower() == "jwe":
             return True
 
-        try:
-            assert "alg" in self.headers and "enc" in self.headers
-        except AssertionError:
-            return False
-        else:
+        if "alg" in self.headers and "enc" in self.headers:
             for typ in ["alg", "enc"]:
-                try:
-                    assert self.headers[typ] in SUPPORTED[typ]
-                except AssertionError:
+                if self.headers[typ] not in SUPPORTED[typ]:
                     logger.debug("Not supported %s algorithm: %s" % (
                         typ, self.headers[typ]))
                     return False
+        else:
+            return False
         return True
 
     def __len__(self):
@@ -659,9 +655,7 @@ class JWE_RSA(JWe):
 
         self["cek"] = cek
         enc = jwe.headers["enc"]
-        try:
-            assert enc in SUPPORTED["enc"]
-        except AssertionError:
+        if enc not in SUPPORTED["enc"]:
             raise NotSupportedAlgorithm(enc)
 
         msg = self._decrypt(enc, cek, jwe.ciphertext(),
@@ -946,7 +940,6 @@ class JWE(JWx):
         :return: Encrypted message
         """
 
-        # encrypted_key = cek = iv = None
         _alg = self["alg"]
 
         # Find Usable Keys
