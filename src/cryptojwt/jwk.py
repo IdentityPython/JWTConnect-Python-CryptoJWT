@@ -730,7 +730,6 @@ class RSAKey(Key):
 
         self._serialize(key)
         self.key = key
-        self._split()
         return self
 
     def load(self, filename):
