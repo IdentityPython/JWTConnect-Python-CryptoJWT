@@ -2,8 +2,6 @@ import base64
 import hashlib
 import logging
 import json
-import six
-import sys
 
 from cryptography import x509
 
@@ -21,17 +19,14 @@ from cryptojwt import base64url_to_long
 from cryptojwt import b64d
 from cryptojwt import b64e
 from cryptojwt import long_to_base64
-from cryptojwt.exception import UnknownAlgorithm, JWKException, HeaderError, \
-    JWKESTException
+from cryptojwt.exception import HeaderError
+from cryptojwt.exception import JWKESTException
+from cryptojwt.exception import JWKException
+from cryptojwt.exception import UnknownAlgorithm
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import SerializationNotPossible
 
-if sys.version > '3':
-    long = int
-else:
-    from __builtin__ import long
-
-__author__ = 'rohe0002'
+__author__ = 'roland hedberg'
 
 logger = logging.getLogger(__name__)
 
@@ -334,22 +329,22 @@ class Key(object):
         self.extra_args = kwargs
 
         # want kty, alg, use and kid to be strings
-        if isinstance(kty, six.string_types):
+        if isinstance(kty, str):
             self.kty = kty
         else:
             self.kty = as_unicode(kty)
 
-        if isinstance(alg, six.string_types):
+        if isinstance(alg, str):
             self.alg = alg
         else:
             self.alg = as_unicode(alg)
 
-        if isinstance(use, six.string_types):
+        if isinstance(use, str):
             self.use = use
         else:
             self.use = as_unicode(use)
 
-        if isinstance(kid, six.string_types):
+        if isinstance(kid, str):
             self.kid = kid
         else:
             self.kid = as_unicode(kid)
@@ -438,7 +433,7 @@ class Key(object):
                     return False
 
         if self.kid:
-            if not isinstance(self.kid, six.string_types):
+            if not isinstance(self.kid, str):
                 raise HeaderError("kid of wrong value type")
         return True
 
@@ -449,9 +444,8 @@ class Key(object):
         :param other: The other Key instance
         :return: True if they are the same otherwise False.
         """
-        try:
-            if self.__class__ != other.__class__:
-                return False
+        if self.__class__ != other.__class__:
+            return False
 
         if set(self.__dict__.keys()) != set(other.__dict__.keys()):
             return False
@@ -635,7 +629,7 @@ class RSAKey(Key):
                         continue
                     else:
                         try:
-                            val = long(deser(item))
+                            val = int(deser(item))
                         except Exception:
                             raise
                         else:

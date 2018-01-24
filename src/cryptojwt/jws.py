@@ -3,7 +3,7 @@ import json
 import logging
 import struct
 import sys
-import six
+
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
@@ -361,7 +361,7 @@ class JWx(object):
             _header["jwk"] = extra["jwk"].serialize()
 
         if "kid" in self:
-            if not isinstance(self["kid"], six.string_types):
+            if not isinstance(self["kid"], str):
                 raise HeaderError("kid of wrong value type")
 
         return _header

@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime
 import json
 import uuid
+from datetime import datetime
 
 from cryptojwt import as_unicode
 from cryptojwt import jwe

@@ -9,7 +9,6 @@ except ImportError:
 import struct
 import logging
 import zlib
-import six
 
 from math import ceil
 
@@ -522,7 +521,7 @@ class JWE_SYM(JWe):
                 kek = key.key.encode('utf8')
             except AttributeError:
                 kek = key.key
-        elif isinstance(key, six.binary_type):
+        elif isinstance(key, bytes):
             kek = key
         else:
             kek = intarr2str(key)
