@@ -74,5 +74,6 @@ class UnSupported(JWKESTException):
 class MissingValue(JWKESTException):
     pass
 
+
 class VerificationError(JWKESTException):
     pass

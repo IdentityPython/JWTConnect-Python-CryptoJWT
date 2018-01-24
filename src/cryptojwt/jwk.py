@@ -2,8 +2,8 @@ import base64
 import hashlib
 import logging
 import json
-import sys
 import six
+import sys
 
 from cryptography import x509
 
@@ -21,7 +21,8 @@ from cryptojwt import base64url_to_long
 from cryptojwt import b64d
 from cryptojwt import b64e
 from cryptojwt import long_to_base64
-from cryptojwt.exception import UnknownAlgorithm, JWKException, HeaderError
+from cryptojwt.exception import UnknownAlgorithm, JWKException, HeaderError, \
+    JWKESTException
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import SerializationNotPossible
 
@@ -66,6 +67,29 @@ DIGEST_HASH = {
 
 
 # =============================================================================
+
+
+def generate_and_store_rsa_key(key_size=2048, filename='rsa.key',
+                               passphrase=''):
+    private_key = rsa.generate_private_key(public_exponent = 65537,
+                                           key_size = key_size,
+                                           backend = default_backend())
+
+    with open(filename, "wb") as keyfile:
+        if passphrase:
+            pem = private_key.private_bytes(
+                encoding = serialization.Encoding.PEM,
+                format = serialization.PrivateFormat.PKCS8,
+                encryption_algorithm = serialization.BestAvailableEncryption(
+                    passphrase))
+        else:
+            pem = private_key.private_bytes(
+                encoding = serialization.Encoding.PEM,
+                format = serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption())
+        keyfile.write(pem)
+        keyfile.close()
+    return private_key
 
 
 def import_private_rsa_key_from_file(filename, passphrase=None):
@@ -293,7 +317,11 @@ def x5t_calculation(cert):
 
 class Key(object):
     """
-    Basic JSON Web key class
+    Basic JSON Web key class. Jason Web keys are described in
+    RFC 7517 (https://tools.ietf.org/html/rfc7517).
+    The name of parameters used in this class are the same as
+    specified in RFC 7518 (https://tools.ietf.org/html/rfc7518).
+
     """
     members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u"]
     longs = []
@@ -342,6 +370,11 @@ class Key(object):
         return res
 
     def common(self):
+        """
+        Return the set of parameters that are common to all types of keys.
+
+        :return: Dictionary
+        """
         res = {"kty": self.kty}
         if self.use:
             res["use"] = self.use
@@ -369,17 +402,27 @@ class Key(object):
         pass
 
     def get_key(self, **kwargs):
+        """
+        Get a keys useful for signing and/or encrypting information.
+
+        :param kwargs:
+        :return: A key instance. This can be an RSA, EC or other
+        type of key.
+        """
+        if not self.key:
+            self.deserialize()
+
         return self.key
 
     def verify(self):
         """
         Verify that the information gathered from the on-the-wire
-        representation is of the right types.
+        representation is of the right type.
         This is supposed to be run before the info is deserialized.
         """
         for param in self.longs:
             item = getattr(self, param)
-            if not item or isinstance(item, six.integer_types):
+            if not item or isinstance(item, str):
                 continue
 
             if isinstance(item, bytes):
@@ -400,8 +443,15 @@ class Key(object):
         return True
 
     def __eq__(self, other):
-        if self.__class__ != other.__class__:
-            return False
+        """
+        Compare 2 Key instances to find out if they represent the same key
+
+        :param other: The other Key instance
+        :return: True if they are the same otherwise False.
+        """
+        try:
+            if self.__class__ != other.__class__:
+                return False
 
         if set(self.__dict__.keys()) != set(other.__dict__.keys()):
             return False
@@ -416,6 +466,16 @@ class Key(object):
         return list(self.to_dict().keys())
 
     def thumbprint(self, hash_function, members=None):
+        """
+        Create a thumbprint of the key following the outline in
+        https://tools.ietf.org/html/draft-jones-jose-jwk-thumbprint-01
+
+        :param hash_function: A hash function to use for hashing the
+            information
+        :param members: Which attributes of the Key instance that should
+            be included when computing the hash value.
+        :return: A base64 encode hash over a set of Key attributes
+        """
         if members is None:
             members = self.required
 
@@ -436,10 +496,21 @@ class Key(object):
         return b64e(DIGEST_HASH[hash_function](_json))
 
     def add_kid(self):
+        """
+        Construct a Key ID using the thumbprint method and add it to
+        the key attributes.
+        """
         self.kid = b64e(self.thumbprint('SHA-256')).decode('utf8')
 
 
 def deser(val):
+    """
+    Deserialize from a string representation of an long integer
+    to the python representation of a long integer.
+
+    :param val: The string representation of the long integer.
+    :return: The long integer.
+    """
     if isinstance(val, str):
         _val = val.encode("utf-8")
     else:
@@ -449,6 +520,14 @@ def deser(val):
 
 
 def cmp_public_numbers(pn1, pn2):
+    """
+    Compare 2 sets of public numbers. These is a way to compare
+    2 public RSA keys. If the sets are the same then the keys are the same.
+
+    :param pn1: The set of values belonging to the 1st key
+    :param pn2: The set of values belonging to the 2nd key
+    :return: True is the sets are the same otherwise False.
+    """
     if pn1.n == pn2.n:
         if pn1.e == pn2.e:
             return True
@@ -456,6 +535,14 @@ def cmp_public_numbers(pn1, pn2):
 
 
 def cmp_private_numbers(pn1, pn2):
+    """
+    Compare 2 sets of private numbers. This is for comparing 2
+    private RSA keys.
+
+    :param pn1: The set of values belonging to the 1st key
+    :param pn2: The set of values belonging to the 2nd key
+    :return: True is the sets are the same otherwise False.
+    """
     if not cmp_public_numbers(pn1.public_numbers, pn2.public_numbers):
         return False
 
@@ -468,11 +555,35 @@ def cmp_private_numbers(pn1, pn2):
 class RSAKey(Key):
     """
     JSON Web key representation of a RSA key
+    The name of parameters used in this class are the same as
+    specified in the RFC 7517.
+
+    According to RFC7517 the JWK representation of a RSA (public key) can be
+    something like this:
+
+        {
+        "kty":"RSA",
+        "use":"sig",
+        "kid":"1b94c",
+        "n":"vrjOfz9Ccdgx5nQudyhdoR17V-IubWMeOZCwX_jj0hgAsz2J_pqYW08
+        PLbK_PdiVGKPrqzmDIsLI7sA25VEnHU1uCLNwBuUiCO11_-7dYbsr4iJmG0Q
+        u2j8DsVyT1azpJC_NG84Ty5KKthuCaPod7iI7w0LK9orSMhBEwwZDCxTWq4a
+        YWAchc8t-emd9qOvWtVMDC2BXksRngh6X5bUYLy6AyHKvj-nUy1wgzjYQDwH
+        MTplCoLtU-o-8SNnZ1tmRoGE9uJkBLdh5gFENabWnU5m1ZqZPdwS-qo-meMv
+        VfJb6jJVWRpl2SUtCnYG2C32qvbWbjZ_jBPD5eunqsIo1vQ",
+        "e":"AQAB",
+        }
+
+    Parameters according to https://tools.ietf.org/html/rfc7518#section-6.3
     """
     members = Key.members
+    # These are the RSA key specific parameters, they are always supposed to
+    # be strings or bytes
     members.extend(["n", "e", "d", "p", "q"])
+    # The parameters that represent long ints in the key instances
     longs = ["n", "e", "d", "p", "q", "dp", "dq", "di", "qi"]
     public_members = Key.public_members
+    # the public members of the key
     public_members.extend(["n", "e"])
     required = ['kty', 'n', 'e']
 
@@ -494,7 +605,7 @@ class RSAKey(Key):
         has_x509_cert_chain = len(self.x5c) > 0
 
         if self.key:
-            self._split()
+            self._serialize(self.key)
         elif has_public_key_parts:
             self.deserialize()
         elif has_x509_cert_chain:
@@ -502,14 +613,25 @@ class RSAKey(Key):
         elif not self.n and not self.e:
             pass
         else:  # one of n or e but not both
-            raise DeSerializationNotPossible('Missing required parameter')
+            raise JWKESTException('Missing required parameter')
 
     def deserialize(self):
+        """
+        Based on a text based representation of an RSA key this method
+        instantiates a
+        cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey or
+        RSAPublicKey instance
+
+        """
+
+        # first look for the public parts of a RSA key
         if self.n and self.e:
             try:
+                numbers = {}
+                # loop over all the parameters that define a RSA key
                 for param in self.longs:
                     item = getattr(self, param)
-                    if not item or isinstance(item, six.integer_types):
+                    if not item:
                         continue
                     else:
                         try:
@@ -517,16 +639,9 @@ class RSAKey(Key):
                         except Exception:
                             raise
                         else:
-                            setattr(self, param, val)
+                            numbers[param] = val
 
-                numbers = {'n': self.n, 'e': self.e}
-                if self.d:
-                    numbers['d'] = self.d
-                    for component in ['p', 'q', 'dp', 'dq', 'di', 'qi']:
-                        val = getattr(self, component, None)
-                        if val:  # Is 0 a possible value ??
-                            numbers[component] = val
-
+                if 'd' in numbers:
                     self.key = rsa_construct_private(numbers)
                 else:
                     self.key = rsa_construct_public(numbers)
@@ -554,7 +669,7 @@ class RSAKey(Key):
             else:
                 self.key = _cert_chain[0].public_key()
 
-            self._split()
+            self._serialize(self.key)
             if len(self.x5c) > 1:  # verify chain
                 pass
 
@@ -562,6 +677,13 @@ class RSAKey(Key):
             raise DeSerializationNotPossible()
 
     def serialize(self, private=False):
+        """
+        Given a cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey or
+        RSAPublicKey instance construct the JWK representation.
+
+        :param private: Should I do the private part or not
+        :return: A JWK as a dictionary
+        """
         if not self.key:
             raise SerializationNotPossible()
 
@@ -571,7 +693,7 @@ class RSAKey(Key):
         for param in public_longs:
             item = getattr(self, param)
             if item:
-                res[param] = long_to_base64(item)
+                res[param] = item
 
         if private:
             for param in self.longs:
@@ -580,44 +702,50 @@ class RSAKey(Key):
                     continue
                 item = getattr(self, param)
                 if item:
-                    res[param] = long_to_base64(item)
+                    res[param] = item
         if self.x5c:
             res['x5c'] = [x.decode('utf-8') for x in self.x5c]
 
         return res
 
-    def _split(self):
-        if isinstance(self.key, rsa.RSAPrivateKey):
-            pn = self.key.private_numbers()
-            self.n = pn.public_numbers.n
-            self.e = pn.public_numbers.e
-            self.d = pn.d
-            self.p = pn.p
-            self.q = pn.q
+    def _serialize(self, key):
+        try:
+            pn = key.private_numbers()
+        except Exception as err:
+            try:
+                pn = key.public_numbers()
+            except Exception as err:
+                raise
+            else:
+                self.n = long_to_base64(pn.n)
+                self.e = long_to_base64(pn.e)
         else:
-            pn = self.key.public_numbers()
-            self.n = pn.n
-            self.e = pn.e
-
-    def load(self, filename):
-        """
-        Load the key from a file.
-
-        :param filename: File name
-        """
-        self.key = rsa_load(filename)
-        self._split()
-        return self
+            self.n = long_to_base64(pn.public_numbers.n)
+            self.e = long_to_base64(pn.public_numbers.e)
+            self.d = long_to_base64(pn.d)
+            self.p = long_to_base64(pn.p)
+            self.q = long_to_base64(pn.q)
 
     def load_key(self, key):
         """
-        Use this RSA key
+        Load a RSA key. Try to serialize the key before binding it to this
+        instance.
 
         :param key: An RSA key instance
         """
+
+        self._serialize(key)
         self.key = key
         self._split()
         return self
+
+    def load(self, filename):
+        """
+        Load a RSA key from a file. Once we have the key do a serialization.
+
+        :param filename: File name
+        """
+        return self.load_key(rsa_load(filename))
 
     def encryption_key(self, **kwargs):
         """
@@ -630,6 +758,12 @@ class RSAKey(Key):
         return self.key
 
     def __eq__(self, other):
+        """
+        Verify that this other key is the same as myself.
+
+        :param other: The other key
+        :return: True if equal otherwise False
+        """
         if not isinstance(other, RSAKey):
             return False
 
@@ -639,21 +773,23 @@ class RSAKey(Key):
         if not other.key:
             other.deserialize()
 
-        if isinstance(self.key,
-                      rsa.RSAPrivateKey) and isinstance(other.key,
-                                                        rsa.RSAPrivateKey):
+        try:
             pn1 = self.key.private_numbers()
             pn2 = other.key.private_numbers()
-            return cmp_private_numbers(pn1, pn2)
-        elif isinstance(self.key,
-                        rsa.RSAPublicKey) and isinstance(other.key,
-                                                         rsa.RSAPublicKey):
-            return cmp_public_numbers(self.key.public_numbers(),
-                                      other.key.public_numbers())
+        except Exception:
+            try:
+                cmp_public_numbers(self.key.public_numbers(),
+                                   other.key.public_numbers())
+            except Exception:
+                return False
+            else:
+                return True
         else:
-            return False
+            return cmp_private_numbers(pn1, pn2)
 
 
+# This is used to translate between the curve representation in
+# Cryptography and the one used by NIST (and in RFC 7518)
 NIST2SEC = {
     'K-571': ec.SECT571K1,
     'K-409': ec.SECT409K1,
@@ -672,9 +808,21 @@ SEC2NIST = dict([(s.name, n) for n, s in NIST2SEC.items()])
 
 class ECKey(Key):
     """
-    JSON Web key representation of a Elliptic curve key
+    JSON Web key representation of a Elliptic curve key.
+    According to RFC 7517 a JWK representation of a EC key can look like
+    this::
+        {"kty":"EC",
+          "crv":"P-256",
+          "x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
+          "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
+          "d":"870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE"
+        }
+
+    Parameters according to https://tools.ietf.org/html/rfc7518#section-6.2
     """
-    members = ["kty", "alg", "use", "kid", "crv", "x", "y", "d"]
+    members = Key.members
+    # The elliptic curve specific attributes
+    members.extend(["crv", "x", "y", "d"])
     longs = ['x', 'y', 'd']
     public_members = ["kty", "alg", "use", "kid", "crv", "x", "y"]
     required = ['crv', 'key', 'x', 'y']
@@ -689,78 +837,107 @@ class ECKey(Key):
 
         # Initiated guess as to what state the key is in
         # To be usable for encryption/signing/.. it has to be deserialized
-        if self.crv :
-            self.verify()
-            self.deserialize()
-        elif self.key:
+        if self.key:
             self.load_key(key)
         elif self.x and self.y and self.crv:
-            pass
+            self.verify()
+            self.deserialize()
         elif any([self.x, self.y, self.crv]):
-            raise DeSerializationNotPossible('Missing required parameter')
+            raise JWKESTException('Missing required parameter')
 
     def deserialize(self):
         """
         Starting with information gathered from the on-the-wire representation
-        of an elliptic curve key initiate an Elliptic Curve.
+        of an elliptic curve key (a JWK) initiate an
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
+        or EllipticCurvePrivateKey instance. So we have to get from having::
+            {
+              "kty":"EC",
+              "crv":"P-256",
+              "x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
+              "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
+              "d":"870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE"
+            }
+        to having a key that can be used for signing/verifying and/or
+        encrypting/decrypting.
+        If 'd' has value then we're dealing with a private key otherwise
+        a public key. 'x' and 'y' must have values.
+        If self.key has a value beforehand this will overwrite what ever
+        was there to begin with.
+
+        x, y and d (if present) must be strings or bytes.
         """
-        try:
-            if not isinstance(self.x, six.integer_types):
-                self.x = deser(self.x)
-            if not isinstance(self.y, six.integer_types):
-                self.y = deser(self.y)
-        except TypeError:
-            raise DeSerializationNotPossible()
-        except ValueError as err:
-            raise DeSerializationNotPossible("%s" % err)
+
+        if isinstance(self.x, (str, bytes)):
+            _x = deser(self.x)
+        else:
+            raise ValueError('"x" MUST be a string')
+        if isinstance(self.y, (str, bytes)):
+            _y = deser(self.y)
+        else:
+            raise ValueError('"y" MUST be a string')
 
         if self.d:
             try:
-                if isinstance(self.d, six.string_types):
-                    self.d = deser(self.d)
-                    self.key = ec_construct_private({'x': self.x, 'y': self.y,
-                                                     'crv': self.crv,
-                                                     'd': self.d})
+                if isinstance(self.d, (str, bytes)):
+                    _d = deser(self.d)
+                    self.key = ec_construct_private({'x': _x, 'y': _y,
+                                                     'crv': self.crv, 'd': _d})
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
-            self.key = ec_construct_public({'x': self.x, 'y': self.y,
-                                           'crv': self.crv})
+            self.key = ec_construct_public({'x': _x, 'y': _y, 'crv': self.crv})
 
-    def get_key(self, private=False, **kwargs):
-        return self.key
+    def _serialize(self, key):
+        if isinstance(key, ec.EllipticCurvePublicKey):
+            pn = key.public_numbers()
+            self.x = long_to_base64(pn.x)
+            self.y = long_to_base64(pn.y)
+            self.crv = SEC2NIST[pn.curve.name]
+        elif isinstance(key, ec.EllipticCurvePrivateKey):
+            pn = key.private_numbers()
+            self.x = long_to_base64(pn.public_numbers.x)
+            self.y = long_to_base64(pn.public_numbers.y)
+            self.crv = SEC2NIST[pn.public_numbers.curve.name]
+            self.d = long_to_base64(pn.private_value)
 
     def serialize(self, private=False):
+        """
+        Go from a
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        or EllipticCurvePublicKey instance to a JWK representation.
+
+        :param private: Whether we should include the private parts or not.
+        :return: A JWK as a dictionary
+        """
         if not self.crv:
             raise SerializationNotPossible()
 
         res = self.common()
+
+        self._serialize(self.key)
+
         res.update({
             #"crv": SEC2NIST[self.crv.name],
             "crv": self.crv,
-            "x": long_to_base64(self.x),
-            "y": long_to_base64(self.y)
+            "x": self.x,
+            "y": self.y
         })
 
         if private and self.d:
-            res["d"] = long_to_base64(self.d)
+            res["d"] = self.d
 
         return res
 
     def load_key(self, key):
-        self.key = key
-        if isinstance(key, ec.EllipticCurvePublicKey):
-            pn = key.public_numbers()
-            self.x = pn.x
-            self.y = pn.y
-            self.crv = SEC2NIST[pn.curve.name]
-        elif isinstance(key, ec.EllipticCurvePrivateKey):
-            pn = key.private_numbers()
-            self.x = pn.public_numbers.x
-            self.y = pn.public_numbers.y
-            self.crv = SEC2NIST[pn.public_numbers.curve.name]
-            self.d = pn.private_value
+        """
+        Load an Elliptic curve key
 
+        :param key: An elliptic curve key instance
+        :return:
+        """
+        self._serialize(key)
+        self.key = key
         return self
 
     def decryption_key(self):
@@ -771,6 +948,12 @@ class ECKey(Key):
         return self.get_key(private=private)
 
     def __eq__(self, other):
+        """
+        Verify that the other key has the same properties as myself.
+
+        :param other: The other key
+        :return: True if the keys as the same otherwise False
+        """
         if isinstance(self.key, ec.EllipticCurvePublicKey):
             if isinstance(other.key, ec.EllipticCurvePublicKey):
                 if self.key.curve != other.key.curve:
@@ -793,6 +976,7 @@ class ECKey(Key):
 
         return False
 
+
 ALG2KEYLEN = {
     "A128KW": 16,
     "A192KW": 24,
@@ -804,6 +988,17 @@ ALG2KEYLEN = {
 
 
 class SYMKey(Key):
+    """
+    JSON Web key representation of a Symmetric key.
+    According to RFC 7517 a JWK representation of a symmetric key can look like
+    this::
+        {
+            "kty":"oct",
+            "alg":"A128KW",
+            "k":"GawgguFyGrWKav7AX4VKUg"
+        }
+
+    """
     members = ["kty", "alg", "use", "kid", "k"]
     public_members = members[:]
     required = ['k', 'kty']
