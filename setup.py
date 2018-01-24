@@ -39,10 +39,10 @@ setup(
         "Development Status :: 4 - Beta",
         "License :: OSI Approved :: Apache Software License",
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.5"
+        "Programming Language :: Python :: 3.6"
     ],
-    install_requires=["cryptography", "requests", "six", "future"],
+    install_requires=["cryptography", "requests"],
     tests_require=['pytest'],
     zip_safe=False,
     scripts=glob.glob('script/*.py'),

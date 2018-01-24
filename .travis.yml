@@ -1,0 +1,30 @@
+language: python
+
+sudo: false
+
+python: 3.6
+
+addons:
+  apt:
+    packages:
+    - libffi-dev
+
+install:
+  - pip install tox
+
+env:
+   - TOXENV=py36
+   - TOXENV=quality
+   - TOXENV=docs
+
+# Everything behaves under python 3.6 except python3.5
+matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35
+
+script:
+  - tox -e $TOXENV
+
+notifications:
+  email: false
