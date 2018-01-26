@@ -2,6 +2,7 @@ import logging
 import json
 import uuid
 from datetime import datetime
+from json import JSONDecodeError
 
 from cryptojwt import as_unicode
 from cryptojwt import jwe
@@ -83,12 +84,14 @@ def get_jwt_keys(jwt, keys, use):
 class JWT(object):
 
     def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
-                 sign_alg='RS256', encrypt=False, enc_enc="A128CBC-HS256",
-                 enc_alg="RSA1_5", msg_cls=None, iss2msg_cls=None):
+                 sign=True, sign_alg='RS256', encrypt=False,
+                 enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
+                 iss2msg_cls=None):
         self.own_keys = own_keys
         self.rec_keys = rec_keys or {}
         self.iss = iss
         self.lifetime = lifetime
+        self.sign = sign
         self.sign_alg = sign_alg
         self.encrypt = encrypt
         self.enc_alg = enc_alg
@@ -154,12 +157,6 @@ class JWT(object):
         """
         _args = self.pack_init()
 
-        if self.sign_alg != 'none':
-            _key = self.pack_key(owner, kid)
-            _args['kid'] = _key.kid
-        else:
-            _key = None
-
         try:
             _encrypt = kwargs['encrypt']
         except KeyError:
@@ -178,11 +175,23 @@ class JWT(object):
         if payload is not None:
             _args.update(payload)
 
-        _jws = JWS(json.dumps(_args), alg=self.sign_alg)
-        _sjwt = _jws.sign_compact([_key])
-        # _jws = _jwt.to_jwt([_key], self.sign_alg)
+        if self.sign:
+            if self.sign_alg != 'none':
+                _key = self.pack_key(owner, kid)
+                _args['kid'] = _key.kid
+            else:
+                _key = None
+
+            _jws = JWS(json.dumps(_args), alg=self.sign_alg)
+            _sjwt = _jws.sign_compact([_key])
+        else:
+            _sjwt = json.dumps(_args)
+
         if _encrypt:
-            return self._encrypt(_sjwt, recv)
+            if not self.sign:
+                return self._encrypt(_sjwt, recv, cty='json')
+            else:
+                return self._encrypt(_sjwt, recv)
         else:
             return _sjwt
 
@@ -213,27 +222,53 @@ class JWT(object):
 
         :param token: The Json Web Token
         :return: If decryption and signature verification work the payload
-            will be returned as a Message instance.
+            will be returned as a Message instance if possible.
         """
         if not token:
             raise KeyError
 
+        _content_type = 'jwt'
+
+        # Check if it's an encrypted JWT
         _rj = jwe.factory(token)
         if _rj:
-            token = self._decrypt(_rj, token)
-
-        _rj = jws.factory(token)
-        if _rj:
-            info = self._verify(_rj, token)
+            # Yes, try to decode
+            _info = self._decrypt(_rj, token)
+            # Try to find out if the information encrypted was a signed JWT
+            try:
+                _content_type = _rj.jwt.headers['cty']
+            except KeyError:
+                pass
         else:
-            raise Exception()
+            _info = token
 
+        # If I have reason to believe the information I have is a signed JWT
+        if _content_type.lower() == 'jwt':
+            # Check that is a signed JWT
+            _rj = jws.factory(_info)
+            if _rj:
+                _info = self._verify(_rj, _info)
+            else:
+                raise Exception()
+        else:
+            # So, not a signed JWT
+            try:
+                # A JSON document ?
+                _info = json.loads(_info)
+            except JSONDecodeError:  # Oh, no ! Not JSON
+                return _info
+
+        # If I know what message class the info should be mapped into
         if self.msg_cls:
-            return self.verify_profile(self.msg_cls, **info)
+            _msg_cls = self.msg_cls
         else:
             try:
-                _msg_cls = self.iss2msg_cls[info['iss']]
+                # try to find a issuer specific message class
+                _msg_cls = self.iss2msg_cls[_info['iss']]
             except KeyError:
-                return info
-            else:
-                return self.verify_profile(_msg_cls, **info)
+                _msg_cls = None
+
+        if _msg_cls:
+            return self.verify_profile(_msg_cls, **_info)
+        else:
+            return _info

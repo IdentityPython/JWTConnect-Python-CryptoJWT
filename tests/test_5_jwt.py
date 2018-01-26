@@ -82,3 +82,16 @@ def test_jwt_pack_unpack_sym():
     bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_sym_key]})
     info = bob.unpack(_jwt)
     assert info
+
+
+def test_jwt_pack_encrypt_no_sign():
+    alice = JWT(sign=False, own_keys=ALICE_KEYS, iss=ALICE,
+                rec_keys={BOB: BOB_PUB_KEYS})
+
+    payload = {'sub': 'sub', 'aud': BOB}
+    _jwt = alice.pack(payload=payload, encrypt=True, recv=BOB)
+
+    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
+    info = bob.unpack(_jwt)
+
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'aud'}
