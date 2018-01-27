@@ -86,7 +86,7 @@ class JWT(object):
     def __init__(self, own_keys=None, iss='', rec_keys=None, lifetime=0,
                  sign=True, sign_alg='RS256', encrypt=False,
                  enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
-                 iss2msg_cls=None):
+                 iss2msg_cls=None, skew=15):
         self.own_keys = own_keys
         self.rec_keys = rec_keys or {}
         self.iss = iss
@@ -99,6 +99,7 @@ class JWT(object):
         self.msg_cls = msg_cls
         self.with_jti = False
         self.iss2msg_cls = iss2msg_cls or {}
+        self.skew = skew
 
     def receiver_keys(self, recv):
         return self.rec_keys[recv]
@@ -210,9 +211,9 @@ class JWT(object):
         keys = get_jwt_keys(rj.jwt, self.my_keys(), 'enc')
         return rj.decrypt(token, keys=keys)
 
-    def verify_profile(self, msg_cls, **info):
-        _msg = self.msg_cls(**info)
-        if not _msg.verify():
+    def verify_profile(self, msg_cls, info, **kwargs):
+        _msg = msg_cls(**info)
+        if not _msg.verify(**kwargs):
             raise VerificationError()
         return _msg
 
@@ -228,12 +229,14 @@ class JWT(object):
             raise KeyError
 
         _content_type = 'jwt'
+        _jwe_header = _jws_header = None
 
         # Check if it's an encrypted JWT
         _rj = jwe.factory(token)
         if _rj:
             # Yes, try to decode
             _info = self._decrypt(_rj, token)
+            _jwe_header = _rj.jwt.headers
             # Try to find out if the information encrypted was a signed JWT
             try:
                 _content_type = _rj.jwt.headers['cty']
@@ -250,6 +253,7 @@ class JWT(object):
                 _info = self._verify(_rj, _info)
             else:
                 raise Exception()
+            _jws_header = _rj.jwt.headers
         else:
             # So, not a signed JWT
             try:
@@ -269,6 +273,12 @@ class JWT(object):
                 _msg_cls = None
 
         if _msg_cls:
-            return self.verify_profile(_msg_cls, **_info)
+            vp_args = {'skew': self.skew}
+            if self.iss:
+                vp_args['aud'] = self.iss
+            _info = self.verify_profile(_msg_cls, _info, **vp_args)
+            _info.jwe_header = _jwe_header
+            _info.jws_header = _jws_header
+            return _info
         else:
             return _info
