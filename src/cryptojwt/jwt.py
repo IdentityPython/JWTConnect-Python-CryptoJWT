@@ -120,7 +120,19 @@ class JWT(object):
         _jwe = JWE(payload, **kwargs)
         return _jwe.encrypt(self.receiver_keys(recv), context="public")
 
-    def pack_init(self):
+    def put_together_aud(self, recv, aud):
+        if aud:
+            if recv in aud:
+                _aud = aud
+            else:
+                _aud = [recv]
+                _aud.extend(aud)
+        else:
+            _aud = [recv]
+
+        return _aud
+
+    def pack_init(self, recv, aud):
         """
         Gather initial information for the payload.
 
@@ -129,6 +141,9 @@ class JWT(object):
         argv = {'iss': self.iss, 'iat': utc_time_sans_frac()}
         if self.lifetime:
             argv['exp'] = argv['iat'] + self.lifetime
+
+        argv['aud'] = self.put_together_aud(recv, aud)
+
         return argv
 
     def pack_key(self, owner='', kid=''):
@@ -146,17 +161,19 @@ class JWT(object):
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid='', owner='', recv='', **kwargs):
+    def pack(self, payload=None, kid='', owner='', recv='', aud=None, **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
         :param owner: The owner of the the keys that are to be used for signing
-        :param recv: The intended receiver
+        :param recv: The intended immediate receiver
+        :param aud: Intended audience for this JWS/JWE, not expected to
+            contain the recipient.
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted JsonWebtoken
         """
-        _args = self.pack_init()
+        _args = self.pack_init(recv, aud)
 
         try:
             _encrypt = kwargs['encrypt']
