@@ -107,7 +107,7 @@ class JWT(object):
     def receivers_keys(self):
         return self.rec_keys
 
-    def my_keys(self):
+    def my_keys(self, owner_id=''):
         return self.own_keys
 
     def _encrypt(self, payload, recv, cty='JWT'):
@@ -146,15 +146,16 @@ class JWT(object):
 
         return argv
 
-    def pack_key(self, owner='', kid=''):
+    def pack_key(self, owner_id='', kid=''):
         """
         Find a key to be used for signing the Json Web Token
 
-        :param owner: Owner of the keys to chose from
+        :param owner_id: Owner of the keys to chose from
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.my_keys(), 'sig', alg=self.sign_alg, kid=kid)
+        keys = pick_key(self.my_keys(owner_id), 'sig', alg=self.sign_alg,
+                        kid=kid)
 
         if not keys:
             raise NoSuitableSigningKeys('kid={}'.format(kid))
