@@ -129,7 +129,7 @@ def der_cert(der_data):
     """
     Load a DER encoded certificate
 
-    @param der: DER-encoded certificate
+    @param der_data: DER-encoded certificate
     @return: RSA instance
     """
     if isinstance(der_data, str):
@@ -496,6 +496,16 @@ class Key(object):
         """
         self.kid = b64e(self.thumbprint('SHA-256')).decode('utf8')
 
+    def is_private_key(self):
+        for p in self.members:
+            if p not in self.public_members:
+                if getattr(self, p):
+                    return True
+        return False
+
+    def is_public_key(self):
+        return not self.is_private_key()
+
 
 def deser(val):
     """
@@ -570,13 +580,13 @@ class RSAKey(Key):
 
     Parameters according to https://tools.ietf.org/html/rfc7518#section-6.3
     """
-    members = Key.members
+    members = Key.members[:]
     # These are the RSA key specific parameters, they are always supposed to
     # be strings or bytes
     members.extend(["n", "e", "d", "p", "q"])
     # The parameters that represent long ints in the key instances
     longs = ["n", "e", "d", "p", "q", "dp", "dq", "di", "qi"]
-    public_members = Key.public_members
+    public_members = Key.public_members[:]
     # the public members of the key
     public_members.extend(["n", "e"])
     required = ['kty', 'n', 'e']
@@ -813,11 +823,12 @@ class ECKey(Key):
 
     Parameters according to https://tools.ietf.org/html/rfc7518#section-6.2
     """
-    members = Key.members
+    members = Key.members[:]
     # The elliptic curve specific attributes
     members.extend(["crv", "x", "y", "d"])
     longs = ['x', 'y', 'd']
-    public_members = ["kty", "alg", "use", "kid", "crv", "x", "y"]
+    public_members = Key.public_members[:]
+    public_members.extend(["kty", "alg", "use", "kid", "crv", "x", "y"])
     required = ['crv', 'key', 'x', 'y']
 
     def __init__(self, kty="EC", alg="", use="", kid="", key=None,
@@ -992,8 +1003,9 @@ class SYMKey(Key):
         }
 
     """
-    members = ["kty", "alg", "use", "kid", "k"]
-    public_members = members[:]
+    members = Key.members[:]
+    members.extend(["kty", "alg", "use", "kid", "k"])
+    public_members = Key.public_members[:]
     required = ['k', 'kty']
 
     def __init__(self, kty="oct", alg="", use="", kid="", key=None,
@@ -1045,6 +1057,12 @@ class SYMKey(Key):
             as_unicode(b64e(_enc_key))))
 
         return _enc_key
+
+    def is_private_key(self):
+        return True
+
+    def is_public_key(self):
+        return True
 
 
 # -----------------------------------------------------------------------------
@@ -1181,7 +1199,7 @@ class KEYS(object):
         """
         Get all keys of a specific key type
 
-        :param kty: Key type
+        :param item: Key type
         :return: list of keys
         """
         kty = item.lower()

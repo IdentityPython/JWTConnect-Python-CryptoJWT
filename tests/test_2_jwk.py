@@ -97,6 +97,8 @@ def test_kspec():
     assert jwk["e"] == JWK["keys"][0]["e"]
     assert jwk["n"] == JWK["keys"][0]["n"]
 
+    assert not _key.is_private_key()
+
 
 def test_loads_0():
     keys = KEYS()
@@ -198,6 +200,8 @@ def test_serialize_rsa_priv_key():
     restored_key = RSAKey(**d_rsakey)
 
     assert restored_key == rsakey
+    assert rsakey.is_private_key()
+    assert restored_key.is_private_key()
 
 
 ECKEY = {

@@ -39,7 +39,7 @@ from cryptojwt.exception import UnknownAlgorithm
 from cryptojwt.exception import UnSupported
 from cryptojwt.exception import WrongNumberOfParts
 
-from cryptojwt.jwk import load_x509_cert
+from cryptojwt.jwk import load_x509_cert, SYMKey
 from cryptojwt.jwk import KEYS
 from cryptojwt.jwk import sha256_digest
 from cryptojwt.jwk import sha384_digest
@@ -156,8 +156,11 @@ class RSASigner(Signer):
                        self.hash_algorithm())
         except InvalidSignature as err:
             raise BadSignature(str(err))
+        except AttributeError:  # If private key
+            return False
         else:
             return True
+
 
 class DSASigner(Signer):
     def __init__(self, algorithm='SHA256'):
@@ -595,6 +598,11 @@ class JWS(JWx):
         verifier = SIGNER_ALGS[_alg]
 
         for key in _keys:
+            # Can not use asymmetric private key for verifying
+            if not isinstance(key, SYMKey):
+                if key.is_private_key():
+                    continue
+
             try:
                 verifier.verify(jwt.sign_input(), jwt.signature(),
                                 key.get_key(alg=_alg, private=False))
