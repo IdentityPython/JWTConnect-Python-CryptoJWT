@@ -177,12 +177,12 @@ class DSASigner(Signer):
 
     def sign(self, msg, key):
         asn1sig = key.sign(msg, ec.ECDSA(self.hash_algorithm()))
-        (r,s) = decode_dss_signature(asn1sig)
+        (r, s) = decode_dss_signature(asn1sig)
         return int_to_bytes(r) + int_to_bytes(s)
 
     def verify(self, msg, sig, key):
         try:
-            (r,s) = self._split_raw_signature(sig)
+            (r, s) = self._split_raw_signature(sig)
             asn1sig = encode_dss_signature(r, s)
             key.verify(asn1sig, msg, ec.ECDSA(self.hash_algorithm()))
         except InvalidSignature as err:
@@ -195,7 +195,7 @@ class DSASigner(Signer):
         c_length = len(sig) // 2
         r = int_from_bytes(sig[:c_length], byteorder='big')
         s = int_from_bytes(sig[c_length:], byteorder='big')
-        return (r,s)
+        return (r, s)
 
 
 class PSSSigner(Signer):
