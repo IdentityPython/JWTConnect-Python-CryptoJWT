@@ -48,7 +48,7 @@ def test_jwt_pack_and_unpack():
     bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
 
 def test_jwt_pack_and_unpack_with_lifetime():
@@ -59,7 +59,7 @@ def test_jwt_pack_and_unpack_with_lifetime():
     bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp', 'aud'}
 
 
 def test_jwt_pack_encrypt():
