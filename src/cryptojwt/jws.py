@@ -176,12 +176,14 @@ class DSASigner(Signer):
             raise UnSupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
+        # cryptography returns ASN.1-encoded signature data; decode as JWS uses raw signatures (r||s)
         asn1sig = key.sign(msg, ec.ECDSA(self.hash_algorithm()))
         (r, s) = decode_dss_signature(asn1sig)
         return int_to_bytes(r) + int_to_bytes(s)
 
     def verify(self, msg, sig, key):
         try:
+            # cryptography uses ASN.1-encoded signature data; split JWS signature (r||s) and encode before verification
             (r, s) = self._split_raw_signature(sig)
             asn1sig = encode_dss_signature(r, s)
             key.verify(asn1sig, msg, ec.ECDSA(self.hash_algorithm()))
@@ -192,6 +194,7 @@ class DSASigner(Signer):
 
     @staticmethod
     def _split_raw_signature(sig):
+        """Split raw signature into components"""
         c_length = len(sig) // 2
         r = int_from_bytes(sig[:c_length], byteorder='big')
         s = int_from_bytes(sig[c_length:], byteorder='big')
