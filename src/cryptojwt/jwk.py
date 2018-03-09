@@ -407,7 +407,7 @@ class Key(object):
         if not self.key:
             self.deserialize()
 
-        if not kwargs.get('private', True):
+        if not kwargs.get('private', True) and hasattr(self.key, 'public_key'):
             return self.key.public_key()
 
         return self.key
