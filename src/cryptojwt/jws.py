@@ -11,6 +11,8 @@ from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature, encode_dss_signature
+from cryptography.utils import int_from_bytes, int_to_bytes
 
 try:
     from builtins import str
@@ -174,15 +176,29 @@ class DSASigner(Signer):
             raise UnSupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
-        return key.sign(msg, ec.ECDSA(self.hash_algorithm()))
+        # cryptography returns ASN.1-encoded signature data; decode as JWS uses raw signatures (r||s)
+        asn1sig = key.sign(msg, ec.ECDSA(self.hash_algorithm()))
+        (r, s) = decode_dss_signature(asn1sig)
+        return int_to_bytes(r) + int_to_bytes(s)
 
     def verify(self, msg, sig, key):
         try:
-            key.verify(sig, msg, ec.ECDSA(self.hash_algorithm()))
+            # cryptography uses ASN.1-encoded signature data; split JWS signature (r||s) and encode before verification
+            (r, s) = self._split_raw_signature(sig)
+            asn1sig = encode_dss_signature(r, s)
+            key.verify(asn1sig, msg, ec.ECDSA(self.hash_algorithm()))
         except InvalidSignature as err:
             raise BadSignature(err)
         else:
             return True
+
+    @staticmethod
+    def _split_raw_signature(sig):
+        """Split raw signature into components"""
+        c_length = len(sig) // 2
+        r = int_from_bytes(sig[:c_length], byteorder='big')
+        s = int_from_bytes(sig[c_length:], byteorder='big')
+        return (r, s)
 
 
 class PSSSigner(Signer):
