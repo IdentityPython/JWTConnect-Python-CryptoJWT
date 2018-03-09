@@ -407,6 +407,9 @@ class Key(object):
         if not self.key:
             self.deserialize()
 
+        if not kwargs.get('private', True):
+            return self.key.public_key()
+
         return self.key
 
     def verify(self):
