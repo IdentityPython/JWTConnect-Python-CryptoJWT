@@ -294,6 +294,24 @@ def test_keys():
     assert len(keyl['ec']) == 1
 
 
+def test_get_key():
+    ec_key = generate_private_key(NIST2SEC['P-256'], default_backend())
+    asym_private_key = ECKey(key=ec_key)
+    asym_public_key = ECKey(key=asym_private_key.key.public_key())
+    sym_key = SYMKey(key='mekmitasdigoat', kid='xyzzy')
+
+    asym_private_key.get_key(private=True)
+    asym_private_key.get_key(private=False)
+
+    with pytest.raises(ValueError):
+        asym_public_key.get_key(private=True)
+    asym_public_key.get_key(private=False)
+
+    sym_key.get_key(private=True)
+    with pytest.raises(ValueError):
+        sym_key.get_key(private=False)
+
+
 def test_private_key_from_jwk():
     keys = []
 
