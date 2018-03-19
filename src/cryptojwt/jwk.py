@@ -1032,11 +1032,9 @@ class SYMKey(Key):
         res["k"] = as_unicode(b64e(bytes(self.key)))
         return res
 
-    def get_key(self, private=False):
+    def get_key(self, **kwargs):
         if not self.key:
             self.deserialize()
-        if not private:
-            raise ValueError("Public key not available for symmetric keys")
         return self.key
 
     def encryption_key(self, alg, **kwargs):

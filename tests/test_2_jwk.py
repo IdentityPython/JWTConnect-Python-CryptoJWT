@@ -308,8 +308,7 @@ def test_get_key():
     asym_public_key.get_key(private=False)
 
     sym_key.get_key(private=True)
-    with pytest.raises(ValueError):
-        sym_key.get_key(private=False)
+    sym_key.get_key(private=False)
 
 
 def test_private_key_from_jwk():
