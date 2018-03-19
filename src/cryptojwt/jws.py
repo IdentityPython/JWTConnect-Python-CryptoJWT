@@ -540,8 +540,7 @@ class JWS(JWx):
             raise UnknownAlgorithm(_alg)
 
         _input = jwt.pack(parts=[self.msg])
-        sig = _signer.sign(_input.encode("utf-8"),
-                           key.get_key(private=True))
+        sig = _signer.sign(_input.encode("utf-8"), key.get_key(private=True))
         logger.debug("Signed message using key with kid=%s" % key.kid)
         return ".".join([_input, b64encode_item(sig).decode("utf-8")])
 
