@@ -396,16 +396,22 @@ class Key(object):
         """
         pass
 
-    def get_key(self, **kwargs):
+    def get_key(self, private=False):
         """
         Get a keys useful for signing and/or encrypting information.
 
-        :param kwargs:
+        :param private: Private key requested
         :return: A key instance. This can be an RSA, EC or other
         type of key.
         """
         if not self.key:
             self.deserialize()
+
+        if not private and hasattr(self.key, 'public_key'):
+            return self.key.public_key()
+
+        if private and not hasattr(self.key, 'private_bytes'):
+            raise ValueError("Not a private key")
 
         return self.key
 
@@ -1025,6 +1031,11 @@ class SYMKey(Key):
         res = self.common()
         res["k"] = as_unicode(b64e(bytes(self.key)))
         return res
+
+    def get_key(self, **kwargs):
+        if not self.key:
+            self.deserialize()
+        return self.key
 
     def encryption_key(self, alg, **kwargs):
         """
