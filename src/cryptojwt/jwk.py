@@ -410,7 +410,7 @@ class Key(object):
         if not private and hasattr(self.key, 'public_key'):
             return self.key.public_key()
 
-        if private and not hasattr(self.key, 'private_bytes'):
+        if private and not self.is_private_key():
             raise ValueError("Not a private key")
 
         return self.key
