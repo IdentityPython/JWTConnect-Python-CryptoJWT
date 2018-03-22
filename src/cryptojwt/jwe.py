@@ -434,8 +434,6 @@ class JWe(JWx):
                 _key = get_random_bytes(ENCALGLEN2[encalg])
             except KeyError:
                 raise Exception("Unsupported encryption algorithm %s" % encalg)
-        if cek:
-            _key = cek
 
         return _key
 
@@ -978,13 +976,7 @@ class JWE(JWx):
             kwargs["iv"] = iv
 
         for key in keys:
-            if isinstance(encrypter, JWE_EC):
-                if self.enc:
-                    _key = key.encryption_key(alg=self.enc, private=True)
-                else:
-                    _key = key.encryption_key(alg=_alg, private=True)
-            else:
-                _key = key.encryption_key(alg=_alg, private=True)
+            _key = key.encryption_key(alg=_alg, private=False)
 
             if key.kid:
                 encrypter["kid"] = key.kid
