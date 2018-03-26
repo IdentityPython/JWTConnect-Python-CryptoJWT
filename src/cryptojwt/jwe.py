@@ -709,9 +709,9 @@ def ecdh_derive_key(key, epk, apu, apv, alg, dk_len):
     # Derive the key
     # AlgorithmID || PartyUInfo || PartyVInfo || SuppPubInfo
     otherInfo = bytes(alg) + \
-                struct.pack("!I", len(apu)) + apu + \
-                struct.pack("!I", len(apv)) + apv + \
-                struct.pack("!I", dk_len)
+        struct.pack("!I", len(apu)) + apu + \
+        struct.pack("!I", len(apv)) + apv + \
+        struct.pack("!I", dk_len)
     return concat_sha256(shared_key, dk_len, otherInfo)
 
 

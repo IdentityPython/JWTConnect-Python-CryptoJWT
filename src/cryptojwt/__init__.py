@@ -283,4 +283,3 @@ class SimpleJWT(object):
                 pass
 
         return _msg
-

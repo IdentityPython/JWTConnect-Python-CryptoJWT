@@ -66,21 +66,20 @@ DIGEST_HASH = {
 
 def generate_and_store_rsa_key(key_size=2048, filename='rsa.key',
                                passphrase=''):
-    private_key = rsa.generate_private_key(public_exponent = 65537,
-                                           key_size = key_size,
-                                           backend = default_backend())
+    private_key = rsa.generate_private_key(public_exponent=65537,
+                                           key_size=key_size,
+                                           backend=default_backend())
 
     with open(filename, "wb") as keyfile:
         if passphrase:
             pem = private_key.private_bytes(
-                encoding = serialization.Encoding.PEM,
-                format = serialization.PrivateFormat.PKCS8,
-                encryption_algorithm = serialization.BestAvailableEncryption(
-                    passphrase))
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.BestAvailableEncryption(passphrase))
         else:
             pem = private_key.private_bytes(
-                encoding = serialization.Encoding.PEM,
-                format = serialization.PrivateFormat.PKCS8,
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption())
         keyfile.write(pem)
         keyfile.close()
@@ -968,7 +967,7 @@ class ECKey(Key):
             if isinstance(other.key, ec.EllipticCurvePublicKey):
                 if self.key.curve != other.key.curve:
                     return False
-                if self.key.key_size != other.key.key_size :
+                if self.key.key_size != other.key.key_size:
                     return False
                 if self.key.public_numbers() != other.key.public_numbers():
                     return False
@@ -978,7 +977,7 @@ class ECKey(Key):
             if isinstance(other.key, ec.EllipticCurvePrivateKey):
                 if self.key.curve != other.key.curve:
                     return False
-                if self.key.key_size != other.key.key_size :
+                if self.key.key_size != other.key.key_size:
                     return False
                 if self.key.private_numbers() != other.key.private_numbers():
                     return False
