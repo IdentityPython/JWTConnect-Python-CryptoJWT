@@ -221,10 +221,10 @@ class JWT(object):
     def _decrypt(self, rj, token):
         """
         Decrypt an encrypted JsonWebToken
-        
-        :param rj: :py:class:`jwkest.jwe.JWE` instance 
+
+        :param rj: :py:class:`jwkest.jwe.JWE` instance
         :param token: The encrypted JsonWebToken
-        :return: 
+        :return:
         """
         keys = get_jwt_keys(rj.jwt, self.my_keys(), 'enc')
         return rj.decrypt(token, keys=keys)
