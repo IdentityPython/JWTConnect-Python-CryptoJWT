@@ -396,7 +396,7 @@ class Key(object):
         """
         pass
 
-    def get_key(self, private=False):
+    def get_key(self, private=False, **kwargs):
         """
         Get a keys useful for signing and/or encrypting information.
 
