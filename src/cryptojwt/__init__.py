@@ -4,7 +4,6 @@ import json
 import logging
 import re
 import struct
-import six
 
 from cryptojwt.exception import BadSyntax
 
@@ -59,7 +58,7 @@ def long_to_base64(n):
 
 
 def base64_to_long(data):
-    if isinstance(data, six.text_type):
+    if isinstance(data, str):
         data = data.encode("ascii")
 
     # urlsafe_b64decode will happily convert b64encoded data
@@ -190,7 +189,7 @@ def bytes2str_conv(item):
     """
     if isinstance(item, bytes):
         return item.decode("utf-8")
-    elif item is None or isinstance(item, (six.string_types, int, bool)):
+    elif item is None or isinstance(item, (str, int, bool)):
         return item
     elif isinstance(item, list):
         return [bytes2str_conv(i) for i in item]
