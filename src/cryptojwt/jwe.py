@@ -1,6 +1,7 @@
 # from future import standard_library
 import os
 
+
 try:
     from builtins import object
 except ImportError:
@@ -16,10 +17,13 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers import modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.ciphers.aead import AESCCM
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
+from cryptography.hazmat.primitives.padding import PKCS7
 
 from cryptojwt import as_bytes, b64encode_item
 from cryptojwt import as_unicode
@@ -156,6 +160,53 @@ class RSAEncrypter(Encrypter):
         return text
 
 
+class AES_CBCEncrypter(Encrypter):
+    """
+    """
+    def __init__(self, key_len=32, key=None, msg_padding='PKCS7'):
+        Encrypter.__init__(self)
+        if key:
+            self.key = key
+        else:
+            self.key = os.urandom(key_len)
+
+        if msg_padding == 'PKCS7':
+            self.padder = PKCS7(128).padder()
+            self.unpadder = PKCS7(128).unpadder()
+
+    def encrypt(self, msg, iv='', auth_data=b''):
+        if not iv:
+            iv = os.urandom(16)
+
+        cipher = Cipher(algorithms.AES(self.key), modes.CBC(iv),
+                        backend=default_backend())
+        encryptor = cipher.encryptor()
+        if auth_data:
+            encryptor.authenticate_additional_data(auth_data)
+
+        pmsg = self.padder.update(msg)
+        pmsg += self.padder.finalize()
+        ct = encryptor.update(pmsg)
+        ct += encryptor.finalize()
+        return ct
+
+    def decrypt(self, msg, key=None, iv='', auth_data=b'',
+                padding='PKCS7'):
+        if key is None:
+            key = self.key
+
+        cipher = Cipher(algorithms.AES(key), modes.CBC(iv),
+                        backend=default_backend())
+        decryptor = cipher.decryptor()
+        if auth_data:
+            decryptor.authenticate_additional_data(auth_data)
+        ctext = decryptor.update(msg)
+        ctext += decryptor.finalize()
+        unpad = self.unpadder.update(ctext)
+        unpad += self.unpadder.finalize()
+        return unpad
+
+
 class AES_GCMEncrypter(Encrypter):
     def __init__(self, bit_length=0, key=None):
         Encrypter.__init__(self)
@@ -167,7 +218,7 @@ class AES_GCMEncrypter(Encrypter):
 
             self.key = AESGCM.generate_key(bit_length=bit_length)
 
-    def encrypt(self, msg, iv='', ass_data=None):
+    def encrypt(self, msg, iv='', auth_data=None):
         """
         Encrypts and authenticates the data provided as well as authenticating
         the associated_data.
@@ -180,9 +231,9 @@ class AES_GCMEncrypter(Encrypter):
         if not iv:
             raise ValueError('Missing Nonce')
 
-        return self.key.encrypt(iv, msg, ass_data)
+        return self.key.encrypt(iv, msg, auth_data)
 
-    def decrypt(self, ciphertext, iv='', ass_data=None):
+    def decrypt(self, ciphertext, iv='', auth_data=None):
         """
         Decrypts the data and authenticates the associated_data (if provided).
 
@@ -194,48 +245,48 @@ class AES_GCMEncrypter(Encrypter):
         if not iv:
             raise ValueError('Missing Nonce')
 
-        return self.key.decrypt(iv, ciphertext, ass_data)
+        return self.key.decrypt(iv, ciphertext, auth_data)
 
 
-class AES_CCMEncrypter(Encrypter):
-    def __init__(self, bit_length=0, key=None, tag_length=16):
-        Encrypter.__init__(self)
-        if key:
-            self.key = AESCCM(key)
-        elif bit_length:
-            if bit_length not in [128, 192, 256]:
-                raise UnsupportedBitLength(bit_length)
-
-            self.key = AESCCM.generate_key(bit_length=bit_length)
-
-    def encrypt(self, msg, iv='', ass_data=None):
-        """
-        Encrypts and authenticates the data provided as well as authenticating
-        the associated_data.
-
-        :param msg: The message to be encrypted
-        :param iv: MUST be present. A value of between 7 and 13 bytes.
-        :param ass_data: Associated data
-        :return: The ciphertext bytes with the 16 byte tag appended.
-        """
-        if not iv:
-            raise ValueError('Missing Nonce')
-
-        return self.key.encrypt(iv, msg, ass_data)
-
-    def decrypt(self, ciphertext, iv='', ass_data=None):
-        """
-        Decrypts the data and authenticates the associated_data (if provided).
-
-        :param ciphertext: The data to decrypt including tag
-        :param iv: A value of between 7 and 13 bytes.
-        :param ass_data: Associated data
-        :return: The original plaintext
-        """
-        if not iv:
-            raise ValueError('Missing Nonce')
-
-        return self.key.decrypt(iv, ciphertext, ass_data)
+# class AES_CCMEncrypter(Encrypter):
+#     def __init__(self, bit_length=0, key=None, tag_length=16):
+#         Encrypter.__init__(self)
+#         if key:
+#             self.key = AESCCM(key)
+#         elif bit_length:
+#             if bit_length not in [128, 192, 256]:
+#                 raise UnsupportedBitLength(bit_length)
+#
+#             self.key = AESCCM.generate_key(bit_length=bit_length)
+#
+#     def encrypt(self, msg, iv='', ass_data=None):
+#         """
+#         Encrypts and authenticates the data provided as well as authenticating
+#         the associated_data.
+#
+#         :param msg: The message to be encrypted
+#         :param iv: MUST be present. A value of between 7 and 13 bytes.
+#         :param ass_data: Associated data
+#         :return: The ciphertext bytes with the 16 byte tag appended.
+#         """
+#         if not iv:
+#             raise ValueError('Missing Nonce')
+#
+#         return self.key.encrypt(iv, msg, ass_data)
+#
+#     def decrypt(self, ciphertext, iv='', ass_data=None):
+#         """
+#         Decrypts the data and authenticates the associated_data (if provided).
+#
+#         :param ciphertext: The data to decrypt including tag
+#         :param iv: A value of between 7 and 13 bytes.
+#         :param ass_data: Associated data
+#         :return: The original plaintext
+#         """
+#         if not iv:
+#             raise ValueError('Missing Nonce')
+#
+#         return self.key.decrypt(iv, ciphertext, ass_data)
 
 
 # ---------------------------------------------------------------------------
@@ -414,9 +465,11 @@ class JWe(JWx):
             return iv
         else:
             if encalg in ENCALGLEN1:
-                _iv = get_random_bytes(12)
+                # _iv = get_random_bytes(ENCALGLEN1[encalg])
+                _iv = get_random_bytes(16)
             elif encalg in ENCALGLEN2:
-                _iv = get_random_bytes(12)
+                # _iv = get_random_bytes(ENCALGLEN2[encalg])
+                _iv = get_random_bytes(16)
             else:
                 raise Exception("Unsupported encryption algorithm %s" % encalg)
 
@@ -440,7 +493,7 @@ class JWe(JWx):
     def alg2keytype(self, alg):
         return alg2keytype(alg)
 
-    def enc_setup(self, enc_alg, msg, auth_data, key=None, iv=""):
+    def enc_setup(self, enc_alg, msg, auth_data=b'', key=None, iv=""):
         """ Encrypt JWE content.
 
         :param enc_alg: The JWE "enc" value specifying the encryption algorithm
@@ -453,17 +506,17 @@ class JWe(JWx):
         iv = self._generate_iv(enc_alg, iv)
 
         if enc_alg in ["A192GCM", "A128GCM", "A256GCM"]:
-            aes = AES_GCMEncrypter(KEYLEN[enc_alg], key=key)
+            aes = AES_GCMEncrypter(ENCALGLEN1[enc_alg], key=key)
         elif enc_alg in ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512"]:
-            aes = AES_CCMEncrypter(KEYLEN[enc_alg], key=key)
+            aes = AES_CBCEncrypter(ENCALGLEN2[enc_alg], key=key)
         else:
             raise NotSupportedAlgorithm(enc_alg)
 
-        ctxt, tag = split_ctx_and_tag(aes.encrypt(msg, iv, auth_data))
-        return ctxt, tag, aes.key
+        res = split_ctx_and_tag(aes.encrypt(msg, iv, auth_data))
+        return res[0], res[1], aes.key
 
     @staticmethod
-    def _decrypt(enc, key, ctxt, auth_data, iv, tag):
+    def _decrypt(enc, key, ctxt, iv, tag, p_header=b'', auth_data=b''):
         """ Decrypt JWE content.
 
         :param enc: The JWE "enc" value specifying the encryption algorithm
@@ -477,13 +530,13 @@ class JWe(JWx):
         if enc in ["A128GCM", "A192GCM", "A256GCM"]:
             aes = AES_GCMEncrypter(key=key)
         elif enc in ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512"]:
-            aes = AES_CCMEncrypter(key=key)
+            aes = AES_CBCEncrypter(key=key)
         else:
             raise Exception("Unsupported encryption algorithm %s" % enc)
 
         ct = ctxt + tag
         try:
-            return aes.decrypt(ct, iv, auth_data)
+            return aes.decrypt(ct, iv=iv, auth_data=auth_data)
         except DecryptionFailed:
             raise
 
@@ -530,9 +583,7 @@ class JWE_SYM(JWe):
 
         _enc = self["enc"]
 
-        ctxt, tag, cek = self.enc_setup(_enc, _msg.encode(),
-                                        jwe.b64_encode_header(),
-                                        cek, iv=iv)
+        ctxt, tag, cek = self.enc_setup(_enc, _msg.encode(), key=cek, iv=iv)
         return jwe.pack(parts=[jek, iv, ctxt, tag])
 
     def decrypt(self, token, key=None, cek=None):
@@ -560,8 +611,8 @@ class JWE_SYM(JWe):
 
         msg = self._decrypt(
             jwe.headers["enc"], cek, jwe.ciphertext(),
-            jwe.b64_protected_header(),
-            jwe.initialization_vector(), jwe.authentication_tag())
+            p_header=jwe.b64_protected_header(),
+            iv=jwe.initialization_vector(), tag=jwe.authentication_tag())
 
         if "zip" in self and self["zip"] == "DEF":
             msg = zlib.decompress(msg)
@@ -616,9 +667,9 @@ class JWE_RSA(JWe):
 
         jwe = JWEnc(**self.headers())
 
-        enc_header = jwe.b64_encode_header()
+        #enc_header = jwe.b64_encode_header()
 
-        ctxt, tag, key = self.enc_setup(_enc, _msg, enc_header, cek, iv)
+        ctxt, tag, key = self.enc_setup(_enc, _msg, key=cek, iv=iv)
         return jwe.pack(parts=[jwe_enc_key, iv, ctxt, tag])
 
     def decrypt(self, token, key, cek=None):
@@ -656,9 +707,9 @@ class JWE_RSA(JWe):
             raise NotSupportedAlgorithm(enc)
 
         msg = self._decrypt(enc, cek, jwe.ciphertext(),
-                            jwe.b64_protected_header(),
-                            jwe.initialization_vector(),
-                            jwe.authentication_tag())
+                            p_header=jwe.b64_protected_header(),
+                            iv=jwe.initialization_vector(),
+                            tag=jwe.authentication_tag())
 
         if "zip" in jwe.headers and jwe.headers["zip"] == "DEF":
             msg = zlib.decompress(msg)
@@ -719,7 +770,7 @@ class JWE_EC(JWe):
     args = JWe.args[:]
     args.append("enc")
 
-    def enc_setup(self, msg, auth_data, key=None, **kwargs):
+    def enc_setup(self, msg, key=None, auth_data=b'', **kwargs):
         """
 
         :param msg: Message to be encrypted
@@ -863,8 +914,8 @@ class JWE_EC(JWe):
 
         jwe = JWEnc(**_args)
         ctxt, tag, cek = super(JWE_EC, self).enc_setup(self["enc"], _msg,
-                                                       jwe.b64_encode_header(),
-                                                       cek, iv=iv)
+                                                       # jwe.b64_encode_header(),
+                                                       key=cek, iv=iv)
         if 'encrypted_key' in kwargs:
             return jwe.pack(parts=[kwargs['encrypted_key'], iv, ctxt, tag])
         return jwe.pack(parts=[iv, ctxt, tag])
@@ -881,8 +932,8 @@ class JWE_EC(JWe):
 
         msg = super(JWE_EC, self)._decrypt(self.headers["enc"], self.cek,
                                            self.ctxt,
-                                           jwe.b64part[0],
-                                           self.iv, self.tag)
+                                           # p_header=jwe.b64part[0],
+                                           iv=self.iv, tag=self.tag)
         self.msg = msg
         self.msg_valid = True
         return msg
@@ -962,7 +1013,7 @@ class JWE(JWx):
 
             encrypter = JWE_EC(**self._dict)
             cek, encrypted_key, iv, params, eprivk = encrypter.enc_setup(
-                self.msg, self._dict, key=keys[0], **self._dict)
+                self.msg, key=keys[0], **self._dict)
             kwargs["encrypted_key"] = encrypted_key
             kwargs["params"] = params
         else:

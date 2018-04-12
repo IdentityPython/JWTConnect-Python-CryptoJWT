@@ -286,8 +286,8 @@ eck_bob = ECKey(key=bob)
 def test_ecdh_encrypt_decrypt_direct_key():
     # Alice starts of
     jwenc = JWE_EC(plain, alg="ECDH-ES", enc="A128GCM")
-    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(
-        plain, '', key=eck_bob)
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain,
+                                                              key=eck_bob)
 
     kwargs = {
         'params': params, 'cek': cek, 'iv': iv,
@@ -309,7 +309,7 @@ def test_ecdh_encrypt_decrypt_direct_key():
 
 def test_ecdh_encrypt_decrypt_keywrapped_key():
     jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
-    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, '',
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain,
                                                               key=eck_bob)
 
     kwargs = {}
