@@ -43,7 +43,7 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
             continue
 
         if key.kty == key_type:
-            if key.alg == '' or key.alg == alg:
+            if key.alg == '' or alg == '' or key.alg == alg:
                 if key.kid == '' or kid == '' or key.kid == kid:
                     res.append(key)
     return res
