@@ -95,3 +95,30 @@ def test_jwt_pack_encrypt_no_sign():
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'aud'}
+
+
+def test_jwt_pack_and_unpack_with_alg():
+    alice = JWT(own_keys=ALICE_KEYS, iss=ALICE)
+    payload = {'sub': 'sub'}
+    _jwt = alice.pack(payload=payload)
+
+    from cryptojwt.jwk import KEYS
+    alice_jwks = {
+        "keys":
+            [{
+                "kty": "RSA",
+                "alg": "RS256",
+                "use": "sig",
+                "kid": "1",
+                "n": ALICE_PUB_KEYS[0].n,
+                "e": ALICE_PUB_KEYS[0].e
+            }]
+    }
+    alg_keys = KEYS()
+    alg_keys.load_dict(alice_jwks)
+
+    bob = JWT(rec_keys={ALICE: alg_keys})
+    info = bob.unpack(_jwt)
+
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
+
