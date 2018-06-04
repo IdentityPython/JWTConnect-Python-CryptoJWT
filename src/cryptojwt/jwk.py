@@ -137,16 +137,17 @@ def der_cert(der_data):
     return cert
 
 
-def load_x509_cert(url, spec2key):
+def load_x509_cert(url, spec2key, **get_args):
     """
     Get and transform a X509 cert into a key.
 
     :param url: Where the X509 cert can be found
     :param spec2key: A dictionary over keys already seen
+    :param get_args: Extra key word arguments to the HTTP GET request
     :return: List of 2-tuples (keytype, key)
     """
     try:
-        r = request("GET", url, allow_redirects=True)
+        r = request("GET", url, allow_redirects=True, **get_args)
         if r.status_code == 200:
             cert = str(r.text)
             try:
