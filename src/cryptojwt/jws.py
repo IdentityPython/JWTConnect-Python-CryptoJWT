@@ -544,19 +544,20 @@ class JWS(JWx):
         logger.debug("Signed message using key with kid=%s" % key.kid)
         return ".".join([_input, b64encode_item(sig).decode("utf-8")])
 
-    def verify_compact(self, jws, keys=None, allow_none=False, sigalg=None):
+    def verify_compact(self, jws=None, keys=None, allow_none=False,
+                       sigalg=None):
         """
         Verify a JWT signature
 
-        :param jws:
-        :param keys:
+        :param jws: Signed JSON Web Token
+        :param keys: A list of Key's that may be useful.
         :param allow_none: If signature algorithm 'none' is allowed
-        :param sigalg: Expected sigalg
+        :param sigalg: Expected signing algorithm
         :return:
         """
         return self.verify_compact_verbose(jws, keys, allow_none, sigalg)['msg']
 
-    def verify_compact_verbose(self, jws, keys=None, allow_none=False,
+    def verify_compact_verbose(self, jws=None, keys=None, allow_none=False,
                                sigalg=None):
         """
         Verify a JWT signature and return dict with validation results
@@ -567,11 +568,16 @@ class JWS(JWx):
         :param sigalg: Expected sigalg
         :return:
         """
-        jwt = JWSig().unpack(jws)
-        if len(jwt) != 3:
-            raise WrongNumberOfParts(len(jwt))
+        if jws:
+            jwt = JWSig().unpack(jws)
+            if len(jwt) != 3:
+                raise WrongNumberOfParts(len(jwt))
 
-        self.jwt = jwt
+            self.jwt = jwt
+        elif self.jwt:
+            jwt = self.jwt
+        else:
+            raise ValueError('Missing signed JSON Web Token')
 
         try:
             _alg = jwt.headers["alg"]
