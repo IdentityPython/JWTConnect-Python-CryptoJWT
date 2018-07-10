@@ -1,30 +1,28 @@
 import base64
 import hashlib
-import logging
 import json
+import logging
 
 from cryptography import x509
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
-
+from cryptography.hazmat.primitives.asymmetric import rsa
 from requests import request
 
 from cryptojwt import as_bytes, bytes2str_conv
 from cryptojwt import as_unicode
-from cryptojwt import base64_to_long
-from cryptojwt import base64url_to_long
 from cryptojwt import b64d
 from cryptojwt import b64e
+from cryptojwt import base64_to_long
+from cryptojwt import base64url_to_long
 from cryptojwt import long_to_base64
+from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import HeaderError
 from cryptojwt.exception import JWKESTException
 from cryptojwt.exception import JWKException
-from cryptojwt.exception import UnknownAlgorithm
-from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import SerializationNotPossible
+from cryptojwt.exception import UnknownAlgorithm
 
 __author__ = 'roland hedberg'
 
@@ -75,7 +73,8 @@ def generate_and_store_rsa_key(key_size=2048, filename='rsa.key',
             pem = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.BestAvailableEncryption(passphrase))
+                encryption_algorithm=serialization.BestAvailableEncryption(
+                    passphrase))
         else:
             pem = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -168,7 +167,7 @@ def rsa_load(filename, passphrase=None):
     try:
         key = import_private_rsa_key_from_file(filename, passphrase)
     except ValueError:
-        key =  import_public_rsa_key_from_file(filename)
+        key = import_public_rsa_key_from_file(filename)
 
     return key
 
@@ -779,17 +778,18 @@ class RSAKey(Key):
         if not other.key:
             other.deserialize()
 
+        if self.kid != other.kid:
+            return False
+
         try:
             pn1 = self.key.private_numbers()
             pn2 = other.key.private_numbers()
         except Exception:
             try:
-                cmp_public_numbers(self.key.public_numbers(),
-                                   other.key.public_numbers())
+                return cmp_public_numbers(self.key.public_numbers(),
+                                          other.key.public_numbers())
             except Exception:
                 return False
-            else:
-                return True
         else:
             return cmp_private_numbers(pn1, pn2)
 
@@ -888,8 +888,10 @@ class ECKey(Key):
             try:
                 if isinstance(self.d, (str, bytes)):
                     _d = deser(self.d)
-                    self.key = ec_construct_private({'x': _x, 'y': _y,
-                                                     'crv': self.crv, 'd': _d})
+                    self.key = ec_construct_private({
+                                                        'x': _x, 'y': _y,
+                                                        'crv': self.crv, 'd': _d
+                                                    })
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
@@ -925,7 +927,7 @@ class ECKey(Key):
         self._serialize(self.key)
 
         res.update({
-            #"crv": SEC2NIST[self.crv.name],
+            # "crv": SEC2NIST[self.crv.name],
             "crv": self.crv,
             "x": self.x,
             "y": self.y
