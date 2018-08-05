@@ -2,21 +2,14 @@ language: python
 
 sudo: false
 
-python: 3.6
-
-addons:
-  apt:
-    packages:
-    - python3.5
-    - python3.7
+python:
+  - "3.5"
+  - "3.6"
 
 install:
   - pip install tox
 
 env:
-   - TOXENV=py35
-   - TOXENV=py36
-   - TOXENV=py37
    - TOXENV=quality
    - TOXENV=docs
 
