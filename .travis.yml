@@ -7,7 +7,8 @@ python: 3.6
 addons:
   apt:
     packages:
-    - libffi-dev
+    - python3.5
+    - python3.7
 
 install:
   - pip install tox
