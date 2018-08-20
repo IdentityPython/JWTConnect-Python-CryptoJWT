@@ -1,4 +1,5 @@
 import base64
+import binascii
 import hashlib
 import json
 import logging
@@ -349,6 +350,7 @@ class Key(object):
         self.x5t = x5t
         self.x5u = x5u
         self.inactive_since = 0
+        self._hash = 0
 
     def to_dict(self):
         """
@@ -507,6 +509,20 @@ class Key(object):
 
     def is_public_key(self):
         return not self.is_private_key()
+
+    def get_hash(self, hash_function=None):
+        if not hash_function:
+            hash_function = 'SHA-256'
+        self._hash = int(binascii.hexlify(self.thumbprint(hash_function)), 16)
+        return self._hash
+
+    def __hash__(self):
+        if not self._hash:
+            if self.kid:
+                self.get_hash()
+            else:
+                self.add_kid()
+        return self._hash
 
 
 def deser(val):
@@ -793,6 +809,14 @@ class RSAKey(Key):
         else:
             return cmp_private_numbers(pn1, pn2)
 
+    def __hash__(self):
+        if not self._hash:
+            if self.kid:
+                self.get_hash()
+            else:
+                self.add_kid()
+        return self._hash
+
 
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
@@ -984,6 +1008,14 @@ class ECKey(Key):
                 return True
 
         return False
+
+    def __hash__(self):
+        if not self._hash:
+            if self.kid:
+                self.get_hash()
+            else:
+                self.add_kid()
+        return self._hash
 
 
 ALG2KEYLEN = {
