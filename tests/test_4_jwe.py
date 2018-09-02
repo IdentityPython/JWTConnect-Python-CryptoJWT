@@ -7,19 +7,21 @@ import array
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from cryptojwt import b64e
-from cryptojwt.jwe import AES_GCMEncrypter
-from cryptojwt.jwk import ECKey
-from cryptojwt.jwe import factory
-from cryptojwt.jwk import import_private_rsa_key_from_file
-from cryptojwt.jwe import JWe
-from cryptojwt.jwe import JWE
-from cryptojwt.jwe import JWE_EC
-from cryptojwt.jwe import JWE_RSA
-from cryptojwt.jwe import JWE_SYM
-from cryptojwt.jwk import RSAKey
-from cryptojwt.jwe import split_ctx_and_tag
-from cryptojwt.jwk import SYMKey
+from cryptojwt.utils import b64e
+
+from cryptojwt.jwe.aes import AES_GCMEncrypter
+from cryptojwt.jwe.jwe import JWE
+from cryptojwt.jwe.jwe import factory
+from cryptojwt.jwe.jwe_ec import JWE_EC
+from cryptojwt.jwe.jwe_rsa import JWE_RSA
+from cryptojwt.jwe.jwe_hmac import JWE_SYM
+from cryptojwt.jwe.utils import split_ctx_and_tag
+
+from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.rsa import RSAKey
+
 
 __author__ = 'rohe0002'
 
@@ -251,14 +253,14 @@ def test_rsa_encrypt_decrypt_rsa_oaep_256_gcm():
 
 
 def test_encrypt_decrypt_rsa_cbc():
-    _key = RSAKey(key=pub_key)
+    _key = RSAKey(pub_key=pub_key)
     _key._keytype = "public"
     _jwe0 = JWE(plain, alg="RSA1_5", enc="A128CBC-HS256")
 
     jwt = _jwe0.encrypt([_key])
 
     _jwe1 = factory(jwt)
-    _dkey = RSAKey(key=priv_key)
+    _dkey = RSAKey(priv_key=priv_key)
     _dkey._keytype = "private"
     msg = _jwe1.decrypt(jwt, [_dkey])
 
@@ -266,7 +268,7 @@ def test_encrypt_decrypt_rsa_cbc():
 
 
 def test_rsa_with_kid():
-    encryption_keys = [RSAKey(use="enc", key=pub_key,
+    encryption_keys = [RSAKey(use="enc", pub_key=pub_key,
                               kid="some-key-id")]
     jwe = JWE("some content", alg="RSA-OAEP", enc="A256CBC-HS512")
     jwe.encrypt(keys=encryption_keys, kid="some-key-id")
@@ -278,9 +280,9 @@ if __name__ == "__main__":
 # Test ECDH-ES
 
 alice = ec.generate_private_key(ec.SECP256R1(), default_backend())
-eck_alice = ECKey(key=alice)
+eck_alice = ECKey(priv_key=alice)
 bob = ec.generate_private_key(ec.SECP256R1(), default_backend())
-eck_bob = ECKey(key=bob)
+eck_bob = ECKey(priv_key=bob)
 
 
 def test_ecdh_encrypt_decrypt_direct_key():

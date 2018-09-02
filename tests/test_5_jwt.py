@@ -1,7 +1,9 @@
 import os
 
-from cryptojwt.jwk import import_private_rsa_key_from_file, SYMKey
-from cryptojwt.jwk import RSAKey
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.jwks import JWKS
 from cryptojwt.jwt import JWT
 
 __author__ = 'Roland Hedberg'
@@ -74,12 +76,12 @@ def test_jwt_pack_encrypt():
 
 
 def test_jwt_pack_unpack_sym():
-    _sym_key = SYMKey(key='hemligt ord', use='sig')
-    alice = JWT(own_keys=[_sym_key], iss=ALICE, sign_alg="HS256")
+    _key = SYMKey(key='hemligt ordsprak', use='sig')
+    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_sym_key]})
+    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
     info = bob.unpack(_jwt)
     assert info
 
@@ -102,7 +104,6 @@ def test_jwt_pack_and_unpack_with_alg():
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    from cryptojwt.jwk import KEYS
     alice_jwks = {
         "keys":
             [{
@@ -114,7 +115,7 @@ def test_jwt_pack_and_unpack_with_alg():
                 "e": ALICE_PUB_KEYS[0].e
             }]
     }
-    alg_keys = KEYS()
+    alg_keys = JWKS()
     alg_keys.load_dict(alice_jwks)
 
     bob = JWT(rec_keys={ALICE: alg_keys})

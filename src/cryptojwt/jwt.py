@@ -4,14 +4,17 @@ import uuid
 from datetime import datetime
 from json import JSONDecodeError
 
-from cryptojwt import as_unicode
-from cryptojwt import jwe
-from cryptojwt import jws
-from cryptojwt.exception import MissingValue
-from cryptojwt.exception import VerificationError
-from cryptojwt.jwe import JWE
-from cryptojwt.jws import JWS
-from cryptojwt.jws import NoSuitableSigningKeys
+from .utils import as_unicode
+
+from .exception import MissingValue
+from .exception import VerificationError
+from .jwe.utils import alg2keytype as jwe_alg2keytype
+from .jwe.jwe import factory as jwe_factory
+from .jwe.jwe import JWE
+from .jws.jws import JWS
+from .jws.jws import factory as jws_factory
+from .jws.exception import NoSuitableSigningKeys
+from .jws.utils import alg2keytype as jws_alg2keytype
 
 __author__ = 'Roland Hedberg'
 
@@ -35,9 +38,9 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
     res = []
     if not key_type:
         if use == 'sig':
-            key_type = jws.alg2keytype(alg)
+            key_type = jws_alg2keytype(alg)
         else:
-            key_type = jwe.alg2keytype(alg)
+            key_type = jwe_alg2keytype(alg)
     for key in keys:
         if key.use != use:
             continue
@@ -52,9 +55,9 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
 def get_jwt_keys(jwt, keys, use):
     try:
         if use == 'sig':
-            _key_type = jws.alg2keytype(jwt.headers['alg'])
+            _key_type = jws_alg2keytype(jwt.headers['alg'])
         else:
-            _key_type = jwe.alg2keytype(jwt.headers['alg'])
+            _key_type = jwe_alg2keytype(jwt.headers['alg'])
     except KeyError:
         _key_type = ''
 
@@ -250,7 +253,7 @@ class JWT(object):
         _jwe_header = _jws_header = None
 
         # Check if it's an encrypted JWT
-        _rj = jwe.factory(token)
+        _rj = jwe_factory(token)
         if _rj:
             # Yes, try to decode
             _info = self._decrypt(_rj, token)
@@ -266,7 +269,7 @@ class JWT(object):
         # If I have reason to believe the information I have is a signed JWT
         if _content_type.lower() == 'jwt':
             # Check that is a signed JWT
-            _rj = jws.factory(_info)
+            _rj = jws_factory(_info)
             if _rj:
                 _info = self._verify(_rj, _info)
             else:
@@ -300,3 +303,4 @@ class JWT(object):
             return _info
         else:
             return _info
+
