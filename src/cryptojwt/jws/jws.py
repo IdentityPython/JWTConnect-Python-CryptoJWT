@@ -13,7 +13,6 @@ from ..exception import BadSignature
 from ..exception import UnknownAlgorithm
 from ..exception import WrongNumberOfParts
 from ..jwk.asym import AsymmetricKey
-from ..jwk.jwk import SYMKey
 from ..jwx import JWx
 from ..simple_jwt import SimpleJWT
 from ..utils import b64d_enc_dec

@@ -5,7 +5,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from ..exception import WrongKeyType
 from ..exception import UnknownKeyType
 from ..exception import UnsupportedAlgorithm
-from ..utils import base64url_to_long, b64d
+from ..utils import base64url_to_long, b64d, as_bytes
 
 from . import JWK
 
@@ -67,7 +67,10 @@ def key_from_jwk_dict(jwk_dict):
                                                                         'kty']))
         return RSAKey(**jwk_dict)
     elif jwk_dict['kty'] == 'oct':
-        jwk_dict['key'] = b64d(jwk_dict["k"])
+        if isinstance(jwk_dict['k'], bytes):
+            jwk_dict['key'] = b64d(jwk_dict["k"])
+        else:
+            jwk_dict['key'] = b64d(as_bytes(jwk_dict["k"]))
         return SYMKey(**jwk_dict)
     else:
         raise UnknownKeyType

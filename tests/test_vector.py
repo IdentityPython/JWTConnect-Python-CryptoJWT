@@ -170,3 +170,14 @@ test_json_ecdsa_pub_key_kid1 = r"""
     "kid":"kid1",
     "alg":"ES256"
   }"""
+
+test_json_ecdsa_priv_key_kid2 = r"""
+  {
+    "kty":"EC",
+    "crv":"P-256",
+    "x":"f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+    "y":"x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+    "d":"jpsQnnGQmL-YBIffH1136cspYG6-0iY7X1fCE9-E9LI",
+    "kid":"kid2",
+    "alg":"ES256"
+  }"""
