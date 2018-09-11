@@ -9,7 +9,7 @@ from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.jws import JWS
 from cryptojwt.utils import as_bytes
-
+from cryptojwt.utils import as_unicode
 
 sys.path.insert(0, '. ')
 
@@ -18,7 +18,8 @@ import test_vector
 
 def modify_header(token, **kwargs):
     part = token.split('.')
-    header = json.loads(utils.b64d(as_bytes(part[0])))
+    _txt = utils.b64d(as_bytes(part[0]))
+    header = json.loads(as_unicode(_txt))
     header.update(kwargs)
     part[0] = utils.b64e(as_bytes(json.dumps(header)))
     return b'.'.join([as_bytes(p) for p in part])
@@ -50,7 +51,8 @@ def modify_bytes(b):
 
 def modify_json_message(token):
     part = [as_bytes(p) for p in token.split('.')]
-    msg = json.loads(utils.b64d(part[1]))
+    _txt = utils.b64d(part[1])
+    msg = json.loads(as_unicode(_txt))
     for k,v in msg.items():
         msg_copy = msg.copy()
         del msg_copy[k]
@@ -267,3 +269,7 @@ def test_jws_mac_authenticator_and_verifier():
         for modified_token in modify_token(signed_token, calgs):
             with pytest.raises(JWKESTException):
                 assert verifier.verify_compact(modified_token, [mac_key])
+
+
+if __name__ == "__main__":
+    test_jws_rsa_verifier_with_rfc()

@@ -282,6 +282,12 @@ class JWT(object):
                 _info = json.loads(_info)
             except JSONDecodeError:  # Oh, no ! Not JSON
                 return _info
+            except TypeError:
+                try:
+                    _info = as_unicode(_info)
+                    _info = json.loads(_info)
+                except JSONDecodeError:  # Oh, no ! Not JSON
+                    return _info
 
         # If I know what message class the info should be mapped into
         if self.msg_cls:

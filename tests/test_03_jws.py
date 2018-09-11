@@ -383,10 +383,8 @@ def test_signer_es512():
     payload = "Please take a moment to register today"
     eck = ec.generate_private_key(ec.SECP521R1(), default_backend())
     _key = ECKey().load_key(eck)
-    keys = [_key]
-    # keys[0]._keytype = "private"
     _jws = JWS(payload, alg="ES512")
-    _jwt = _jws.sign_compact(keys)
+    _jwt = _jws.sign_compact([_key])
 
     _pubkey = ECKey().load_key(eck.public_key())
     _rj = JWS()
@@ -713,5 +711,3 @@ def test_pick_alg_dont_get_alg_from_single_key_if_already_specified():
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
     alg = JWS(alg=expected_alg)._pick_alg(vkeys)
     assert alg == expected_alg
-
-

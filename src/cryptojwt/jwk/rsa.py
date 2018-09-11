@@ -481,12 +481,10 @@ class RSAKey(AsymmetricKey):
             pn2 = other.priv_key.private_numbers()
         except Exception:
             try:
-                cmp_public_numbers(self.pub_key.public_numbers(),
-                                   other.pub_key.public_numbers())
+                return cmp_public_numbers(self.pub_key.public_numbers(),
+                                          other.pub_key.public_numbers())
             except Exception:
                 return False
-            else:
-                return True
         else:
             return cmp_private_numbers(pn1, pn2)
 

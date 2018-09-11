@@ -123,3 +123,6 @@ def test_jwt_pack_and_unpack_with_alg():
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
+
+if __name__ == "__main__":
+    test_jwt_pack_encrypt_no_sign()
