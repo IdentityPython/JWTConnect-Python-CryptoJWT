@@ -2,12 +2,14 @@ import json
 
 from .jwk import keyrep
 from .jwk import jwk_wrap
+from ..exception import HTTPException
 from ..utils import bytes2str_conv
 
 
 class JWKS(object):
     def __init__(self, httpc=None):
         self._keys = []
+        # The http client is expected to behave like requests.request
         self.httpc = httpc
 
     def load_dict(self, dikt):
@@ -61,11 +63,11 @@ class JWKS(object):
         :return: list of keys
         """
 
-        r = self.httpc.get(url, allow_redirects=True, verify=verify)
+        r = self.httpc('GET', url, allow_redirects=True, verify=verify)
         if r.status_code == 200:
             return self.load_jwks(r.text)
         else:
-            raise Exception("HTTP Get error: %s" % r.status_code)
+            raise HTTPException("HTTP Get error: %s" % r.status_code)
 
     def __getitem__(self, item):
         """
@@ -109,20 +111,20 @@ class JWKS(object):
     def wrap_add(self, keyinst, use="", kid=''):
         self._keys.append(jwk_wrap(keyinst, use, kid))
 
-    def as_dict(self):
-        _res = {}
-        for kty, k in [(k.kty, k) for k in self._keys]:
-            if kty not in ["RSA", "EC", "oct"]:
-                if kty in ["rsa", "ec"]:
-                    kty = kty.upper()
-                else:
-                    kty = kty.lower()
-
-            try:
-                _res[kty].append(k)
-            except KeyError:
-                _res[kty] = [k]
-        return _res
+    # def as_dict(self):
+    #     _res = {}
+    #     for kty, k in [(k.kty, k) for k in self._keys]:
+    #         if kty not in ["RSA", "EC", "oct"]:
+    #             if kty in ["rsa", "ec"]:
+    #                 kty = kty.upper()
+    #             else:
+    #                 kty = kty.lower()
+    #
+    #         try:
+    #             _res[kty].append(k)
+    #         except KeyError:
+    #             _res[kty] = [k]
+    #     return _res
 
     def add(self, item, enc="utf-8"):
         self._keys.append(keyrep(item, enc))

@@ -19,17 +19,21 @@ class AsymmetricKey(JWK):
         Make sure there is a key instance present that can be used for
         the specified usage.
         """
-        if usage in ['sign', 'decrypt']:
-            if self.use == USE[usage]:
-                return self.priv_key
-
-        if usage in ['encrypt', 'verify']:
-            if self.use == USE[usage]:
-                return self.pub_key
-            else:
+        try:
+            _use = USE[usage]
+        except KeyError:
+            raise ValueError('Unknown key usage')
+        else:
+            if usage in ['sign', 'decrypt']:
+                if not self.use or _use == self.use:
+                    if self.priv_key:
+                        return self.priv_key
                 raise WrongUsage("This key can't be used for {}".format(usage))
-
-        raise ValueError('Unknown key usage')
+            else:  # has to be one of ['encrypt', 'verify']
+                if not self.use or _use == self.use:
+                    if self.pub_key:
+                        return self.pub_key
+                raise WrongUsage("This key can't be used for {}".format(usage))
 
     def has_private_key(self):
         if self.priv_key:

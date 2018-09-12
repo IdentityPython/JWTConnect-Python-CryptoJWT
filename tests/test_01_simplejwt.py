@@ -1,6 +1,5 @@
 import pytest
 
-from cryptojwt.utils import bytes2str_conv
 from cryptojwt.simple_jwt import SimpleJWT
 
 __author__ = 'roland'
@@ -60,9 +59,5 @@ def test_unpack_str():
 
     _jwt2 = SimpleJWT().unpack(jwt)
     assert _jwt2
-    out_payload = _jwt2.payload()
+    _ = _jwt2.payload()
 
-
-def test_bytes2str_conv_conv_raise_exception_on_bad_value():
-    with pytest.raises(ValueError):
-        bytes2str_conv(object())

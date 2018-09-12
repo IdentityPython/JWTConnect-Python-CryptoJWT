@@ -101,3 +101,8 @@ class UpdateFailed(JWKESTException):
 
 class WrongUsage(JWKESTException):
     pass
+
+
+class HTTPException(JWKESTException):
+    pass
+

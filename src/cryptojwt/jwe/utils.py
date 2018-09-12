@@ -9,8 +9,8 @@ from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.hashes import SHA384
 from cryptography.hazmat.primitives.hashes import SHA512
 
-from .jwenc import JWEnc
 from ..utils import b64e
+
 
 LENMET = {
     32: (16, SHA256),
@@ -41,36 +41,36 @@ def int2big_endian(n):
     return [ord(c) for c in struct.pack('>I', n)]
 
 
-def party_value(pv):
-    if pv:
-        s = b64e(pv)
-        r = int2big_endian(len(s))
-        r.extend(s)
-        return r
-    else:
-        return [0, 0, 0, 0]
+# def party_value(pv):
+#     if pv:
+#         s = b64e(pv)
+#         r = int2big_endian(len(s))
+#         r.extend(s)
+#         return r
+#     else:
+#         return [0, 0, 0, 0]
 
 
-def _hash_input(cmk, enc, label, rond=1, length=128, hashsize=256,
-                epu="", epv=""):
-    r = [0, 0, 0, rond]
-    r.extend(cmk)
-    r.extend([0, 0, 0, length])
-    r.extend([ord(c) for c in enc])
-    r.extend(party_value(epu))
-    r.extend(party_value(epv))
-    r.extend(label)
-    return r
-
-
-def keysize(spec):
-    if spec.startswith("HS"):
-        return int(spec[2:])
-    elif spec.startswith("CS"):
-        return int(spec[2:])
-    elif spec.startswith("A"):
-        return int(spec[1:4])
-    return 0
+# def _hash_input(cmk, enc, label, rond=1, length=128, hashsize=256,
+#                 epu="", epv=""):
+#     r = [0, 0, 0, rond]
+#     r.extend(cmk)
+#     r.extend([0, 0, 0, length])
+#     r.extend([ord(c) for c in enc])
+#     r.extend(party_value(epu))
+#     r.extend(party_value(epv))
+#     r.extend(label)
+#     return r
+#
+#
+# def keysize(spec):
+#     if spec.startswith("HS"):
+#         return int(spec[2:])
+#     elif spec.startswith("CS"):
+#         return int(spec[2:])
+#     elif spec.startswith("A"):
+#         return int(spec[1:4])
+#     return 0
 
 
 def alg2keytype(alg):

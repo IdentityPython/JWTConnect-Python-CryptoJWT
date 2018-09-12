@@ -8,13 +8,14 @@ import pytest
 
 from collections import Counter
 
+import requests
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
 import os.path
 
-from cryptojwt.exception import DeSerializationNotPossible
+from cryptojwt.exception import DeSerializationNotPossible, WrongUsage
 
 from cryptojwt.utils import as_unicode
 from cryptojwt.utils import b64e
@@ -35,7 +36,7 @@ from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.hmac import sha256_digest
 from cryptojwt.jwk.hmac import SYMKey
 
-__author__ = 'rohe0002'
+__author__ = 'Roland Hedberg'
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -443,30 +444,109 @@ def test_encryption_key():
     assert _v == as_unicode(b64e(ek))
 
 
+RSA1 = RSAKey(
+    alg="RS256",
+    e="AQAB",
+    kty="RSA",
+    n="wkpyitec6TgFC5G41RF6jBOZghGVyaHL79CzSjjS9VCkWjpGo2hajOsiJ1RnSoat9XDmQAqiqn18rWx4xa4ErdWVqug88pLxMVmnV9tF10uJNgIi_RSsIQz40J9aKrxOotN6Mnq454BpanAxbrbC5hLlp-PIGgmWzUDNwCSfnWBjd0yGwdYKVB6d-SGNfLvdMUhFiYIX0POUnJDNl_j3kLYQ0peYRbunyQzST5nLPOItePCuZ12G5e0Eo1meSF1Md3IkuY8paqKk-vsWrT22X7CUV3HZow06ogRcFMMzvooE7yDqS53I_onsUrqgQ2aUnoo8OaD0eLlEWdaTyeNAIw",
+    use="sig"
+)
+
+RSA2 = RSAKey(
+    n="pKXuY5tuT9ibmEcq4B6VRx3MafdSsajrOndAk5FjJFedlA6qSpdqDUr9wWUkNeO8h_efdLfg43CHXk3mH6Fp1t2gbHzBQ4-SzT3_X5tsdG2PPqvngem7f5NHO6Kefhq11Zk5q4-FyTL9FUQQW6ZANbrU7GifSAs82Ck20ciIvFdv7cPCphk_THMVv14aW5w0eKEXumgx4Bc7HrQFXQUHSze3dVAKg8hKHDIQOGUU0fkolEFmOC4Gb-G57RpBJryZxXqgdUdEG66xl1f37tqpYgaLViFDWDiI8S7BMVHEbGHN4-f_MD9f6gMduaxrL6a6SfyIW1So2VqtvlAyanesTw",
+    kid="gtH4v3Yr2QqLreBSz0ByQQ8vkf8eFo1KIit3s-3Bbww",
+    use="enc",
+    e="AQAB",
+    kty="RSA"
+)
+
+RSA3 = RSAKey(
+    n="pKXuY5tuT9ibmEcq4B6VRx3MafdSsajrOndAk5FjJFedlA6qSpdqDUr9wWUkNeO8h_efdLfg43CHXk3mH6Fp1t2gbHzBQ4-SzT3_X5tsdG2PPqvngem7f5NHO6Kefhq11Zk5q4-FyTL9FUQQW6ZANbrU7GifSAs82Ck20ciIvFdv7cPCphk_THMVv14aW5w0eKEXumgx4Bc7HrQFXQUHSze3dVAKg8hKHDIQOGUU0fkolEFmOC4Gb-G57RpBJryZxXqgdUdEG66xl1f37tqpYgaLViFDWDiI8S7BMVHEbGHN4-f_MD9f6gMduaxrL6a6SfyIW1So2VqtvlAyanesTw",
+    use="enc",
+    e="AQAB",
+    kty="RSA"
+)
+
+
 def test_equal():
-    rsa1 = RSAKey(
-        alg="RS256",
-        e="AQAB",
-        kty="RSA",
-        n="wkpyitec6TgFC5G41RF6jBOZghGVyaHL79CzSjjS9VCkWjpGo2hajOsiJ1RnSoat9XDmQAqiqn18rWx4xa4ErdWVqug88pLxMVmnV9tF10uJNgIi_RSsIQz40J9aKrxOotN6Mnq454BpanAxbrbC5hLlp-PIGgmWzUDNwCSfnWBjd0yGwdYKVB6d-SGNfLvdMUhFiYIX0POUnJDNl_j3kLYQ0peYRbunyQzST5nLPOItePCuZ12G5e0Eo1meSF1Md3IkuY8paqKk-vsWrT22X7CUV3HZow06ogRcFMMzvooE7yDqS53I_onsUrqgQ2aUnoo8OaD0eLlEWdaTyeNAIw",
-        use="sig"
-    )
+    assert RSA1 == RSA1
+    assert RSA1 != RSA2
+    assert RSA2 == RSA3
 
-    rsa2 = RSAKey(
-        n="pKXuY5tuT9ibmEcq4B6VRx3MafdSsajrOndAk5FjJFedlA6qSpdqDUr9wWUkNeO8h_efdLfg43CHXk3mH6Fp1t2gbHzBQ4-SzT3_X5tsdG2PPqvngem7f5NHO6Kefhq11Zk5q4-FyTL9FUQQW6ZANbrU7GifSAs82Ck20ciIvFdv7cPCphk_THMVv14aW5w0eKEXumgx4Bc7HrQFXQUHSze3dVAKg8hKHDIQOGUU0fkolEFmOC4Gb-G57RpBJryZxXqgdUdEG66xl1f37tqpYgaLViFDWDiI8S7BMVHEbGHN4-f_MD9f6gMduaxrL6a6SfyIW1So2VqtvlAyanesTw",
-        kid="gtH4v3Yr2QqLreBSz0ByQQ8vkf8eFo1KIit3s-3Bbww",
-        use="enc",
-        e="AQAB",
-        kty="RSA"
-    )
 
-    rsa3 = RSAKey(
-        n="pKXuY5tuT9ibmEcq4B6VRx3MafdSsajrOndAk5FjJFedlA6qSpdqDUr9wWUkNeO8h_efdLfg43CHXk3mH6Fp1t2gbHzBQ4-SzT3_X5tsdG2PPqvngem7f5NHO6Kefhq11Zk5q4-FyTL9FUQQW6ZANbrU7GifSAs82Ck20ciIvFdv7cPCphk_THMVv14aW5w0eKEXumgx4Bc7HrQFXQUHSze3dVAKg8hKHDIQOGUU0fkolEFmOC4Gb-G57RpBJryZxXqgdUdEG66xl1f37tqpYgaLViFDWDiI8S7BMVHEbGHN4-f_MD9f6gMduaxrL6a6SfyIW1So2VqtvlAyanesTw",
-        use="enc",
-        e="AQAB",
-        kty="RSA"
-    )
+def test_get_asym_key_for_verify():
+    assert RSA1.get_key_for_usage('verify')
 
-    assert rsa1 == rsa1
-    assert rsa1 != rsa2
-    assert rsa2 == rsa3
+
+def test_get_asym_key_for_encrypt():
+    assert RSA2.get_key_for_usage('encrypt')
+
+
+def test_get_asym_key_all():
+    # When not marked for a special usage this key can be use for everything
+    rsakey = RSAKey(
+        priv_key=import_private_rsa_key_from_file(full_path("rsa.key")))
+    assert rsakey.get_key_for_usage('sign')
+    assert rsakey.get_key_for_usage('verify')
+    assert rsakey.get_key_for_usage('encrypt')
+    assert rsakey.get_key_for_usage('decrypt')
+
+    rsakey.use = 'sig'
+    # Now it can only be used for signing and signature verification
+    assert rsakey.get_key_for_usage('sign')
+    assert rsakey.get_key_for_usage('verify')
+    for usage in ['encrypt','decrypt']:
+        with pytest.raises(WrongUsage):
+            rsakey.get_key_for_usage(usage)
+
+    rsakey.use = 'enc'
+    # Now it can only be used for encrypting and decrypting
+    assert rsakey.get_key_for_usage('encrypt')
+    assert rsakey.get_key_for_usage('decrypt')
+    for usage in ['sign','verify']:
+        with pytest.raises(WrongUsage):
+            rsakey.get_key_for_usage(usage)
+
+
+def test_get_asym_key_for_unknown_usage():
+    with pytest.raises(ValueError):
+        RSA1.get_key_for_usage('binding')
+
+
+def test_get_hmac_key_for_verify():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='sig')
+    assert key.get_key_for_usage('verify')
+
+
+def test_get_hmac_key_for_encrypt():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
+    assert key.get_key_for_usage('encrypt')
+
+
+def test_get_hmac_key_for_verify_fail():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
+    with pytest.raises(WrongUsage):
+        key.get_key_for_usage('verify')
+
+
+def test_get_hmac_key_for_encrypt_fail():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='sig')
+    with pytest.raises(WrongUsage):
+        key.get_key_for_usage('encrypt')
+
+
+def test_get_hmac_key_for_encrypt_HS384():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
+    assert key.get_key_for_usage('encrypt', 'HS384')
+
+
+def test_get_hmac_key_for_encrypt_HS512():
+    key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
+    assert key.get_key_for_usage('encrypt', 'HS512')
+
+
+@pytest.mark.network
+def test_jwks_url():
+    keys = JWKS(httpc=requests.request)
+    keys.load_from_url('https://login.salesforce.com/id/keys')
+    assert len(keys)

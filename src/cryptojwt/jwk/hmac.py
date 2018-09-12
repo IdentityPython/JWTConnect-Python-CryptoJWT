@@ -68,15 +68,23 @@ class SYMKey(JWK):
             self.deserialize()
         return self.key
 
-    def get_key_for_usage(self, usage):
+    def get_key_for_usage(self, usage, alg='HS256'):
         """
         Make sure there is a key instance present that can be used for
         the specified usage.
         """
-        if self.use == USE[usage]:
-            return self.key
+        try:
+            _use = USE[usage]
+        except:
+            raise ValueError('Unknown key usage')
+        else:
+            if not self.use or self.use == _use:
+                if _use == 'sig':
+                    return self.get_key()
+                else:
+                    return self.encryption_key(alg)
 
-        raise WrongUsage("This key can't be used for {}".format(usage))
+            raise WrongUsage("This key can't be used for {}".format(usage))
 
     def encryption_key(self, alg, **kwargs):
         """
