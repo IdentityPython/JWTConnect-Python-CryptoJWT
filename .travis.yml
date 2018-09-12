@@ -2,18 +2,14 @@ language: python
 
 sudo: false
 
-python: 3.6
-
-addons:
-  apt:
-    packages:
-    - libffi-dev
+python:
+  - "3.5"
+  - "3.6"
 
 install:
   - pip install tox
 
 env:
-   - TOXENV=py36
    - TOXENV=quality
    - TOXENV=docs
 

@@ -1,7 +1,7 @@
 import pytest
 
-from cryptojwt import bytes2str_conv
-from cryptojwt import SimpleJWT
+from cryptojwt.utils import bytes2str_conv
+from cryptojwt.simple_jwt import SimpleJWT
 
 __author__ = 'roland'
 
