@@ -3,6 +3,7 @@ from __future__ import print_function
 import json
 import os.path
 
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -337,11 +338,16 @@ def test_jws_2():
     assert _jws2.key == key
 
 
-def test_signer_es256():
+@pytest.mark.parametrize("ec_func,alg", [
+    (ec.SECP256R1, "ES256"),
+    (ec.SECP384R1, "ES384"),
+    (ec.SECP521R1, "ES512"),
+])
+def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(ec_func(), default_backend())
     keys = [ECKey().load_key(eck)]
-    _jws = JWS(payload, alg="ES256")
+    _jws = JWS(payload, alg=alg)
     _jwt = _jws.sign_compact(keys)
 
     _pubkey = ECKey().load_key(eck.public_key())
@@ -363,33 +369,6 @@ def test_signer_es256_verbose():
     info = _rj.verify_compact_verbose(_jwt, [_pubkey])
     assert info['msg'] == payload
     assert info['key'] == _pubkey
-
-
-def test_signer_es384():
-    payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP384R1(), default_backend())
-    _key = ECKey().load_key(eck)
-    keys = [_key]
-    _jws = JWS(payload, alg="ES384")
-    _jwt = _jws.sign_compact(keys)
-
-    _pubkey = ECKey().load_key(eck.public_key())
-    _rj = JWS()
-    info = _rj.verify_compact(_jwt, [_pubkey])
-    assert info == payload
-
-
-def test_signer_es512():
-    payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP521R1(), default_backend())
-    _key = ECKey().load_key(eck)
-    _jws = JWS(payload, alg="ES512")
-    _jwt = _jws.sign_compact([_key])
-
-    _pubkey = ECKey().load_key(eck.public_key())
-    _rj = JWS()
-    info = _rj.verify_compact(_jwt, [_pubkey])
-    assert info == payload
 
 
 def test_signer_ps256():
