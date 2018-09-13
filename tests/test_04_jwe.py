@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 from cryptojwt.utils import b64e
 
-from cryptojwt.jwe.aes import AES_GCMEncrypter
+from cryptojwt.jwe.aes import AES_GCMEncrypter, AES_CBCEncrypter
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwe.jwe import factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
@@ -125,9 +125,18 @@ def test_aesgcm_bit_length():
     encrypter = AES_GCMEncrypter(bit_length=192)
     enc_msg = encrypter.encrypt(b'Murder must advertise.',
                                 b'Dorothy L. Sayers')
-    ctx,tag = split_ctx_and_tag(enc_msg)
+    ctx, tag = split_ctx_and_tag(enc_msg)
     _msg = encrypter.decrypt(ctx, iv=b'Dorothy L. Sayers',tag=tag)
     assert _msg == b'Murder must advertise.'
+
+
+def test_aes_cbc():
+    encrypter = AES_CBCEncrypter()
+    orig_msg = b'Murder must advertise.'
+    iv = b'Dorothy L Sayers'
+    ctx, tag = encrypter.encrypt(orig_msg, iv)
+    _msg = encrypter.decrypt(ctx, iv=iv, tag=tag)
+    assert _msg == orig_msg
 
 # def test_jwe_09_a3():
 #     # Example JWE using AES Key Wrap for key encryption and
