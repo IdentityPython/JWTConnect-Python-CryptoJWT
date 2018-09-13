@@ -1,9 +1,13 @@
 import json
 import logging
 
+import requests
+
 from .jwk.jwk import keyrep
 from .jwk.jwks import JWKS
+from .jwk.rsa import import_rsa_key
 from .jwk.rsa import load_x509_cert
+from .jwk.rsa import RSAKey
 from .exception import HeaderError
 from .utils import b64d
 
@@ -40,20 +44,25 @@ class JWx(object):
     :return: A class instance
     """
 
-    def __init__(self, msg=None, with_digest=False, **kwargs):
+    def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
         self.msg = msg
 
         self._dict = {}
         self.with_digest = with_digest
+        if httpc:
+            self.httpc = httpc
+        else:
+            self.httpc = requests.request
+
         self.jwt = None
+        self._jwk = None
+        self._jwks = None
 
         if kwargs:
             for key in self.args:
                 try:
                     _val = kwargs[key]
                 except KeyError:
-                    if key == "alg":
-                        self._dict[key] = "none"
                     continue
 
                 if key == "jwk":
@@ -62,9 +71,24 @@ class JWx(object):
                     elif isinstance(_val, str):
                         self._dict["jwk"] = keyrep(json.loads(_val))
                     else:
-                        self._dict["jwk"] = _val
-                elif key == "x5c" or key == "crit":
-                    self._dict["x5c"] = _val or []
+                        raise ValueError(
+                            'JWK must be a string or a JSON object')
+                    self._jwk = self._dict['jwk']
+                elif key == "x5c":
+                    self._dict["x5c"] = _val
+                    _pub_key = import_rsa_key(_val)
+                    self._jwk = RSAKey(_pub_key)
+                elif key == "jku":
+                    self._jwks = JWKS(httpc=self.httpc)
+                    self._jwks.load_from_url(_val)
+                    self._dict['jku'] = _val
+                elif "x5u" in self:
+                    try:
+                        _spec = load_x509_cert(self["x5u"], self.httpc, {})
+                        self._jwk = RSAKey(pub_key=_spec['rsa'])
+                    except Exception:
+                        # ca_chain = load_x509_cert_chain(self["x5u"])
+                        pass
                 else:
                     self._dict[key] = _val
 
@@ -114,20 +138,12 @@ class JWx(object):
         logger.debug("_get_keys(): self._dict.keys={0}".format(
             self._dict.keys()))
 
-        if "jwk" in self:
-            return [self["jwk"]]
-        elif "jku" in self:
-            keys = JWKS()
-            keys.load_from_url(self["jku"])
-            return keys.as_dict()
-        elif "x5u" in self:
-            try:
-                return load_x509_cert(self["x5u"])
-            except Exception:
-                # ca_chain = load_x509_cert_chain(self["x5u"])
-                pass
-
-        return {}
+        _keys = []
+        if self._jwk:
+            _keys.append(self._jwk)
+        if self._jwks:
+            _keys.extend(self._jwks.keys())
+        return _keys
 
     def alg2keytype(self, alg):
         raise NotImplemented()

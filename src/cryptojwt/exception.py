@@ -67,7 +67,7 @@ class HeaderError(JWKESTException):
     pass
 
 
-class UnSupported(JWKESTException):
+class Unsupported(JWKESTException):
     pass
 
 

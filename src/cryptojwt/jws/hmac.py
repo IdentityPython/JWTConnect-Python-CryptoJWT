@@ -6,10 +6,7 @@ from cryptography.hazmat.backends import default_backend
 
 from . import Signer
 
-from ..exception import UnSupported
-from ..exception import BadSignature
-from ..utils import safe_str_cmp
-from ..utils import constant_time_compare
+from ..exception import Unsupported
 
 
 class HMACSigner(Signer):
@@ -21,7 +18,7 @@ class HMACSigner(Signer):
         elif algorithm == 'SHA512':
             self.algorithm = hashes.SHA512
         else:
-            raise UnSupported('algorithm: {}'.format(algorithm))
+            raise Unsupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
         h = hmac.HMAC(key, self.algorithm(), default_backend())

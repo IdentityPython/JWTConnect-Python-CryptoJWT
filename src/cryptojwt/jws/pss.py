@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives.asymmetric import utils
 
 from . import Signer
 
-from ..exception import UnSupported
+from ..exception import Unsupported
 from ..exception import BadSignature
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ class PSSSigner(Signer):
         elif algorithm == 'SHA512':
             self.hash_algorithm = hashes.SHA512
         else:
-            raise UnSupported('algorithm: {}'.format(algorithm))
+            raise Unsupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
         hasher = hashes.Hash(self.hash_algorithm(), backend=default_backend())

@@ -8,7 +8,7 @@ from cryptography.utils import int_to_bytes
 
 from . import Signer
 
-from ..exception import UnSupported, UnsupportedAlgorithm
+from ..exception import Unsupported
 from ..exception import BadSignature
 
 
@@ -24,7 +24,7 @@ class ECDSASigner(Signer):
             self.hash_algorithm = hashes.SHA512
             self.curve_name = "secp521r1"
         else:
-            raise UnSupported('algorithm: {}'.format(algorithm))
+            raise Unsupported('algorithm: {}'.format(algorithm))
 
         self.algorithm = algorithm
 

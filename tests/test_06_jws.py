@@ -7,11 +7,16 @@ import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from cryptojwt.jws.exception import FormatError
+from cryptojwt.jws.exception import NoSuitableSigningKeys
+from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash
 from cryptojwt.utils import b64d_enc_dec, intarr2bin
 from cryptojwt.utils import b64d
 from cryptojwt.utils import b64e
-from cryptojwt.exception import WrongNumberOfParts, BadSignature
+from cryptojwt.exception import BadSignature
+from cryptojwt.exception import UnknownAlgorithm
+from cryptojwt.exception import WrongNumberOfParts
 
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
@@ -300,6 +305,7 @@ def test_a_1_3a():
 
     # keycol = {"hmac": cryptojwt.intarr2bin(HMAC_KEY)}
     jwt = JWSig().unpack(_jwt)
+    assert jwt.valid()
 
     hmac = intarr2bin(HMAC_KEY)
     signer = SIGNER_ALGS["HS256"]
@@ -690,3 +696,34 @@ def test_pick_alg_dont_get_alg_from_single_key_if_already_specified():
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
     alg = JWS(alg=expected_alg)._pick_alg(vkeys)
     assert alg == expected_alg
+
+
+def test_alg_keys_no_keys():
+    jws = JWS(kid='abc1', alg='RS256')
+    with pytest.raises(NoSuitableSigningKeys):
+        jws.alg_keys(None, 'sig')
+
+    jws = JWS(alg='RS256')
+    with pytest.raises(NoSuitableSigningKeys):
+        jws.alg_keys(None, 'sig')
+
+
+def test_unknown_alg():
+    jws = JWS(msg="Please take a moment to register today",
+              jwk=JWKS_b['keys'][0],
+              alg='RS768')
+
+    with pytest.raises(UnknownAlgorithm):
+        jws.sign_compact()
+
+
+def test_missing_payload():
+    jws = JWS()
+    with pytest.raises(FormatError):
+        jws.verify_json('{"foo":"bar"}')
+
+
+def test_rsasigner_wrong_key_variant():
+    _pkey = import_private_rsa_key_from_file(PRIV_KEY)
+    with pytest.raises(TypeError):
+        RSASigner().sign(b'Message to whom it may concern', _pkey.public_key)

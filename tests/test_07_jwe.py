@@ -4,12 +4,18 @@ import os
 import sys
 import array
 
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptojwt.exception import MissingKey
+from cryptojwt.exception import Unsupported
+from cryptojwt.exception import VerificationError
+from cryptojwt.jwe.exception import UnsupportedBitLength
 
 from cryptojwt.utils import b64e
 
-from cryptojwt.jwe.aes import AES_GCMEncrypter, AES_CBCEncrypter
+from cryptojwt.jwe.aes import AES_CBCEncrypter
+from cryptojwt.jwe.aes import AES_GCMEncrypter
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwe.jwe import factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
@@ -130,6 +136,31 @@ def test_aesgcm_bit_length():
     assert _msg == b'Murder must advertise.'
 
 
+def test_aesgcm_unsupported_bit_length():
+    with pytest.raises(UnsupportedBitLength):
+        AES_GCMEncrypter(bit_length=164)
+
+
+def test_aesgcm_no_key_or_bit_length():
+    with pytest.raises(ValueError):
+        AES_GCMEncrypter()
+
+
+def test_aesgcm_missing_iv_on_encrypt():
+    encrypter = AES_GCMEncrypter(bit_length=192)
+    with pytest.raises(ValueError):
+        encrypter.encrypt(b'Murder must advertise.')
+
+
+def test_aesgcm_missing_iv_on_decrypt():
+    encrypter = AES_GCMEncrypter(bit_length=192)
+    enc_msg = encrypter.encrypt(b'Murder must advertise.',
+                                b'Dorothy L. Sayers')
+    ctx, tag = split_ctx_and_tag(enc_msg)
+    with pytest.raises(ValueError):
+        encrypter.decrypt(ctx, tag=tag)
+
+
 def test_aes_cbc():
     encrypter = AES_CBCEncrypter()
     orig_msg = b'Murder must advertise.'
@@ -137,6 +168,37 @@ def test_aes_cbc():
     ctx, tag = encrypter.encrypt(orig_msg, iv)
     _msg = encrypter.decrypt(ctx, iv=iv, tag=tag)
     assert _msg == orig_msg
+
+
+def test_aes_cbc_unsupported_padding():
+    with pytest.raises(Unsupported):
+        AES_CBCEncrypter(msg_padding='ABC')
+
+
+def test_aes_cbc_no_iv():
+    encrypter = AES_CBCEncrypter()
+    orig_msg = b'Murder must advertise.'
+    ctx, tag = encrypter.encrypt(orig_msg)
+    _msg = encrypter.decrypt(ctx, iv=encrypter.iv, tag=tag)
+    assert _msg == orig_msg
+
+
+def test_aes_cbc_wrong_tag():
+    encrypter = AES_CBCEncrypter()
+    orig_msg = b'Murder must advertise.'
+    ctx, tag = encrypter.encrypt(orig_msg)
+    with pytest.raises(VerificationError):
+        encrypter.decrypt(ctx, iv=encrypter.iv, tag=b'12346567890')
+
+
+def test_aes_cbc_missing_decrypt_key():
+    encrypter = AES_CBCEncrypter()
+    orig_msg = b'Murder must advertise.'
+    ctx, tag = encrypter.encrypt(orig_msg)
+    encrypter.key = None
+    with pytest.raises(MissingKey):
+        encrypter.decrypt(ctx, iv=encrypter.iv, tag=b'12346567890')
+
 
 # def test_jwe_09_a3():
 #     # Example JWE using AES Key Wrap for key encryption and

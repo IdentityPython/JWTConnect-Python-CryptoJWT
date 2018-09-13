@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.ciphers import modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.padding import PKCS7
 
-from ..exception import VerificationError
+from ..exception import VerificationError, Unsupported, MissingKey
 from .exception import UnsupportedBitLength
 
 from . import Encrypter
@@ -30,6 +30,10 @@ class AES_CBCEncrypter(Encrypter):
         if msg_padding == 'PKCS7':
             self.padder = PKCS7(128).padder()
             self.unpadder = PKCS7(128).unpadder()
+        else:
+            raise Unsupported("Message padding: {}".format(msg_padding))
+
+        self.iv = None
 
     def _mac(self, hash_key, hash_func, auth_data, iv, enc_msg, key_len):
         al = pack("!Q", 8 * len(auth_data))
@@ -44,6 +48,9 @@ class AES_CBCEncrypter(Encrypter):
     def encrypt(self, msg, iv='', auth_data=b''):
         if not iv:
             iv = os.urandom(16)
+            self.iv = iv
+        else:
+            self.iv = iv
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key,
                                                                      iv)
@@ -61,7 +68,10 @@ class AES_CBCEncrypter(Encrypter):
 
     def decrypt(self, msg, iv='', auth_data=b'', tag=b'', key=None):
         if key is None:
-            key = self.key
+            if self.key:
+                key = self.key
+            else:
+                raise MissingKey('No available key')
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(key, iv)
 
@@ -90,6 +100,8 @@ class AES_GCMEncrypter(Encrypter):
                 raise UnsupportedBitLength(bit_length)
 
             self.key = AESGCM(AESGCM.generate_key(bit_length=bit_length))
+        else:
+            raise ValueError('Need key or key bit length')
 
     def encrypt(self, msg, iv='', auth_data=None):
         """
