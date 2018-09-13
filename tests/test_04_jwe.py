@@ -121,6 +121,14 @@ def sha256_digest(msg):
     return hashlib.sha256(msg).digest()
 
 
+def test_aesgcm_bit_length():
+    encrypter = AES_GCMEncrypter(bit_length=192)
+    enc_msg = encrypter.encrypt(b'Murder must advertise.',
+                                b'Dorothy L. Sayers')
+    ctx,tag = split_ctx_and_tag(enc_msg)
+    _msg = encrypter.decrypt(ctx, iv=b'Dorothy L. Sayers',tag=tag)
+    assert _msg == b'Murder must advertise.'
+
 # def test_jwe_09_a3():
 #     # Example JWE using AES Key Wrap for key encryption and
 #     # AES_128_CBC_HMAC_SHA_256 for content encryption

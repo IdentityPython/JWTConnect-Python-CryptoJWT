@@ -89,7 +89,7 @@ class AES_GCMEncrypter(Encrypter):
             if bit_length not in [128, 192, 256]:
                 raise UnsupportedBitLength(bit_length)
 
-            self.key = AESGCM.generate_key(bit_length=bit_length)
+            self.key = AESGCM(AESGCM.generate_key(bit_length=bit_length))
 
     def encrypt(self, msg, iv='', auth_data=None):
         """
