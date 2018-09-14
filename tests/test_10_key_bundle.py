@@ -21,6 +21,13 @@ __author__ = 'Roland Hedberg'
 BASE_PATH = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "test_keys"))
 
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def full_path(local_file):
+    return os.path.join(BASEDIR, local_file)
+
+
 RSAKEY = os.path.join(BASE_PATH, "cert.key")
 RSA0 = os.path.join(BASE_PATH, "rsa.key")
 
@@ -445,3 +452,16 @@ def test_copy():
     kbc = kb.copy()
     assert len(kbc.keys()) == 2
     assert len(kbc.active_keys()) == 1
+
+
+def test_local_jwk():
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path))
+    assert kb
+
+
+def test_local_jwk_copy():
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path))
+    kb2 = kb.copy()
+    assert kb2.source == kb.source

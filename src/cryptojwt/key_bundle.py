@@ -71,13 +71,7 @@ def create_and_store_rsa_key_pair(name="oidcmsg", path=".", size=2048, use=''):
     key = generate_private_key(public_exponent=65537, key_size=size,
                                backend=default_backend())
 
-    if sys.version_info[0] > 2:
-        os.makedirs(path, exist_ok=True)
-    else:
-        try:
-            os.makedirs(path)
-        except OSError:  # assume this is because it already exists
-            pass
+    os.makedirs(path, exist_ok=True)
 
     if name:
         if use:
@@ -239,7 +233,7 @@ class KeyBundle(object):
             try:
                 _usage = harmonize_usage(inst['use'])
             except KeyError:
-                _usage = ['sig', 'enc']
+                _usage = ['']
             else:
                 del inst['use']
 
@@ -266,14 +260,13 @@ class KeyBundle(object):
          
         :param filename: 
         """
-        try:
-            self.do_keys(json.loads(open(filename).read())["keys"])
-        except KeyError:
-            logger.error("Now 'keys' keyword in JWKS")
-            raise UpdateFailed(
-                "Local key update from '{}' failed.".format(filename))
+        _info = json.loads(open(filename).read())
+        if 'keys' in _info:
+            self.do_keys(_info["keys"])
         else:
-            self.last_updated = time.time()
+            self.do_keys([_info])
+
+        self.last_updated = time.time()
 
     def do_local_der(self, filename, keytype, keyusage=None):
         """
@@ -307,8 +300,6 @@ class KeyBundle(object):
         :return: True or False if load was successful        
         """
         args = {"verify": self.verify_ssl}
-        if self.etag:
-            args["headers"] = {"If-None-Match": self.etag}
 
         try:
             logging.debug('KeyBundle fetch keys from: {}'.format(self.source))
@@ -318,17 +309,7 @@ class KeyBundle(object):
             raise UpdateFailed(
                 REMOTE_FAILED.format(self.source, str(err)))
 
-        if r.status_code == 304:  # file has not changed
-            self.time_out = time.time() + self.cache_time
-            self.last_updated = time.time()
-            try:
-                self.do_keys(self.imp_jwks["keys"])
-            except KeyError:
-                logger.error("No 'keys' keyword in JWKS")
-                raise UpdateFailed("No 'keys' keyword in JWKS")
-            else:
-                return False
-        elif r.status_code == 200:  # New content
+        if r.status_code == 200:  # New content
             self.time_out = time.time() + self.cache_time
 
             self.imp_jwks = self._parse_remote_response(r)
@@ -343,10 +324,6 @@ class KeyBundle(object):
                 logger.error("No 'keys' keyword in JWKS")
                 raise UpdateFailed(MALFORMED.format(self.source))
 
-            try:
-                self.etag = r.headers["Etag"]
-            except KeyError:
-                pass
         else:
             raise UpdateFailed(
                 REMOTE_FAILED.format(self.source, r.status_code))

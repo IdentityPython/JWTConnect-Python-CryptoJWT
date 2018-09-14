@@ -68,7 +68,7 @@ class SYMKey(JWK):
             self.deserialize()
         return self.key
 
-    def get_key_for_usage(self, usage, alg='HS256'):
+    def appropriate_for(self, usage, alg='HS256'):
         """
         Make sure there is a key instance present that can be used for
         the specified usage.

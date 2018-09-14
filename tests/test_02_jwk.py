@@ -475,74 +475,72 @@ def test_equal():
 
 
 def test_get_asym_key_for_verify():
-    assert RSA1.get_key_for_usage('verify')
+    assert RSA1.appropriate_for('verify')
 
 
 def test_get_asym_key_for_encrypt():
-    assert RSA2.get_key_for_usage('encrypt')
+    assert RSA2.appropriate_for('encrypt')
 
 
 def test_get_asym_key_all():
     # When not marked for a special usage this key can be use for everything
     rsakey = RSAKey(
         priv_key=import_private_rsa_key_from_file(full_path("rsa.key")))
-    assert rsakey.get_key_for_usage('sign')
-    assert rsakey.get_key_for_usage('verify')
-    assert rsakey.get_key_for_usage('encrypt')
-    assert rsakey.get_key_for_usage('decrypt')
+    assert rsakey.appropriate_for('sign')
+    assert rsakey.appropriate_for('verify')
+    assert rsakey.appropriate_for('encrypt')
+    assert rsakey.appropriate_for('decrypt')
 
     rsakey.use = 'sig'
     # Now it can only be used for signing and signature verification
-    assert rsakey.get_key_for_usage('sign')
-    assert rsakey.get_key_for_usage('verify')
+    assert rsakey.appropriate_for('sign')
+    assert rsakey.appropriate_for('verify')
     for usage in ['encrypt','decrypt']:
-        with pytest.raises(WrongUsage):
-            rsakey.get_key_for_usage(usage)
+        assert rsakey.appropriate_for(usage) is None
 
     rsakey.use = 'enc'
     # Now it can only be used for encrypting and decrypting
-    assert rsakey.get_key_for_usage('encrypt')
-    assert rsakey.get_key_for_usage('decrypt')
+    assert rsakey.appropriate_for('encrypt')
+    assert rsakey.appropriate_for('decrypt')
     for usage in ['sign','verify']:
-        with pytest.raises(WrongUsage):
-            rsakey.get_key_for_usage(usage)
+        assert rsakey.appropriate_for(usage) is None
 
 
 def test_get_asym_key_for_unknown_usage():
     with pytest.raises(ValueError):
-        RSA1.get_key_for_usage('binding')
+        RSA1.appropriate_for('binding')
 
 
 def test_get_hmac_key_for_verify():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='sig')
-    assert key.get_key_for_usage('verify')
+    assert key.appropriate_for('verify')
 
 
 def test_get_hmac_key_for_encrypt():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
-    assert key.get_key_for_usage('encrypt')
+    assert key.appropriate_for('encrypt')
 
 
 def test_get_hmac_key_for_verify_fail():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
     with pytest.raises(WrongUsage):
-        key.get_key_for_usage('verify')
+        key.appropriate_for('verify')
 
 
 def test_get_hmac_key_for_encrypt_fail():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='sig')
     with pytest.raises(WrongUsage):
-        key.get_key_for_usage('encrypt')
+        key.appropriate_for('encrypt')
 
 
 def test_get_hmac_key_for_encrypt_HS384():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
-    assert key.get_key_for_usage('encrypt', 'HS384')
+    assert key.appropriate_for('encrypt', 'HS384')
 
 
 def test_get_hmac_key_for_encrypt_HS512():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
-    assert key.get_key_for_usage('encrypt', 'HS512')
+    assert key.appropriate_for('encrypt', 'HS512')
 
 
 @pytest.mark.network

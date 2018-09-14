@@ -1,6 +1,5 @@
 from . import JWK
 from . import USE
-from ..exception import WrongUsage
 
 
 class AsymmetricKey(JWK):
@@ -14,10 +13,15 @@ class AsymmetricKey(JWK):
         self.pub_key = pub_key
         self.priv_key = priv_key
 
-    def get_key_for_usage(self, usage):
+    def appropriate_for(self, usage, **kwargs):
         """
         Make sure there is a key instance present that can be used for
         the specified usage.
+
+        :param usage: Usage specification, one of [sign, verify, decrypt,
+            encrypt]
+        :param kwargs: Extra keyword arguments
+        :return: Suitable key or None
         """
         try:
             _use = USE[usage]
@@ -28,12 +32,12 @@ class AsymmetricKey(JWK):
                 if not self.use or _use == self.use:
                     if self.priv_key:
                         return self.priv_key
-                raise WrongUsage("This key can't be used for {}".format(usage))
+                return None
             else:  # has to be one of ['encrypt', 'verify']
                 if not self.use or _use == self.use:
                     if self.pub_key:
                         return self.pub_key
-                raise WrongUsage("This key can't be used for {}".format(usage))
+                return None
 
     def has_private_key(self):
         if self.priv_key:

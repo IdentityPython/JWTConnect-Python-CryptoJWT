@@ -25,11 +25,6 @@ MALFORMED = "Remote key update from {} failed, malformed JWKS."
 logger = logging.getLogger(__name__)
 
 
-def raise_exception(excep, descr, error='service_error'):
-    _err = json.dumps({'error': error, 'error_description': descr})
-    raise excep(_err, 'application/json')
-
-
 class KeyIOError(Exception):
     pass
 
@@ -305,7 +300,7 @@ class KeyJar(object):
 
         :return: A list of entity IDs
         """
-        return self.issuer_keys.keys()
+        return list(self.issuer_keys.keys())
 
     def match_owner(self, url):
         """
@@ -316,10 +311,10 @@ class KeyJar(object):
         :return:
         """
         for owner in self.issuer_keys.keys():
-            if url.startswith(owner):
+            if owner.startswith(url):
                 return owner
 
-        raise KeyIOError("No keys for '%s'" % url)
+        raise KeyError("No keys for '{}' in this keyjar".format(url))
 
     def __str__(self):
         _res = {}
@@ -328,7 +323,7 @@ class KeyJar(object):
             for kb in kbs:
                 _l.extend(json.loads(kb.jwks())["keys"])
             _res[_id] = {"keys": _l}
-        return "%s" % (_res,)
+        return json.dumps(_res)
 
     def load_keys(self, issuer, jwks_uri='', jwks=None, replace=False):
         """
@@ -351,12 +346,9 @@ class KeyJar(object):
             self.add_url(issuer, jwks_uri)
         elif jwks:
             # jwks should only be considered if no jwks_uri is present
-            try:
-                _keys = jwks["keys"]
-                self.issuer_keys[issuer].append(
-                    self.keybundle_cls(_keys, verify_ssl=self.verify_ssl))
-            except KeyError:
-                pass
+            _keys = jwks["keys"]
+            self.issuer_keys[issuer].append(
+                self.keybundle_cls(_keys, verify_ssl=self.verify_ssl))
 
     def find(self, source, issuer):
         """
@@ -372,6 +364,8 @@ class KeyJar(object):
                     return kb
         except KeyError:
             return None
+
+        return None
 
     def export_jwks(self, private=False, issuer=""):
         """
@@ -536,7 +530,29 @@ class KeyJar(object):
             _kid = ''
 
         keys = self.get(key_use='enc', owner='', key_type=_key_type)
-        keys = self._add_key(keys, '', 'enc', _key_type, _kid, {'': None})
+        _payload = jwt.payload()
+
+        try:
+            _aud = _payload['aud']
+        except KeyError:
+            try:
+                _aud = kwargs['aud']
+            except KeyError:
+                _aud = ''
+
+        if _aud:
+            try:
+                allow_missing_kid = kwargs['allow_missing_kid']
+            except KeyError:
+                allow_missing_kid = False
+
+            try:
+                nki = kwargs['no_kid_issuer']
+            except KeyError:
+                nki = {}
+
+            keys = self._add_key(keys, _aud, 'enc', _key_type, _kid, nki,
+                                 allow_missing_kid)
 
         # Only want the appropriate keys.
         keys = [k for k in keys if k.appropriate_for('decrypt')]
@@ -716,47 +732,6 @@ def key_summary(keyjar, issuer):
                     key_list.append(
                         '{}:{}:{}'.format(key.kty, key.use, key.kid))
         return ', '.join(key_list)
-
-
-def check_key_availability(inst, jwt):
-    """
-    If the server is restarted it will NOT load keys from jwks_uris for
-    all the clients that has been registered. So this function is there
-    to get a clients keys when needed.
-
-    :param inst: OP instance
-    :param jwt: A JWT that has to be verified or decrypted
-    """
-
-    _rj = factory(jwt)
-    payload = json.loads(as_unicode(_rj.jwt.part[1]))
-    _cid = payload['iss']
-    if _cid not in inst.keyjar:
-        cinfo = inst.cdb[_cid]
-        inst.keyjar.add_symmetric(_cid, cinfo['client_secret'], ['enc', 'sig'])
-        inst.keyjar.add(_cid, cinfo['jwks_uri'])
-
-
-def public_keys_keyjar(from_kj, origin, to_kj=None, receiver=''):
-    """
-    Due to cryptography's differentiating between public and private keys
-    this function will construct the public equivalent to the private keys
-    that a key jar may contain.
-
-    :param from_kj: The KeyJar instance that contains the private keys
-    :param origin: The owner ID
-    :param to_kj: The KeyJar that is the receiver of the public keys.
-    :param receiver: The owner ID under which the public keys should be stored
-    :return: The modified KeyJar instance
-    """
-
-    if to_kj is None:
-        to_kj = KeyJar()
-
-    _jwks = from_kj.export_jwks(issuer=origin)
-    to_kj.import_jwks(_jwks, receiver)
-
-    return to_kj
 
 
 def init_key_jar(public_path='', private_path='', key_defs=''):

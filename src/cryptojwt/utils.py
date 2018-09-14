@@ -120,27 +120,6 @@ def b64d_enc_dec(str, encode="ascii", decode="utf-8"):
     return b64d(str.encode(encode)).decode(decode)
 
 
-# 'Stolen' from Werkzeug
-def safe_str_cmp(a, b):
-    """Compare two strings in constant time."""
-    if len(a) != len(b):
-        return False
-    r = 0
-    for c, d in zip(a, b):
-        r |= ord(c) ^ ord(d)
-    return r == 0
-
-
-def constant_time_compare(a, b):
-    """Compare two strings in constant time."""
-    if len(a) != len(b):
-        return False
-    r = 0
-    for c, d in zip(a, b):
-        r |= c ^ d
-    return r == 0
-
-
 def as_bytes(s):
     """
     Convert an unicode string to bytes.

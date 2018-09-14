@@ -206,7 +206,7 @@ class JWK(object):
         """
         self.kid = b64e(self.thumbprint('SHA-256')).decode('utf8')
 
-    def appropriate_for(self, usage):
+    def appropriate_for(self, usage, **kwargs):
         """
         Make sure that key can be used for the specified usage.
         """

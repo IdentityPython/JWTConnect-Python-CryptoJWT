@@ -1,23 +1,30 @@
+import json
 import os
 import time
 
 import pytest
 from cryptojwt.exception import JWKESTException
+from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import factory
 from cryptojwt.jws.jws import JWS
 
-from cryptojwt.key_bundle import keybundle_from_local_file
+from cryptojwt.key_bundle import keybundle_from_local_file, rsa_init
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import build_keyjar
+from cryptojwt.key_jar import build_keyjar, update_keyjar, key_summary
 from cryptojwt.key_jar import KeyJar
 
 __author__ = 'Roland Hedberg'
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "test_keys"))
-
 RSAKEY = os.path.join(BASE_PATH, "cert.key")
 RSA0 = os.path.join(BASE_PATH, "rsa.key")
+BASEDIR = os.path.abspath(os.path.dirname(__file__))
+
+
+def full_path(local_file):
+    return os.path.join(BASEDIR, local_file)
+
 
 JWK0 = {"keys": [
     {'kty': 'RSA', 'e': 'AQAB', 'kid': "abc",
@@ -335,7 +342,7 @@ class TestKeyJar(object):
 def test_import_jwks():
     kj = KeyJar()
     kj.import_jwks(JWK1, '')
-    assert len(kj.get_issuer_keys('')) == 4
+    assert len(kj.get_issuer_keys('')) == 2
 
 
 def test_get_signing_key_use_undefined():
@@ -409,7 +416,7 @@ JWK_UK = {"keys": [
 def test_load_unknown_keytype():
     kj = KeyJar()
     kj.import_jwks(JWK_UK, '')
-    assert len(kj.get_issuer_keys('')) == 2
+    assert len(kj.get_issuer_keys('')) == 1
 
 
 JWK_FP = {"keys": [
@@ -645,3 +652,113 @@ def test_copy():
 
     assert len(kjc.get('sig', 'oct', 'C')) == 0
     assert len(kjc.get('sig', 'rsa', 'C')) == 4
+
+
+def test_repr():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj['Bob'] = [KeyBundle(JWK1['keys'])]
+    kj['C'] = [KeyBundle(JWK2['keys'])]
+    txt = kj.__repr__()
+    assert txt == "<KeyJar(issuers=['Alice', 'Bob', 'C'])>"
+
+
+def test_get_wrong_owner():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj['Bob'] = [KeyBundle(JWK1['keys'])]
+    kj['C'] = [KeyBundle(JWK2['keys'])]
+    assert kj.get('sig', 'rsa', 'https://delphi.example.com/') == []
+    assert kj.get('sig', 'rsa', 'https://delphi.example.com') == []
+    assert kj.get('sig', 'rsa') == []
+
+    assert 'https://delphi.example.com' not in kj
+
+    with pytest.raises(KeyError):
+        _ = kj['https://delphi.example.com']
+
+
+def test_match_owner():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj['Bob'] = [KeyBundle(JWK1['keys'])]
+    kj['https://delphi.example.com/path'] = [KeyBundle(JWK2['keys'])]
+    a = kj.match_owner('https://delphi.example.com')
+    assert a == 'https://delphi.example.com/path'
+
+    with pytest.raises(KeyError):
+        kj.match_owner('https://example.com')
+
+
+def test_str():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+
+    desc = '{}'.format(kj)
+    _cont = json.loads(desc)
+    assert set(_cont.keys()) == {'Alice'}
+    assert set(_cont['Alice'].keys()) == {'keys'}
+
+
+def test_load_keys():
+    kj = KeyJar()
+    kj.load_keys('Alice', jwks=JWK1)
+
+    assert kj.owners() == ['Alice']
+
+
+def test_find():
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path))
+    kj = KeyJar()
+    kj.add_kb('Alice', kb)
+
+    assert kj.find('{}'.format(_path), 'Alice')
+    assert kj.find('https://example.com', 'Alice') is None
+    assert kj.find('{}'.format(_path), 'Bob') is None
+
+
+def test_get_decrypt_keys():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj[''] = [KeyBundle(JWK1['keys'])]
+    kj['C'] = [KeyBundle(JWK2['keys'])]
+
+    kb = rsa_init(
+        {'use': ['enc', 'sig'], 'size': 1024, 'name': 'rsa', 'path': 'keys'})
+    kj.add_kb('', kb)
+
+    jwt = JWEnc()
+    jwt.headers = {'alg':'RS256'}
+    jwt.part = [{'alg':'RS256'},'{"aud": "Bob", "iss": "Alice"}',
+                'aksjdhaksjbd']
+
+    keys = kj.get_jwt_decrypt_keys(jwt)
+    assert keys
+
+    jwt.part = [{'alg':'RS256'},'{"iss": "Alice"}', 'aksjdhaksjbd']
+
+    keys = kj.get_jwt_decrypt_keys(jwt)
+    assert keys
+
+    keys = kj.get_jwt_decrypt_keys(jwt, aud='Bob')
+    assert keys
+
+
+def test_update_keyjar():
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path))
+    kj = KeyJar()
+    kj.add_kb('Alice', kb)
+
+    update_keyjar(kj)
+
+
+def test_key_summary():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj['Bob'] = [KeyBundle(JWK1['keys'])]
+    kj['C'] = [KeyBundle(JWK2['keys'])]
+
+    out = key_summary(kj, 'Alice')
+    assert out
