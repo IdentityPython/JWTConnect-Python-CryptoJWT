@@ -24,7 +24,7 @@ from cryptojwt.utils import base64url_to_long
 from cryptojwt.utils import deser
 from cryptojwt.utils import base64_to_long
 from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file, load_x509_cert
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.jwk import jwk_wrap
@@ -548,3 +548,10 @@ def test_jwks_url():
     keys = JWKS(httpc=requests.request)
     keys.load_from_url('https://login.salesforce.com/id/keys')
     assert len(keys)
+
+
+def test_load_x509_cert(httpserver):
+    _cert = open(CERT).read()
+    httpserver.serve_content(_cert)
+    key_spec = load_x509_cert(httpserver.url, requests.request, {})
+    assert set(key_spec.keys()) == {'rsa'}

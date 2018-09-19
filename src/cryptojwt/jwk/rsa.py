@@ -193,7 +193,7 @@ def load_x509_cert(url, httpc, spec2key, **get_args):
     :return: List of 2-tuples (keytype, key)
     """
     try:
-        r = httpc.get(url, allow_redirects=True, **get_args)
+        r = httpc('GET', url, allow_redirects=True, **get_args)
         if r.status_code == 200:
             cert = str(r.text)
             try:

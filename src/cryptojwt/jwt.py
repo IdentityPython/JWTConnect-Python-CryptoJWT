@@ -53,6 +53,13 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
 
 
 def get_jwt_keys(jwt, keys, use):
+    """
+
+    :param jwt: JWT instance
+    :param keys: A set of keys
+    :param use: What the keys should be used for
+    :return:
+    """
     try:
         if use == 'sig':
             _key_type = jws_alg2keytype(jwt.headers['alg'])
@@ -123,7 +130,13 @@ class JWT(object):
         _jwe = JWE(payload, **kwargs)
         return _jwe.encrypt(self.receiver_keys(recv), context="public")
 
-    def put_together_aud(self, recv, aud):
+    def put_together_aud(self, recv, aud=None):
+        """
+
+        :param recv: The intended receiver
+        :param aud: A list of entity identifiers (the audience)
+        :return: A possibly extended audience set
+        """
         if aud:
             if recv in aud:
                 _aud = aud

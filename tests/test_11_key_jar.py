@@ -10,7 +10,8 @@ from cryptojwt.jws.jws import JWS
 
 from cryptojwt.key_bundle import keybundle_from_local_file, rsa_init
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import build_keyjar, update_keyjar, key_summary
+from cryptojwt.key_jar import build_keyjar, update_keyjar, key_summary, \
+    init_key_jar
 from cryptojwt.key_jar import KeyJar
 
 __author__ = 'Roland Hedberg'
@@ -762,3 +763,47 @@ def test_key_summary():
 
     out = key_summary(kj, 'Alice')
     assert out
+
+
+KEYSPEC = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+]
+
+
+def test_init_key_jar():
+    # Nothing written to file
+    _keyjar = init_key_jar(key_defs=KEYSPEC)
+    assert list(_keyjar.owners()) == ['']
+
+
+def test_init_key_jar_dump_public():
+    pub_file = '{}/pub_client.jwks'.format(BASEDIR)
+    if os.path.isfile(pub_file):
+        os.unlink(pub_file)
+
+    # JWKS with public keys written to file
+    _keyjar = init_key_jar(public_path=pub_file, key_defs=KEYSPEC)
+    assert list(_keyjar.owners()) == ['']
+
+    # JWKS will be read from disc, not created new
+    _keyjar2 = init_key_jar(public_path=pub_file, key_defs=KEYSPEC)
+    assert list(_keyjar2.owners()) == ['']
+
+    # verify that the 2 Key jars contains the same keys
+
+
+def test_init_key_jar_dump_private():
+    private_path = '{}/pub_client.jwks'.format(BASEDIR)
+    if os.path.isfile(private_path):
+        os.unlink(private_path)
+
+    # New set of keys, JWKS with private keys written to file
+    _keyjar = init_key_jar(public_path='{}/pub_client.jwks'.format(BASEDIR),
+                           private_path=private_path, key_defs=KEYSPEC)
+    assert list(_keyjar.owners()) == ['']
+
+    # JWKS will be read from disc, not created new
+    _keyjar2 = init_key_jar(public_path='{}/pub_client.jwks'.format(BASEDIR),
+                           private_path=private_path, key_defs=KEYSPEC)
+    assert list(_keyjar2.owners()) == ['']

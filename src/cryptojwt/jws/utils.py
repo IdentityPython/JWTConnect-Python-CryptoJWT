@@ -33,12 +33,12 @@ def mpint(b):
     return struct.pack(">L", len(b)) + b
 
 
-def mp2bin(b):
-    # just ignore the length...
-    if b[4] == '\x00':
-        return b[5:]
-    else:
-        return b[4:]
+# def mp2bin(b):
+#     # just ignore the length...
+#     if b[4] == '\x00':
+#         return b[5:]
+#     else:
+#         return b[4:]
 
 
 def alg2keytype(alg):

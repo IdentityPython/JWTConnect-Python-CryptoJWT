@@ -11,6 +11,7 @@ from cryptojwt.jws.exception import FormatError
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash
+from cryptojwt.jws.utils import parse_rsa_algorithm
 from cryptojwt.utils import b64d_enc_dec, intarr2bin
 from cryptojwt.utils import b64d
 from cryptojwt.utils import b64e
@@ -727,3 +728,41 @@ def test_rsasigner_wrong_key_variant():
     _pkey = import_private_rsa_key_from_file(PRIV_KEY)
     with pytest.raises(TypeError):
         RSASigner().sign(b'Message to whom it may concern', _pkey.public_key)
+
+
+def test_parse_rsa_algorithm_rs256():
+    (hash, padding) = parse_rsa_algorithm('RS256')
+    assert hash.name == 'sha256'
+    assert padding.name == 'EMSA-PKCS1-v1_5'
+
+
+def test_parse_rsa_algorithm_rs384():
+    (hash, padding) = parse_rsa_algorithm('RS384')
+    assert hash.name == 'sha384'
+    assert padding.name == 'EMSA-PKCS1-v1_5'
+
+
+def test_parse_rsa_algorithm_rs512():
+    (hash, padding) = parse_rsa_algorithm('RS512')
+    assert hash.name == 'sha512'
+    assert padding.name == 'EMSA-PKCS1-v1_5'
+
+
+def test_parse_rsa_algorithm_ps256():
+    (hash, padding) = parse_rsa_algorithm('PS256')
+    assert hash.name == 'sha256'
+    assert padding.name == 'EMSA-PSS'
+
+
+def test_parse_rsa_algorithm_ps384():
+    (hash, padding) = parse_rsa_algorithm('PS384')
+    assert hash
+    assert hash.name == 'sha384'
+    assert padding.name == 'EMSA-PSS'
+
+
+def test_parse_rsa_algorithm_ps512():
+    (hash, padding) = parse_rsa_algorithm('PS512')
+    assert hash
+    assert hash.name == 'sha512'
+    assert padding.name == 'EMSA-PSS'

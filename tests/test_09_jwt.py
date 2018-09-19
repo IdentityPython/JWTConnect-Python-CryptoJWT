@@ -124,5 +124,42 @@ def test_jwt_pack_and_unpack_with_alg():
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
 
-if __name__ == "__main__":
-    test_jwt_pack_encrypt_no_sign()
+def test_extend_audience():
+    _jwt = JWT()
+    aud = _jwt.put_together_aud('abcdefgh')
+    assert aud == ['abcdefgh']
+    aud = _jwt.put_together_aud('12345678', aud)
+    assert set(aud) == {'abcdefgh', '12345678'}
+
+
+def test_with_jti():
+    _key = SYMKey(key='hemligt ordsprak', use='sig')
+    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
+    alice.with_jti = True
+    payload = {'sub': 'sub2'}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
+    info = bob.unpack(_jwt)
+    assert 'jti' in info
+
+
+class DummyMsg(object):
+    def __init__(self, **kwargs):
+        for key,val in kwargs.items():
+            setattr(self, key, val)
+
+    def verify(self, **kwargs):
+        return True
+
+
+def test_msg_cls():
+    _key = SYMKey(key='hemligt ordsprak', use='sig')
+    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
+    payload = {'sub': 'sub2'}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
+    bob.msg_cls = DummyMsg
+    info = bob.unpack(_jwt)
+    assert isinstance(info, DummyMsg)
