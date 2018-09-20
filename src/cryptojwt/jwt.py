@@ -42,7 +42,7 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
         else:
             key_type = jwe_alg2keytype(alg)
     for key in keys:
-        if key.use != use:
+        if key.use and key.use != use:
             continue
 
         if key.kty == key_type:
