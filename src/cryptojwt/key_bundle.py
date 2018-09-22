@@ -159,7 +159,7 @@ def ec_init(spec):
 
 class KeyBundle(object):
     def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
-                 fileformat="jwk", keytype="RSA", keyusage=None):
+                 fileformat="jwk", keytype="RSA", keyusage=None, kid=''):
         """
         Contains a set of keys that have a common origin.
         The sources can be serveral:
@@ -219,7 +219,8 @@ class KeyBundle(object):
                 if self.fileformat in ['jwks', "jwk"]:
                     self.do_local_jwk(self.source)
                 elif self.fileformat == "der":  # Only valid for RSA keys
-                    self.do_local_der(self.source, self.keytype, self.keyusage)
+                    self.do_local_der(self.source, self.keytype, self.keyusage,
+                                      kid)
 
     def do_keys(self, keys):
         """
@@ -268,7 +269,7 @@ class KeyBundle(object):
 
         self.last_updated = time.time()
 
-    def do_local_der(self, filename, keytype, keyusage=None):
+    def do_local_der(self, filename, keytype, keyusage=None, kid=''):
         """
         Load a DER encoded file amd create a key from it.
          
@@ -289,6 +290,8 @@ class KeyBundle(object):
         for use in keyusage:
             _key = RSAKey().load_key(_bkey)
             _key.use = use
+            if kid:
+                _key.kid = kid
             self._keys.append(_key)
 
         self.last_updated = time.time()

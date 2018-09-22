@@ -5,6 +5,8 @@ from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.jwks import JWKS
 from cryptojwt.jwt import JWT
+from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_jar import KeyJar
 
 __author__ = 'Roland Hedberg'
 
@@ -17,108 +19,107 @@ def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
 
-k1 = import_private_rsa_key_from_file(full_path('rsa.key'))
-k2 = import_private_rsa_key_from_file(full_path('size2048.key'))
+# k1 = import_private_rsa_key_from_file(full_path('rsa.key'))
+# k2 = import_private_rsa_key_from_file(full_path('size2048.key'))
 
-ALICE_KEYS = [RSAKey(use='sig', kid='1').load_key(k1),
-              RSAKey(use='enc', kid='2').load_key(k2)]
-ALICE_PUB_KEYS = [RSAKey(use='sig', kid='1').load_key(k1.public_key()),
-                  RSAKey(use='enc', kid='2').load_key(k2.public_key())]
+kb1 = KeyBundle(source='file://{}'.format(full_path('rsa.key')),
+                fileformat='der', keyusage='sig',kid='1')
+kb2 = KeyBundle(source='file://{}'.format(full_path('size2048.key')),
+                fileformat='der', keyusage='enc', kid='2')
 
-k3 = import_private_rsa_key_from_file(full_path('server.key'))
+ALICE_KEY_JAR = KeyJar()
+ALICE_KEY_JAR.add_kb(ALICE, kb1)
+ALICE_KEY_JAR.add_kb(ALICE, kb2)
 
-BOB_KEYS = [RSAKey(use='enc', kid='3').load_key(k3)]
-BOB_PUB_KEYS = [RSAKey(use='enc', kid='3').load_key(k3.public_key())]
+kb3 = KeyBundle(source='file://{}'.format(full_path('server.key')),
+                fileformat='der', keyusage='enc', kid='3')
 
+BOB_KEY_JAR = KeyJar()
+BOB_KEY_JAR.add_kb(BOB, kb3)
+
+# Load the opponents keys
+_jwks = ALICE_KEY_JAR.export_jwks_as_json(issuer=ALICE)
+BOB_KEY_JAR.import_jwks_as_json(_jwks, ALICE)
+
+_jwks = BOB_KEY_JAR.export_jwks_as_json(issuer=BOB)
+ALICE_KEY_JAR.import_jwks_as_json(_jwks, BOB)
 
 def _eq(l1, l2):
     return set(l1) == set(l2)
 
 
 def test_jwt_pack():
-    _jwt = JWT(own_keys=ALICE_KEYS, lifetime=3600, iss=ALICE).pack()
+    _jwt = JWT(key_jar=ALICE_KEY_JAR, lifetime=3600, iss=ALICE).pack(aud=BOB)
 
     assert _jwt
     assert len(_jwt.split('.')) == 3
 
 
 def test_jwt_pack_and_unpack():
-    alice = JWT(own_keys=ALICE_KEYS, iss=ALICE)
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE)
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
 
 def test_jwt_pack_and_unpack_with_lifetime():
-    alice = JWT(own_keys=ALICE_KEYS, iss=ALICE, lifetime=600)
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, lifetime=600)
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp', 'aud'}
 
 
 def test_jwt_pack_encrypt():
-    alice = JWT(own_keys=ALICE_KEYS, iss=ALICE, rec_keys={BOB: BOB_PUB_KEYS})
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE)
     payload = {'sub': 'sub', 'aud': BOB}
     _jwt = alice.pack(payload=payload, encrypt=True, recv=BOB)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
 
 
 def test_jwt_pack_unpack_sym():
-    _key = SYMKey(key='hemligt ordsprak', use='sig')
-    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, 'hemligt ordsprak', usage=['sig'])
+    alice = JWT(key_jar=_kj, iss=ALICE, sign_alg="HS256")
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, 'hemligt ordsprak', usage=['sig'])
+    bob = JWT(key_jar=_kj, iss=BOB)
     info = bob.unpack(_jwt)
     assert info
 
 
 def test_jwt_pack_encrypt_no_sign():
-    alice = JWT(sign=False, own_keys=ALICE_KEYS, iss=ALICE,
-                rec_keys={BOB: BOB_PUB_KEYS})
+    alice = JWT(sign=False, key_jar=ALICE_KEY_JAR, iss=ALICE)
 
     payload = {'sub': 'sub', 'aud': BOB}
     _jwt = alice.pack(payload=payload, encrypt=True, recv=BOB)
 
-    bob = JWT(own_keys=BOB_KEYS, iss=BOB, rec_keys={ALICE: ALICE_PUB_KEYS})
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'aud'}
 
 
 def test_jwt_pack_and_unpack_with_alg():
-    alice = JWT(own_keys=ALICE_KEYS, iss=ALICE)
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg='RS384')
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    alice_jwks = {
-        "keys":
-            [{
-                "kty": "RSA",
-                "alg": "RS256",
-                "use": "sig",
-                "kid": "1",
-                "n": ALICE_PUB_KEYS[0].n,
-                "e": ALICE_PUB_KEYS[0].e
-            }]
-    }
-    alg_keys = JWKS()
-    alg_keys.load_dict(alice_jwks)
-
-    bob = JWT(rec_keys={ALICE: alg_keys})
+    bob = JWT(BOB_KEY_JAR)
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
@@ -133,13 +134,15 @@ def test_extend_audience():
 
 
 def test_with_jti():
-    _key = SYMKey(key='hemligt ordsprak', use='sig')
-    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, 'hemligt ordsprak', usage=['sig'])
+
+    alice = JWT(key_jar=_kj, iss=ALICE, sign_alg="HS256")
     alice.with_jti = True
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
+    bob = JWT(key_jar=_kj, iss=BOB)
     info = bob.unpack(_jwt)
     assert 'jti' in info
 
@@ -154,12 +157,14 @@ class DummyMsg(object):
 
 
 def test_msg_cls():
-    _key = SYMKey(key='hemligt ordsprak', use='sig')
-    alice = JWT(own_keys=[_key], iss=ALICE, sign_alg="HS256")
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, 'hemligt ordsprak', usage=['sig'])
+
+    alice = JWT(key_jar=_kj, iss=ALICE, sign_alg="HS256")
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(own_keys=None, iss=BOB, rec_keys={ALICE: [_key]})
+    bob = JWT(key_jar=_kj, iss=BOB)
     bob.msg_cls = DummyMsg
     info = bob.unpack(_jwt)
     assert isinstance(info, DummyMsg)

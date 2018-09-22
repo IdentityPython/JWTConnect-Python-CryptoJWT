@@ -638,7 +638,7 @@ class KeyJar(object):
 # =============================================================================
 
 
-def build_keyjar(key_conf, kid_template="", keyjar=None):
+def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
     an existing KeyJar based on a key specification.
@@ -656,6 +656,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None):
     :param kid_template: A template by which to build the key IDs. If no
         kid_template is given then the built-in function add_kid() will be used.
     :param keyjar: If an KeyJar instance the new keys are added to this key jar.
+    :param owner: The default owner of the keys in the key jar.
     :return: A KeyJar instance
     """
 
@@ -692,7 +693,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None):
             else:
                 k.add_kid()
 
-        keyjar.add_kb("", kb)
+        keyjar.add_kb(owner, kb)
 
     return keyjar
 
@@ -734,7 +735,7 @@ def key_summary(keyjar, issuer):
         return ', '.join(key_list)
 
 
-def init_key_jar(public_path='', private_path='', key_defs=''):
+def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
     """
     A number of cases here:
 
@@ -774,10 +775,10 @@ def init_key_jar(public_path='', private_path='', key_defs=''):
         if os.path.isfile(private_path):
             _jwks = open(private_path, 'r').read()
             _kj = KeyJar()
-            _kj.import_jwks(json.loads(_jwks), '')
+            _kj.import_jwks(json.loads(_jwks), owner)
         else:
-            _kj = build_keyjar(key_defs)
-            jwks = _kj.export_jwks(private=True)
+            _kj = build_keyjar(key_defs, owner=owner)
+            jwks = _kj.export_jwks(private=True, issuer=owner)
             head, tail = os.path.split(private_path)
             if head and not os.path.isdir(head):
                 os.makedirs(head)
@@ -786,7 +787,7 @@ def init_key_jar(public_path='', private_path='', key_defs=''):
             fp.close()
 
         if public_path:
-            jwks = _kj.export_jwks()  # public part
+            jwks = _kj.export_jwks(issuer=owner)  # public part
             fp = open(public_path, 'w')
             fp.write(json.dumps(jwks))
             fp.close()
@@ -794,10 +795,10 @@ def init_key_jar(public_path='', private_path='', key_defs=''):
         if os.path.isfile(public_path):
             _jwks = open(public_path, 'r').read()
             _kj = KeyJar()
-            _kj.import_jwks(json.loads(_jwks), '')
+            _kj.import_jwks(json.loads(_jwks), owner)
         else:
-            _kj = build_keyjar(key_defs)
-            _jwks = _kj.export_jwks()
+            _kj = build_keyjar(key_defs, owner=owner)
+            _jwks = _kj.export_jwks(issuer=owner)
             head, tail = os.path.split(public_path)
             if head and not os.path.isdir(head):
                 os.makedirs(head)
@@ -805,6 +806,6 @@ def init_key_jar(public_path='', private_path='', key_defs=''):
             fp.write(json.dumps(_jwks))
             fp.close()
     else:
-        _kj = build_keyjar(key_defs)
+        _kj = build_keyjar(key_defs, owner=owner)
 
     return _kj
