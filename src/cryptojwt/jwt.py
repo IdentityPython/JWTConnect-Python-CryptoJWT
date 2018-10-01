@@ -172,7 +172,9 @@ class JWT(object):
         if self.lifetime:
             argv['exp'] = argv['iat'] + self.lifetime
 
-        argv['aud'] = self.put_together_aud(recv, aud)
+        _aud = self.put_together_aud(recv, aud)
+        if _aud:
+            argv['aud'] = _aud
 
         return argv
 
