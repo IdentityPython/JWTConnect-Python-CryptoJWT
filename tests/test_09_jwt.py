@@ -63,7 +63,7 @@ def test_jwt_pack_and_unpack():
     bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}
 
 
 def test_jwt_pack_and_unpack_with_lifetime():
@@ -74,7 +74,7 @@ def test_jwt_pack_and_unpack_with_lifetime():
     bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp', 'aud'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'exp'}
 
 
 def test_jwt_pack_encrypt():
@@ -122,7 +122,7 @@ def test_jwt_pack_and_unpack_with_alg():
     bob = JWT(BOB_KEY_JAR)
     info = bob.unpack(_jwt)
 
-    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid', 'aud'}
+    assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}
 
 
 def test_extend_audience():
