@@ -157,8 +157,10 @@ class JWT(object):
             else:
                 _aud = [recv]
                 _aud.extend(aud)
-        else:
+        elif recv:
             _aud = [recv]
+        else:
+            _aud = []
 
         return _aud
 
