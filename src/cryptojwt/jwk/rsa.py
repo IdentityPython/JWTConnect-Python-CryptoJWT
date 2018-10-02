@@ -495,7 +495,7 @@ def new_rsa_key(key_size=2048, kid='', use='', public_exponent=65537):
                                     key_size=key_size,
                                     backend=default_backend())
 
-    _rk = RSAKey(priv_key=_key, use=use)
+    _rk = RSAKey(priv_key=_key, use=use, kid=kid)
     if not kid:
         _rk.add_kid()
 
