@@ -490,12 +490,12 @@ class RSAKey(AsymmetricKey):
             return cmp_private_numbers(pn1, pn2)
 
 
-def new_rsa_key(key_size=2048, kid='', use=''):
-    _key = rsa.generate_private_key(public_exponent=65537,
+def new_rsa_key(key_size=2048, kid='', use='', public_exponent=65537):
+    _key = rsa.generate_private_key(public_exponent=public_exponent,
                                     key_size=key_size,
                                     backend=default_backend())
 
-    _rk = RSAKey(priv_key=_key, use=use)
+    _rk = RSAKey(priv_key=_key, use=use, kid=kid)
     if not kid:
         _rk.add_kid()
 
