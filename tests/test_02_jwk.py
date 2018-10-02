@@ -24,9 +24,11 @@ from cryptojwt.utils import base64url_to_long
 from cryptojwt.utils import deser
 from cryptojwt.utils import base64_to_long
 from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file, load_x509_cert
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
+from cryptojwt.jwk.rsa import load_x509_cert
+from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import keyrep
 from cryptojwt.jwk.jwks import JWKS
@@ -555,3 +557,9 @@ def test_load_x509_cert(httpserver):
     httpserver.serve_content(_cert)
     key_spec = load_x509_cert(httpserver.url, requests.request, {})
     assert set(key_spec.keys()) == {'rsa'}
+
+
+def test_new_rsa_key():
+    key = new_rsa_key()
+    assert isinstance(key, RSAKey)
+    assert key.priv_key
