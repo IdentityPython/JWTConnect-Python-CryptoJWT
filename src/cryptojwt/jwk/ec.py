@@ -2,10 +2,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from .asym import AsymmetricKey
-
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
-from ..exception import SerializationNotPossible
 from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
@@ -23,7 +21,7 @@ NIST2SEC = {
     'P-256': ec.SECP256R1,
     'P-224': ec.SECP224R1,
     'P-192': ec.SECP192R1,
-    }
+}
 
 SEC2NIST = dict([(s.name, n) for n, s in NIST2SEC.items()])
 
@@ -159,7 +157,7 @@ class ECKey(AsymmetricKey):
             "crv": self.crv,
             "x": self.x,
             "y": self.y
-            })
+        })
 
         if private and self.d:
             res["d"] = self.d
@@ -227,7 +225,8 @@ def cmp_keys(a, b, key_type):
 
 
 def new_ec_key(crv, kid='', use=''):
-    _key = ec.generate_private_key(curve=NIST2SEC[crv], backend=default_backend())
+    _key = ec.generate_private_key(curve=NIST2SEC[crv],
+                                   backend=default_backend())
 
     _rk = ECKey(priv_key=_key, use=use, kid=kid)
     if not kid:
