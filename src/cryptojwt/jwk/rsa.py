@@ -85,6 +85,7 @@ def import_rsa_key_from_cert_file(pem_file):
     with open(pem_file, 'r') as cert_file:
         return import_rsa_key(cert_file.read())
 
+
 def rsa_load(filename, passphrase=None):
     """Read a PEM-encoded RSA private key from a file."""
     with open(filename, "rb") as key_file:
@@ -488,3 +489,14 @@ class RSAKey(AsymmetricKey):
         else:
             return cmp_private_numbers(pn1, pn2)
 
+
+def new_rsa_key(key_size=2048, kid='', use=''):
+    _key = rsa.generate_private_key(public_exponent=65537,
+                                    key_size=key_size,
+                                    backend=default_backend())
+
+    _rk = RSAKey(priv_key=_key, use=use)
+    if not kid:
+        _rk.add_kid()
+
+    return _rk
