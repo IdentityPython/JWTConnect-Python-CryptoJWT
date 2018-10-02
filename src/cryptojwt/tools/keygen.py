@@ -2,16 +2,15 @@
 
 """JWK Key Generator"""
 
-import sys
 import argparse
 import json
 import os
-import string
+import sys
 
-from cryptojwt.utils import b64e
-from cryptojwt.jwk.ec import ECKey, NIST2SEC, new_ec_key
-from cryptojwt.jwk.rsa import RSAKey, new_rsa_key
+from cryptojwt.jwk.ec import new_ec_key, NIST2SEC
 from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.rsa import new_rsa_key
+from cryptojwt.utils import b64e
 
 
 DEFAULT_SYM_KEYSIZE = 32
@@ -57,7 +56,7 @@ def main():
             args.keysize = DEFAULT_RSA_KEYSIZE
         jwk = new_rsa_key(public_exponent=args.rsa_exp, key_size=args.keysize, kid=args.kid)
     elif args.kty.upper() == 'EC':
-        if not args.crv in NIST2SEC:
+        if args.crv not in NIST2SEC:
             print("Unknown curve: {0}".format(args.crv), file=sys.stderr)
             exit(1)
         jwk = new_ec_key(crv=args.crv, kid=args.kid)
