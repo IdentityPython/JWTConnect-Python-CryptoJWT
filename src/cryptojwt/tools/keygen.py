@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""JWK Key Generator"""
+"""JSON Web Key (JWK) Generator"""
 
 import argparse
 import json
@@ -21,7 +21,7 @@ DEFAULT_EC_CURVE = 'P-256'
 
 def main():
     """ Main function"""
-    parser = argparse.ArgumentParser(description='JWK Key Generator')
+    parser = argparse.ArgumentParser(description='JSON Web Key (JWK) Generator')
 
     parser.add_argument('--kty',
                         dest='kty',
