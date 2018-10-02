@@ -224,3 +224,13 @@ def cmp_keys(a, b, key_type):
             return True
 
     return False
+
+
+def new_ec_key(crv, kid='', use=''):
+    _key = ec.generate_private_key(curve=NIST2SEC[crv], backend=default_backend())
+
+    _rk = ECKey(priv_key=_key, use=use, kid=kid)
+    if not kid:
+        _rk.add_kid()
+
+    return _rk
