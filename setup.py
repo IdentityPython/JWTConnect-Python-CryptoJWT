@@ -46,5 +46,9 @@ setup(
     tests_require=['pytest'],
     zip_safe=False,
     scripts=glob.glob('script/*.py'),
+    entry_points={
+         "console_scripts": [
+             "jwtkeygen = cryptojwt.tools.keygen:main",
+         ]
+     }
 )
-
