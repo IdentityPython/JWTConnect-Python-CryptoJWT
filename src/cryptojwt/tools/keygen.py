@@ -7,7 +7,6 @@ import argparse
 import json
 import os
 import string
-import random
 
 from cryptojwt.utils import b64e
 from cryptojwt.jwk.ec import ECKey, NIST2SEC, new_ec_key
@@ -65,7 +64,7 @@ def main():
     elif args.kty.upper() == 'SYM':
         if args.keysize is None:
             args.keysize = DEFAULT_SYM_KEYSIZE
-        randomkey = randomkey = os.urandom(args.keysize)
+        randomkey = os.urandom(args.keysize)
         jwk = SYMKey(key=randomkey, kid=args.kid)
     else:
         print(f"Unknown key type: {args.kty}", file=sys.stderr)
