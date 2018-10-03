@@ -4,10 +4,9 @@ import uuid
 from datetime import datetime
 from json import JSONDecodeError
 
-from .utils import as_unicode
 
-from .exception import MissingValue
 from .exception import VerificationError
+from .utils import as_unicode
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jwe.jwe import factory as jwe_factory
 from .jwe.jwe import JWE
@@ -22,18 +21,26 @@ logger = logging.getLogger(__name__)
 
 
 def utc_time_sans_frac():
+    """
+    Produces UTC time without fractions
+
+    :return: A number of seconds
+    """
     return int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds())
 
 
 def pick_key(keys, use, alg='', key_type='', kid=''):
     """
+    Based on given criteria pick out the keys that fulfill them from a
+    given set of keys.
 
-    :param keys: List of keys
-    :param use: What the key is going to be used for
+    :param keys: List of keys. These are :py:class:`cryptojwt.jwk.JWK`
+        instances.
+    :param use: What the key is going to be used for 'sig'/'enc'
     :param alg: crypto algorithm
-    :param key_type: Type of key
-    :param kid: Ley ID
-    :return: list of keys that match the pattern
+    :param key_type: Type of key 'rsa'/'ec'/'oct'
+    :param kid: Key ID
+    :return: A list of keys that match the pattern
     """
     res = []
     if not key_type:
@@ -52,50 +59,6 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
     return res
 
 
-def get_jwt_keys(jwt, key_jar, use, me=''):
-    """
-
-    :param jwt: JWT instance
-    :param key_jar: A KeyJar instance
-    :param use: What the keys should be used for
-    :return:
-    """
-    try:
-        if use == 'sig':
-            _key_type = jws_alg2keytype(jwt.headers['alg'])
-        else:
-            _key_type = jwe_alg2keytype(jwt.headers['alg'])
-    except KeyError:
-        _key_type = ''
-
-    try:
-        _kid = jwt.headers['kid']
-    except KeyError:
-        _kid = ''  # Unknown
-
-    # pick issuer keys
-    if use == 'sig':
-        payload = json.loads(as_unicode(jwt.part[1]))
-        try:
-            _keys = key_jar.get_issuer_keys(payload['iss'])
-        except KeyError:  # No issuer, not kosher
-            raise MissingValue('iss')
-        if not _kid:
-            try:
-                _kid = payload['kid']
-            except KeyError:
-                _kid = ''  # Unknown
-    else:  # encryption, means they should have used my keys
-        _keys = key_jar.get_issuer_keys(me)
-        if me != '':
-            try:
-                _keys.extend(key_jar.get_issuer_keys(''))
-            except KeyError:
-                pass
-
-    return pick_key(_keys, use, key_type=_key_type, kid=_kid)
-
-
 class JWT(object):
 
     def __init__(self, key_jar=None, iss='', lifetime=0,
@@ -103,16 +66,18 @@ class JWT(object):
                  enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
                  iss2msg_cls=None, skew=15):
         self.key_jar = key_jar  # KeyJar instance
-        self.iss = iss
-        self.lifetime = lifetime
-        self.sign = sign
-        self.sign_alg = sign_alg
-        self.encrypt = encrypt
-        self.enc_alg = enc_alg
-        self.enc_enc = enc_enc
-        self.msg_cls = msg_cls
-        self.with_jti = False
+        self.iss = iss  # My identifier
+        self.lifetime = lifetime  # default life time of the signature
+        self.sign = sign  # default signing or not
+        self.sign_alg = sign_alg  # default signing algorithm
+        self.encrypt = encrypt  # default encrypting or not
+        self.enc_alg = enc_alg  # CEK encryption algorithm
+        self.enc_enc = enc_enc  # content encryption algorithm
+        self.msg_cls = msg_cls  # message class
+        self.with_jti = False  # If a jti should be added
+        # A map between issuers and the message classes they use
         self.iss2msg_cls = iss2msg_cls or {}
+        # Allowed time skew
         self.skew = skew
 
     def receiver_keys(self, recv, use):
@@ -144,7 +109,8 @@ class JWT(object):
         _jwe = JWE(payload, **kwargs)
         return _jwe.encrypt(self.receiver_keys(recv, 'enc'), context="public")
 
-    def put_together_aud(self, recv, aud=None):
+    @staticmethod
+    def put_together_aud(recv, aud=None):
         """
 
         :param recv: The intended receiver
@@ -252,7 +218,8 @@ class JWT(object):
             return _sjwt
 
     def _verify(self, rj, token):
-        keys = get_jwt_keys(rj.jwt, self.key_jar, 'sig')
+        keys = self.key_jar.get_jwt_verify_keys(rj.jwt)
+        #keys = get_jwt_keys(rj.jwt, self.key_jar, 'sig')
         return rj.verify_compact(token, keys)
 
     def _decrypt(self, rj, token):
@@ -263,7 +230,10 @@ class JWT(object):
         :param token: The encrypted JsonWebToken
         :return:
         """
-        keys = get_jwt_keys(rj.jwt, self.key_jar, 'enc', me=self.iss)
+        if self.iss:
+            keys = self.key_jar.get_jwt_decrypt_keys(rj.jwt, aud=self.iss)
+        else:
+            keys = self.key_jar.get_jwt_decrypt_keys(rj.jwt)
         return rj.decrypt(token, keys=keys)
 
     def verify_profile(self, msg_cls, info, **kwargs):

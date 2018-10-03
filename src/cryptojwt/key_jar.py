@@ -2,17 +2,14 @@ import json
 import logging
 import os
 
-from cryptojwt.jwk.asym import AsymmetricKey
 from .jws.utils import alg2keytype as jws_alg2keytype
-from .jws.jws import factory
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 
-from .exception import DeSerializationNotPossible, WrongUsage
+from .exception import DeSerializationNotPossible
 from .key_bundle import KeyBundle
 from .key_bundle import ec_init
 from .key_bundle import rsa_init
 from .utils import as_bytes
-from .utils import as_unicode
 from .utils import b64e
 
 
@@ -411,7 +408,7 @@ class KeyJar(object):
                 self.issuer_keys[issuer] = [self.keybundle_cls(
                     _keys, verify_ssl=self.verify_ssl)]
 
-    def import_jwks_as_json(self, js, issuer):
+    def import_jwks_as_json(self, jwks, issuer):
         """
         Imports all the keys that are represented in a JWKS expressed as a
         JSON object
@@ -419,7 +416,7 @@ class KeyJar(object):
         :param jwks: JSON representation of a JWKS
         :param issuer: Who 'owns' the JWKS
         """
-        return self.import_jwks(json.loads(js), issuer)
+        return self.import_jwks(json.loads(jwks), issuer)
 
     def __eq__(self, other):
         if not isinstance(other, KeyJar):
@@ -517,7 +514,6 @@ class KeyJar(object):
         :return: list of usable keys
         """
 
-
         try:
             _key_type = jwe_alg2keytype(jwt.headers['alg'])
         except KeyError:
@@ -530,15 +526,11 @@ class KeyJar(object):
             _kid = ''
 
         keys = self.get(key_use='enc', owner='', key_type=_key_type)
-        _payload = jwt.payload()
 
         try:
-            _aud = _payload['aud']
+            _aud = kwargs['aud']
         except KeyError:
-            try:
-                _aud = kwargs['aud']
-            except KeyError:
-                _aud = ''
+            _aud = ''
 
         if _aud:
             try:
@@ -740,20 +732,25 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
     A number of cases here:
 
     1. A private path is given
-       a) The file exists and a JWKS is found there.
+
+       a. The file exists and a JWKS is found there.
           From that JWKS a KeyJar instance is built.
-       b)
-         If the private path file doesn't exit the key definitions are
-         used to build a KeyJar instance. A JWKS with the private keys are
-         written to the file named in private_path.
+       b.
+          If the private path file doesn't exit the key definitions are
+          used to build a KeyJar instance. A JWKS with the private keys are
+          written to the file named in private_path.
+
        If a public path is also provided a JWKS with public keys are written
        to that file.
+
     2. A public path is given but no private path.
-       a) If the public path file exists then the JWKS in that file is used to
+
+       a. If the public path file exists then the JWKS in that file is used to
           construct a KeyJar.
-       b) If no such file exists then a KeyJar will be built
+       b. If no such file exists then a KeyJar will be built
           based on the key_defs specification and a JWKS with the public keys
           will be written to the public path file.
+
     3. If neither a public path nor a private path is given then a KeyJar is
        built based on the key_defs specification and no JWKS will be written
        to file.
