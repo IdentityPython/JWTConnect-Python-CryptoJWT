@@ -218,15 +218,21 @@ class JWT(object):
             return _sjwt
 
     def _verify(self, rj, token):
+        """
+        Verify a signed JSON Web Token
+
+        :param rj: A :py:class:`cryptojwt.jws.JWS` instance
+        :param token: The signed JSON Web Token
+        :return: A verified message
+        """
         keys = self.key_jar.get_jwt_verify_keys(rj.jwt)
-        #keys = get_jwt_keys(rj.jwt, self.key_jar, 'sig')
         return rj.verify_compact(token, keys)
 
     def _decrypt(self, rj, token):
         """
         Decrypt an encrypted JsonWebToken
 
-        :param rj: :py:class:`jwkest.jwe.JWE` instance
+        :param rj: :py:class:`cryptojwt.jwe.JWE` instance
         :param token: The encrypted JsonWebToken
         :return:
         """
@@ -237,6 +243,16 @@ class JWT(object):
         return rj.decrypt(token, keys=keys)
 
     def verify_profile(self, msg_cls, info, **kwargs):
+        """
+        If a message type is known for this JSON document. Verify that the
+        document complies with the message specifications.
+
+        :param msg_cls: The message class. A
+            :py:class:`oidcmsg.message.Message` instance
+        :param info: The information in the JSON document as a dictionary
+        :param kwargs: Extra keyword arguments used when doing the verification.
+        :return: The verified message as a msg_cls instance.
+        """
         _msg = msg_cls(**info)
         if not _msg.verify(**kwargs):
             raise VerificationError()

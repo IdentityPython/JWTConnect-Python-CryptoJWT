@@ -35,7 +35,7 @@ class UpdateFailed(KeyIOError):
 
 
 class KeyJar(object):
-    """ A keyjar contains a number of KeyBundles sorted by owner """
+    """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
                  remove_after=3600):
@@ -57,14 +57,14 @@ class KeyJar(object):
         issuers = list(self.issuer_keys.keys())
         return '<KeyJar(issuers={})>'.format(issuers)
 
-    def add_url(self, owner, url, **kwargs):
+    def add_url(self, issuer, url, **kwargs):
         """
         Add a set of keys by url. This method will create a 
         :py:class:`oidcmsg.key_bundle.KeyBundle` instance with the
         url as source specification. If no file format is given it's assumed
         that what's on the other side is a JWKS.
         
-        :param owner: Who issued the keys
+        :param issuer: Who issued the keys
         :param url: Where can the key/-s be found
         :param kwargs: extra parameters for instantiating KeyBundle
         :return: A :py:class:`oidcmsg.oauth2.keybundle.KeyBundle` instance
@@ -79,53 +79,53 @@ class KeyJar(object):
             kb = self.keybundle_cls(source=url, verify_ssl=self.verify_ssl,
                                     **kwargs)
 
-        self.add_kb(owner, kb)
+        self.add_kb(issuer, kb)
 
         return kb
 
-    def add_symmetric(self, owner, key, usage=None):
+    def add_symmetric(self, issuer, key, usage=None):
         """
         Add a symmetric key. This is done by wrapping it in a key bundle 
         cloak since KeyJar does not handle keys directly but only through
         key bundles.
         
-        :param owner: Owner of the key
+        :param issuer: Owner of the key
         :param key: The key 
         :param usage: What the key can be used for signing/signature 
             verification (sig) and/or encryption/decryption (enc)
         """
-        if owner not in self.issuer_keys:
-            self.issuer_keys[owner] = []
+        if issuer not in self.issuer_keys:
+            self.issuer_keys[issuer] = []
 
         _key = b64e(as_bytes(key))
         if usage is None:
-            self.issuer_keys[owner].append(
+            self.issuer_keys[issuer].append(
                 self.keybundle_cls([{"kty": "oct", "k": _key}]))
         else:
             for use in usage:
-                self.issuer_keys[owner].append(
+                self.issuer_keys[issuer].append(
                     self.keybundle_cls([{"kty": "oct",
                                          "k": _key,
                                          "use": use}]))
 
-    def add_kb(self, owner, kb):
+    def add_kb(self, issuer, kb):
         """
         Add a key bundle and bind it to an identifier
         
-        :param owner: Owner of the keys in the key bundle
+        :param issuer: Owner of the keys in the key bundle
         :param kb: A :py:class:`oidcmsg.key_bundle.KeyBundle` instance
         """
         try:
-            self.issuer_keys[owner].append(kb)
+            self.issuer_keys[issuer].append(kb)
         except KeyError:
-            self.issuer_keys[owner] = [kb]
+            self.issuer_keys[issuer] = [kb]
 
-    def __setitem__(self, owner, val):
+    def __setitem__(self, issuer, val):
         """
         Bind one or a list of key bundles to a special identifier.
         Will overwrite whatever was there before !!
         
-        :param owner: The owner of the keys in the key bundle/-s
+        :param issuer: The owner of the keys in the key bundle/-s
         :param val: A single or a list of KeyBundle instance
         """
         if not isinstance(val, list):
@@ -135,7 +135,7 @@ class KeyJar(object):
             if not isinstance(kb, KeyBundle):
                 raise ValueError('{} not an KeyBundle instance'.format(kb))
 
-        self.issuer_keys[owner] = val
+        self.issuer_keys[issuer] = val
 
     def items(self):
         """
@@ -326,8 +326,8 @@ class KeyJar(object):
         """
         Fetch keys from another server
 
-        :param jwks_uri:
-        :param jwks:
+        :param jwks_uri: A URL pointing to a site that will return a JWKS
+        :param jwks: A dictionary representation of a JWKS
         :param issuer: The provider URL
         :param replace: If all previously gathered keys from this provider
             should be replace.
@@ -391,7 +391,7 @@ class KeyJar(object):
 
     def import_jwks(self, jwks, issuer):
         """
-        Imports all the keys that are respresented in a JWKS
+        Imports all the keys that are represented in a JWKS
 
         :param jwks: Dictionary representation of a JWKS
         :param issuer: Who 'owns' the JWKS
@@ -461,25 +461,25 @@ class KeyJar(object):
             else:
                 del self.issuer_keys[iss]
 
-    def _add_key(self, keys, owner, use, key_type='', kid='',
+    def _add_key(self, keys, issuer, use, key_type='', kid='',
                  no_kid_issuer=None, allow_missing_kid=False):
 
-        if owner not in self:
-            logger.error('Issuer "{}" not in keyjar'.format(owner))
+        if issuer not in self:
+            logger.error('Issuer "{}" not in keyjar'.format(issuer))
             return keys
 
         logger.debug('Key set summary for {}: {}'.format(
-            owner, key_summary(self, owner)))
+            issuer, key_summary(self, issuer)))
 
         if kid:
-            for _key in self.get(key_use=use, owner=owner, kid=kid,
+            for _key in self.get(key_use=use, owner=issuer, kid=kid,
                                  key_type=key_type):
                 if _key and _key not in keys:
                     keys.append(_key)
             return keys
         else:
             try:
-                kl = self.get(key_use=use, owner=owner, key_type=key_type)
+                kl = self.get(key_use=use, owner=issuer, key_type=key_type)
             except KeyError:
                 pass
             else:
@@ -492,7 +492,7 @@ class KeyJar(object):
                     keys.extend(kl)
                 elif no_kid_issuer:
                     try:
-                        allowed_kids = no_kid_issuer[owner]
+                        allowed_kids = no_kid_issuer[issuer]
                     except KeyError:
                         return keys
                     else:
@@ -505,9 +505,8 @@ class KeyJar(object):
 
     def get_jwt_decrypt_keys(self, jwt, **kwargs):
         """
-        Get decryption keys from a keyjar based on information carried
-        in a JWE.
-        These keys should be usable to decrypt an encrypted JWT.
+        Get decryption keys from this keyjar based on information carried
+        in a JWE. These keys should be usable to decrypt an encrypted JWT.
 
         :param jwt: A cryptojwt.jwt.JWT instance
         :param kwargs: Other key word arguments
@@ -552,7 +551,7 @@ class KeyJar(object):
 
     def get_jwt_verify_keys(self, jwt, **kwargs):
         """
-        Get keys from a key jar based on information in a JWS. These keys
+        Get keys from this key jar based on information in a JWS. These keys
         should be usable to verify the signed JWT.
 
         :param jwt: A cryptojwt.jwt.JWT instance
@@ -622,8 +621,8 @@ class KeyJar(object):
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
         kj = KeyJar()
-        for owner in self.owners():
-            kj[owner] = [kb.copy() for kb in self[owner]]
+        for issuer in self.owners():
+            kj[issuer] = [kb.copy() for kb in self[issuer]]
         return kj
 
 
@@ -642,8 +641,23 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
             {"type": "EC", "crv": "P-256", "use": ["sig"]},
             {"type": "EC", "crv": "P-256", "use": ["enc"]}
         ]
-    
-    
+
+    Keys in this specification are:
+
+    type
+        The type of key. Presently only 'rsa' and 'ec' supported.
+
+    key
+        A name of a file where a key can be found. Only works with PEM encoded
+        RSA keys
+
+    use
+        What the key should be used for
+
+    crv
+        The elliptic curve that should be used. Only applies to elliptic curve
+        keys :-)
+
     :param key_conf: The key configuration
     :param kid_template: A template by which to build the key IDs. If no
         kid_template is given then the built-in function add_kid() will be used.
