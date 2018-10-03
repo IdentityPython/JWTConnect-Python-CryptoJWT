@@ -270,16 +270,11 @@ class RSAKey(AsymmetricKey):
     something like this:
 
         {
-        "kty":"RSA",
-        "use":"sig",
-        "kid":"1b94c",
-        "n":"vrjOfz9Ccdgx5nQudyhdoR17V-IubWMeOZCwX_jj0hgAsz2J_pqYW08
-        PLbK_PdiVGKPrqzmDIsLI7sA25VEnHU1uCLNwBuUiCO11_-7dYbsr4iJmG0Q
-        u2j8DsVyT1azpJC_NG84Ty5KKthuCaPod7iI7w0LK9orSMhBEwwZDCxTWq4a
-        YWAchc8t-emd9qOvWtVMDC2BXksRngh6X5bUYLy6AyHKvj-nUy1wgzjYQDwH
-        MTplCoLtU-o-8SNnZ1tmRoGE9uJkBLdh5gFENabWnU5m1ZqZPdwS-qo-meMv
-        VfJb6jJVWRpl2SUtCnYG2C32qvbWbjZ_jBPD5eunqsIo1vQ",
-        "e":"AQAB",
+        "kty": "RSA",
+        "use": "sig",
+        "kid": "1b94c",
+        "n": "vrjOfz9Ccdgx5nQudyhdoR17V...",
+        "e": "AQAB",
         }
 
     Parameters according to https://tools.ietf.org/html/rfc7518#section-6.3

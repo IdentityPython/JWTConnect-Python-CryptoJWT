@@ -30,6 +30,7 @@ class SYMKey(JWK):
     JSON Web key representation of a Symmetric key.
     According to RFC 7517 a JWK representation of a symmetric key can look like
     this::
+
         {
             "kty":"oct",
             "alg":"A128KW",

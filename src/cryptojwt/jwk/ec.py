@@ -44,6 +44,7 @@ class ECKey(AsymmetricKey):
     JSON Web key representation of a Elliptic curve key.
     According to RFC 7517 a JWK representation of a EC key can look like
     this::
+
         {"kty":"EC",
           "crv":"P-256",
           "x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
@@ -85,6 +86,7 @@ class ECKey(AsymmetricKey):
         of an elliptic curve key (a JWK) initiate an
         cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
         or EllipticCurvePrivateKey instance. So we have to get from having::
+
             {
               "kty":"EC",
               "crv":"P-256",
@@ -92,6 +94,7 @@ class ECKey(AsymmetricKey):
               "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
               "d":"870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE"
             }
+
         to having a key that can be used for signing/verifying and/or
         encrypting/decrypting.
         If 'd' has value then we're dealing with a private key otherwise

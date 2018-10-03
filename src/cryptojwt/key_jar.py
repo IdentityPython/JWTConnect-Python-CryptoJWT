@@ -301,11 +301,12 @@ class KeyJar(object):
 
     def match_owner(self, url):
         """
-        Finds the first entity with keys in the key jar that matches the
-        given URL. The match is a leading substring match.
+        Finds the first entity, with keys in the key jar, with an
+        identifier that matches the given URL. The match is a leading
+        substring match.
 
-        :param url:
-        :return:
+        :param url: A URL
+        :return: An issue entity ID that exists in the Key jar
         """
         for owner in self.issuer_keys.keys():
             if owner.startswith(url):
