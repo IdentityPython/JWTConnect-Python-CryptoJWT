@@ -29,8 +29,13 @@ class ECDSASigner(Signer):
         self.algorithm = algorithm
 
     def sign(self, msg, key):
-        # cryptography returns ASN.1-encoded signature data; decode as JWS
-        # uses raw signatures (r||s)
+        """
+        Signs a message using a Elliptic curve key.
+
+        :param msg: The message
+        :param key: An ec.EllipticCurvePrivateKey
+        :return:
+        """
 
         if not isinstance(key, ec.EllipticCurvePrivateKey):
             raise TypeError(
@@ -40,10 +45,21 @@ class ECDSASigner(Signer):
         self._cross_check(key.public_key())
 
         asn1sig = key.sign(msg, ec.ECDSA(self.hash_algorithm()))
+        # Cryptography returns ASN.1-encoded signature data; decode as JWS
+        # uses raw signatures (r||s)
         (r, s) = decode_dss_signature(asn1sig)
         return int_to_bytes(r) + int_to_bytes(s)
 
     def verify(self, msg, sig, key):
+        """
+        Verify a message signature
+
+        :param msg: The message
+        :param sig: A signature
+        :param key: A ec.EllipticCurvePublicKey to use for the verification.
+        :raises: BadSignature if the signature can't be verified.
+        :return: True
+        """
         if not isinstance(key, ec.EllipticCurvePublicKey):
             raise TypeError(
                 "The public key must be an instance of "
@@ -65,6 +81,7 @@ class ECDSASigner(Signer):
         """
         In Ecdsa, both the key and the algorithm define the curve.
         Therefore, we must cross check them to make sure they're the same.
+
         :param key:
         :raises: ValueError is the curves are not the same
         """
@@ -75,8 +92,13 @@ class ECDSASigner(Signer):
 
     @staticmethod
     def _split_raw_signature(sig):
-        """Split raw signature into components"""
+        """
+        Split raw signature into components
+
+        :param sig: The signature
+        :return: A 2-tuple
+        """
         c_length = len(sig) // 2
         r = int_from_bytes(sig[:c_length], byteorder='big')
         s = int_from_bytes(sig[c_length:], byteorder='big')
-        return (r, s)
+        return r, s

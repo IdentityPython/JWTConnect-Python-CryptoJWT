@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class SimpleJWT(object):
+    """
+    Basic JSON Web Token class that doesn't make any assumptions as to what
+    can or should be in the payload
+    """
     def __init__(self, **headers):
         if not headers.get("alg"):
             headers["alg"] = None
@@ -45,6 +49,7 @@ class SimpleJWT(object):
 
         :param parts: List of parts to pack
         :param headers: The JWT headers
+        :return:
         """
         if not headers:
             if self.headers:
@@ -64,6 +69,13 @@ class SimpleJWT(object):
         return ".".join([a.decode() for a in _all])
 
     def payload(self):
+        """
+        Picks out the payload from the different parts of the signed/encrypted
+        JSON Web Token. If the content type is said to be 'jwt' deserialize the
+        payload into a Python object otherwise return as-is.
+
+        :return: The payload
+        """
         _msg = as_unicode(self.part[1])
 
         # If not JSON web token assume JSON

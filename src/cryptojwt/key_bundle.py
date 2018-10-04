@@ -17,7 +17,7 @@ from .jwk.hmac import SYMKey
 from .jwk.ec import ECKey
 from .jwk.ec import NIST2SEC
 from .jwk.rsa import RSAKey
-from .jwk.rsa import rsa_load
+from .jwk.rsa import import_private_rsa_key_from_file
 from .utils import as_unicode
 
 
@@ -277,7 +277,7 @@ class KeyBundle(object):
         :param keytype: Presently only 'rsa' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
         """
-        _bkey = rsa_load(filename)
+        _bkey = import_private_rsa_key_from_file(filename)
 
         if keytype.lower() != 'rsa':
             raise NotImplemented('No support for DER decoding of that key type')

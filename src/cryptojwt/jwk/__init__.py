@@ -72,6 +72,8 @@ class JWK(object):
         A wrapper for to_dict the makes sure that all the private information
         as well as extra arguments are included. This method should *not* be
         used for exporting information about the key.
+
+        :return: A dictionary representation of the JSON Web key
         """
         res = self.serialize(private=True)
         res.update(self.extra_args)
@@ -113,9 +115,9 @@ class JWK(object):
         """
         Get a keys useful for signing and/or encrypting information.
 
-        :param private: Private key requested
+        :param private: Private key requested. If false return a public key.
         :return: A key instance. This can be an RSA, EC or other
-        type of key.
+            type of key.
         """
         pass
 
@@ -124,6 +126,8 @@ class JWK(object):
         Verify that the information gathered from the on-the-wire
         representation is of the right type.
         This is supposed to be run before the info is deserialized.
+
+        :return: True/False
         """
         for param in self.longs:
             item = getattr(self, param)
@@ -177,7 +181,8 @@ class JWK(object):
         :param hash_function: A hash function to use for hashing the
             information
         :param members: Which attributes of the Key instance that should
-            be included when computing the hash value.
+            be included when computing the hash value. If members is undefined
+            then all the required attributes are used.
         :return: A base64 encode hash over a set of Key attributes
         """
         if members is None:
@@ -209,6 +214,8 @@ class JWK(object):
     def appropriate_for(self, usage, **kwargs):
         """
         Make sure that key can be used for the specified usage.
+
+        :return: True/False
         """
         return self.use == USE[usage]
 

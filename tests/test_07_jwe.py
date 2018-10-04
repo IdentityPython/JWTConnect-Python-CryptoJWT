@@ -200,68 +200,6 @@ def test_aes_cbc_missing_decrypt_key():
         encrypter.decrypt(ctx, iv=encrypter.iv, tag=b'12346567890')
 
 
-# def test_jwe_09_a3():
-#     # Example JWE using AES Key Wrap for key encryption and
-#     # AES_128_CBC_HMAC_SHA_256 for content encryption
-#
-#     msg = b'Live long and prosper.'
-#
-#     header = b'{"alg":"A128KW","enc":"A128CBC-HS256"}'
-#     b64_header = b64e(header)
-#
-#     assert b64_header == b'eyJhbGciOiJBMTI4S1ciLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0'
-#
-#     cek = intarr2bytes([4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250,
-#                         63, 170, 106, 206, 107, 124, 212, 45, 111, 107, 9, 219,
-#                         200, 177, 0, 240, 143, 156, 44, 207])
-#
-#     shared_key = [25, 172, 32, 130, 225, 114, 26, 181, 138, 106, 254, 192, 95,
-#                   133, 74, 82]
-#
-#     jek = aes_wrap_key(intarr2bytes(shared_key), cek)
-#
-#     assert to_intarr(jek) == [
-#         232, 160, 123, 211, 183, 76, 245, 132, 200, 128, 123, 75, 190, 216,
-#         22, 67, 201, 138, 193, 186, 9, 91, 122, 31, 246, 90, 28, 139, 57, 3,
-#         76, 124, 193, 11, 98, 37, 173, 61, 104, 57]
-#
-#     b64_jek = b64e(jek)
-#     assert b64_jek == b'6KB707dM9YTIgHtLvtgWQ8mKwboJW3of9locizkDTHzBC2IlrT1oOQ'
-#
-#     iv = intarr2bytes([3, 22, 60, 12, 43, 67, 104, 105, 108, 108, 105, 99,
-#                        111, 116, 104, 101])
-#
-#     b64_iv = b64e(iv)
-#     assert b64_iv == b'AxY8DCtDaGlsbGljb3RoZQ'
-#
-#     aadp = b64_header
-#
-#     assert to_intarr(aadp) == [
-#         101, 121, 74, 104, 98, 71, 99, 105, 79, 105, 74, 66, 77, 84, 73, 52,
-#         83, 49, 99, 105, 76, 67, 74, 108, 98, 109, 77, 105, 79, 105, 74, 66, 77,
-#         84, 73, 52, 81, 48, 74, 68, 76, 85, 104, 84, 77, 106, 85, 50, 73, 110,
-#         48]
-#
-#     _jwe = JWe()
-#     ctxt, tag, key = _jwe.enc_setup("A128CBC-HS256", msg, aadp, cek, iv=iv)
-#
-#     print(to_intarr(ctxt))
-#
-#     assert to_intarr(ctxt) == [
-#         40, 57, 83, 181, 119, 33, 133, 148, 198, 185, 243, 24, 152, 230, 6,
-#         75, 129, 223, 127, 19, 210, 82, 183, 230, 168, 33, 215, 104, 143,
-#         112, 56, 102]
-#
-#     assert to_intarr(tag) == [83, 73, 191, 98, 104, 205, 211, 128, 201, 189,
-#                               199, 133, 32, 38, 194, 85]
-#
-#     enc_cipher_text = b64e(ctxt)
-#     assert enc_cipher_text == b'KDlTtXchhZTGufMYmOYGS4HffxPSUrfmqCHXaI9wOGY'
-#
-#     enc_authn_tag = b64e(tag)
-#     assert enc_authn_tag == b'U0m_YmjN04DJvceFICbCVQ'
-
-
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 

@@ -1,61 +1,6 @@
-cryptojwt\.jws package
-==========================
+JSON Web Signature (JWS)
+========================
 
-Submodules
-----------
+JSON Web Signature (JWS) represents content secured with digital signatures
+or Message Authentication Codes (MACs) using JSON-based data structures.
 
-cryptojwt\.jws\.dsa module
---------------------------
-
-.. automodule:: cryptojwt.jws.dsa
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.exception module
---------------------------------
-
-.. automodule:: cryptojwt.jws.exception
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.hmac module
----------------------------
-
-.. automodule:: cryptojwt.jws.hmac
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.jws module
---------------------------
-
-.. automodule:: cryptojwt.jws.jws
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.pss module
---------------------------
-
-.. automodule:: cryptojwt.jws.pss
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.rsa module
---------------------------
-
-.. automodule:: cryptojwt.jws.rsa
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-cryptojwt\.jws\.utils module
-----------------------------
-
-.. automodule:: cryptojwt.jws.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:

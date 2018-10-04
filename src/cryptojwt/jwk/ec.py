@@ -23,16 +23,35 @@ NIST2SEC = {
     'P-192': ec.SECP192R1,
 }
 
+# Inverted NIST2SEC dictionary
 SEC2NIST = dict([(s.name, n) for n, s in NIST2SEC.items()])
 
 
 def ec_construct_public(num):
+    """
+    Given a set of values on public attributes build a elliptic curve
+    public key instance.
+
+    :param num: A dictionary with public attributes and their values
+    :return: A
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
+        instance.
+    """
     ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
                                          NIST2SEC[as_unicode(num['crv'])]())
     return ecpn.public_key(default_backend())
 
 
 def ec_construct_private(num):
+    """
+    Given a set of values on public and private attributes build a elliptic
+    curve private key instance.
+
+    :param num: A dictionary with public and private attributes and their values
+    :return: A
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        instance.
+    """
     pub_ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
                                              NIST2SEC[as_unicode(num['crv'])]())
     priv_ecpn = ec.EllipticCurvePrivateNumbers(num['d'], pub_ecpn)
@@ -45,7 +64,8 @@ class ECKey(AsymmetricKey):
     According to RFC 7517 a JWK representation of a EC key can look like
     this::
 
-        {"kty":"EC",
+        {
+          "kty":"EC",
           "crv":"P-256",
           "x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4",
           "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
@@ -60,6 +80,7 @@ class ECKey(AsymmetricKey):
     longs = ['x', 'y', 'd']
     public_members = AsymmetricKey.public_members[:]
     public_members.extend(["kty", "alg", "use", "kid", "crv", "x", "y"])
+    # required attributes
     required = ['crv', 'key', 'x', 'y']
 
     def __init__(self, kty="EC", alg="", use="", kid="", key=None,
@@ -98,9 +119,9 @@ class ECKey(AsymmetricKey):
         to having a key that can be used for signing/verifying and/or
         encrypting/decrypting.
         If 'd' has value then we're dealing with a private key otherwise
-        a public key. 'x' and 'y' must have values.
-        If self.key has a value beforehand this will overwrite what ever
-        was there to begin with.
+        a public key. 'x' and 'y' MUST have values.
+        If self.pub_key or self.priv_key has a value beforehand this will
+        be overwrite.
 
         x, y and d (if present) must be strings or bytes.
         """
@@ -109,6 +130,7 @@ class ECKey(AsymmetricKey):
             _x = deser(self.x)
         else:
             raise ValueError('"x" MUST be a string')
+
         if isinstance(self.y, (str, bytes)):
             _y = deser(self.y)
         else:
@@ -120,6 +142,7 @@ class ECKey(AsymmetricKey):
                     _d = deser(self.d)
                     self.priv_key = ec_construct_private(
                         {'x': _x, 'y': _y, 'crv': self.crv, 'd': _d})
+                    self.pub_key = self.priv_key.public_key()
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
@@ -145,7 +168,7 @@ class ECKey(AsymmetricKey):
         cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         or EllipticCurvePublicKey instance to a JWK representation.
 
-        :param private: Whether we should include the private parts or not.
+        :param private: Whether we should include the private attributes or not.
         :return: A JWK as a dictionary
         """
         if self.priv_key:
@@ -156,7 +179,6 @@ class ECKey(AsymmetricKey):
         res = self.common()
 
         res.update({
-            # "crv": SEC2NIST[self.crv.name],
             "crv": self.crv,
             "x": self.x,
             "y": self.y
@@ -171,8 +193,8 @@ class ECKey(AsymmetricKey):
         """
         Load an Elliptic curve key
 
-        :param key: An elliptic curve key instance
-        :return:
+        :param key: An elliptic curve key instance, private or public.
+        :return: Reference to this instance
         """
         self._serialize(key)
         if isinstance(key, ec.EllipticCurvePrivateKey):
@@ -184,11 +206,20 @@ class ECKey(AsymmetricKey):
         return self
 
     def decryption_key(self):
-        return self.get_key(private=True)
+        """
+        Get a key appropriate for decrypting a message.
 
-    def encryption_key(self, private=False, **kwargs):
-        # both for encryption and decryption.
-        return self.get_key(private=private)
+        :return: An ec.EllipticCurvePrivateKey instance
+        """
+        return self.priv_key
+
+    def encryption_key(self):
+        """
+        Get a key appropriate for encrypting a message.
+
+        :return: An ec.EllipticCurvePublicKey instance
+        """
+        return self.pub_key
 
     def __eq__(self, other):
         """

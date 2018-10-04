@@ -21,6 +21,13 @@ class HMACSigner(Signer):
             raise Unsupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
+        """
+        Create a signature over a message
+
+        :param msg: The message
+        :param key: The key
+        :return: A signature
+        """
         h = hmac.HMAC(key, self.algorithm(), default_backend())
         h.update(msg)
         return h.finalize()

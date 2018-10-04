@@ -1,4 +1,4 @@
-import struct
+# import struct
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
@@ -28,12 +28,18 @@ def left_hash(msg, func="HS256"):
         return as_unicode(b64e(sha512_digest(msg)[:32]))
 
 
-def mpint(b):
-    b += b"\x00"
-    return struct.pack(">L", len(b)) + b
-
+# def mpint(b):
+#     b += b"\x00"
+#     return struct.pack(">L", len(b)) + b
+#
 
 def alg2keytype(alg):
+    """
+    Go from algorithm name to key type.
+
+    :param alg: The algorithm name
+    :return: The key type
+    """
     if not alg or alg.lower() == "none":
         return "none"
     elif alg.startswith("RS") or alg.startswith("PS"):
@@ -47,7 +53,8 @@ def alg2keytype(alg):
 
 
 def parse_rsa_algorithm(algorithm):
-    """Parses Rsa's algorithm and returns tuple (hash, padding).
+    """
+    Parses a RSA algorithm and returns tuple (hash, padding).
 
     :param algorithm: string, RSA algorithm as defined at
         https://tools.ietf.org/html/rfc7518#section-3.1.

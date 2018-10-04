@@ -40,13 +40,24 @@ class AsymmetricKey(JWK):
                 return None
 
     def has_private_key(self):
+        """
+        Checks whether there is a private key avaliable.
+
+        :return: True/False
+        """
         if self.priv_key:
             return True
         else:
             return False
 
     def public_key(self):
+        """
+        Return a public key instance.
+        """
         return self.pub_key
 
     def private_key(self):
+        """
+        Return a private key instance.
+        """
         return self.priv_key

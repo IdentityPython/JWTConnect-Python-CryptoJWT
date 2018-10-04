@@ -26,6 +26,13 @@ class PSSSigner(Signer):
             raise Unsupported('algorithm: {}'.format(algorithm))
 
     def sign(self, msg, key):
+        """
+        Create a signature over a message
+
+        :param msg: The message
+        :param key: The key
+        :return: A signature
+        """
         hasher = hashes.Hash(self.hash_algorithm(), backend=default_backend())
         hasher.update(msg)
         digest = hasher.finalize()
@@ -38,6 +45,15 @@ class PSSSigner(Signer):
         return sig
 
     def verify(self, msg, signature, key):
+        """
+        Verify a message signature
+
+        :param msg: The message
+        :param sig: A signature
+        :param key: A ec.EllipticCurvePublicKey to use for the verification.
+        :raises: BadSignature if the signature can't be verified.
+        :return: True
+        """
         try:
             key.verify(signature, msg,
                        padding.PSS(mgf=padding.MGF1(self.hash_algorithm()),
