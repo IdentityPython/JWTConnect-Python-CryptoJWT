@@ -104,7 +104,7 @@ class JWS(JWx):
 
         :param keys: A dictionary of keys
         :param protected: The protected headers (a dictionary)
-        :return:
+        :return: A signed JSON Web Token
         """
 
         key, xargs, _alg = self.alg_keys(keys, 'sig', protected)
@@ -137,11 +137,12 @@ class JWS(JWx):
         """
         Verify a JWT signature
 
-        :param jws:
-        :param keys:
+        :param jws: A signed JSON Web Token
+        :param keys: A list of keys that can possibly be used to verify the
+            signature
         :param allow_none: If signature algorithm 'none' is allowed
         :param sigalg: Expected sigalg
-        :return:
+        :return: Dictionary with 2 keys 'msg' required, 'key' optional
         """
         return self.verify_compact_verbose(jws, keys, allow_none, sigalg)['msg']
 
@@ -150,11 +151,14 @@ class JWS(JWx):
         """
         Verify a JWT signature and return dict with validation results
 
-        :param jws:
-        :param keys:
+        :param jws: A signed JSON Web Token
+        :param keys: A list of keys that can possibly be used to verify the
+            signature
         :param allow_none: If signature algorithm 'none' is allowed
         :param sigalg: Expected sigalg
-        :return:
+        :return: Dictionary with 2 keys 'msg' required, 'key' optional.
+            The value of 'msg' is the unpacked and verified message.
+            The value of 'key' is the key used to verify the message
         """
         if jws:
             jwt = JWSig().unpack(jws)
@@ -234,8 +238,8 @@ class JWS(JWx):
 
         :param keys: list of keys to use for signing the JWS
         :param headers: list of tuples (protected headers, unprotected
-        headers) for each signature
-        :return:
+            headers) for each signature
+        :return: A signed message using the JSON serialization format.
         """
 
         def create_signature(protected, unprotected):

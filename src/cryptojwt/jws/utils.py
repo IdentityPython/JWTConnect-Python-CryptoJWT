@@ -33,14 +33,6 @@ def mpint(b):
     return struct.pack(">L", len(b)) + b
 
 
-# def mp2bin(b):
-#     # just ignore the length...
-#     if b[4] == '\x00':
-#         return b[5:]
-#     else:
-#         return b[4:]
-
-
 def alg2keytype(alg):
     if not alg or alg.lower() == "none":
         return "none"
@@ -57,15 +49,10 @@ def alg2keytype(alg):
 def parse_rsa_algorithm(algorithm):
     """Parses Rsa's algorithm and returns tuple (hash, padding).
 
-    Args:
-      algorithm: string, RSA algorithm as defined at
-      https://tools.ietf.org/html/rfc7518#section-3.1.
-
-    Raises:
-      UnsupportedAlgorithm: if the algorithm is not supported.
-
-    Returns:
-      (hash, padding) tuple.
+    :param algorithm: string, RSA algorithm as defined at
+        https://tools.ietf.org/html/rfc7518#section-3.1.
+    :raises: UnsupportedAlgorithm: if the algorithm is not supported.
+    :returns: (hash, padding) tuple.
     """
 
     if algorithm == "RS256":

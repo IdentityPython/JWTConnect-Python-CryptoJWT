@@ -66,7 +66,7 @@ class ECDSASigner(Signer):
         In Ecdsa, both the key and the algorithm define the curve.
         Therefore, we must cross check them to make sure they're the same.
         :param key:
-        :return:
+        :raises: ValueError is the curves are not the same
         """
         if self.curve_name != pub_key.curve.name:
             raise ValueError(

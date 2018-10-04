@@ -123,6 +123,7 @@ def b64d_enc_dec(str, encode="ascii", decode="utf-8"):
 def as_bytes(s):
     """
     Convert an unicode string to bytes.
+
     :param s: Unicode / bytes string
     :return: bytes string
     """
@@ -136,6 +137,7 @@ def as_bytes(s):
 def as_unicode(b):
     """
     Convert a byte string to a unicode string
+
     :param b: byte string
     :return: unicode string
     """
