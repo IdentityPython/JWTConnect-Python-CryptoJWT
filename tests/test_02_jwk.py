@@ -570,7 +570,7 @@ def test_load_pem_file_rsa():
     assert key.has_private_key()
 
 
-# def test_load_pem_file_ec():
-#     key = ECKey().load(full_path('ec.pem'))
-#     assert key.has_private_key()
+def test_load_pem_file_ec():
+    key = ECKey().load(full_path('570-ec-sect571r1-keypair.pem'))
+    assert key.has_private_key()
 
