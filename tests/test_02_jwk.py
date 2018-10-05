@@ -575,9 +575,18 @@ def test_load_pem_file_ec():
     assert key.has_private_key()
 
 
-def test_key_from_jwk_dict():
+def test_key_from_jwk_dict_rsa():
     rsa_key = new_rsa_key()
     jwk = rsa_key.serialize(private=True)
     _key = key_from_jwk_dict(jwk)
     assert isinstance(_key, RSAKey)
+    assert _key.has_private_key()
+
+
+def test_key_from_jwk_dict_ec():
+    key = ECKey().load(full_path('570-ec-sect571r1-keypair.pem'))
+    assert key.has_private_key()
+    jwk = key.serialize(private=True)
+    _key = key_from_jwk_dict(jwk)
+    assert isinstance(_key, ECKey)
     assert _key.has_private_key()

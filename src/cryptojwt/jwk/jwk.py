@@ -13,6 +13,7 @@ from ..exception import UnsupportedAlgorithm
 from ..utils import base64url_to_long, b64d, as_bytes
 
 from .ec import ECKey
+from .ec import NIST2SEC
 from .rsa import RSAKey
 from .hmac import SYMKey
 
@@ -27,15 +28,12 @@ def key_from_jwk_dict(jwk_dict):
     _jwk_dict = copy.copy(jwk_dict)
 
     if _jwk_dict['kty'] == 'EC':
-        if _jwk_dict["crv"] == "P-256":
-            curve = ec.SECP256R1()
-        elif _jwk_dict["crv"] == "P-384":
-            curve = ec.SECP384R1()
-        elif _jwk_dict["crv"] == "P-521":
-            curve = ec.SECP521R1()
+        if _jwk_dict["crv"] in NIST2SEC:
+            curve = NIST2SEC[_jwk_dict["crv"]]()
         else:
             raise UnsupportedAlgorithm(
                 "Unknown curve: %s" % (_jwk_dict["crv"]))
+
         if _jwk_dict.get("d", None) is not None:
             # Ecdsa private key.
             _jwk_dict['priv_key'] = ec.derive_private_key(
@@ -55,11 +53,11 @@ def key_from_jwk_dict(jwk_dict):
             base64url_to_long(_jwk_dict["e"]),
             base64url_to_long(_jwk_dict["n"]))
         if _jwk_dict.get("p", None) is not None:
-            # Rsa private key.
+            # Rsa private key. These MUST be present
             p_long = base64url_to_long(_jwk_dict["p"])
             q_long = base64url_to_long(_jwk_dict["q"])
             d_long = base64url_to_long(_jwk_dict["d"])
-
+            # If not present these can be calculated from the others
             if 'dp' not in _jwk_dict:
                 dp_long = rsa_crt_dmp1(d_long, p_long)
             else:
