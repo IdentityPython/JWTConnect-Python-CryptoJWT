@@ -30,7 +30,7 @@ from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import load_x509_cert
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.jwk.jwk import jwk_wrap
-from cryptojwt.jwk.jwk import keyrep
+from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jwk.jwks import JWKS
 from cryptojwt.jwk.jwks import load_jwks
 from cryptojwt.jwk.ec import NIST2SEC
@@ -321,7 +321,7 @@ def test_private_key_from_jwk():
     keys = []
 
     kspec = json.loads(open(full_path("jwk_private_key.json")).read())
-    keys.append(keyrep(kspec))
+    keys.append(key_from_jwk_dict(kspec))
 
     key = keys[0]
 

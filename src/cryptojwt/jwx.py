@@ -3,7 +3,7 @@ import logging
 
 import requests
 
-from .jwk.jwk import keyrep
+from .jwk.jwk import key_from_jwk_dict
 from .jwk.jwks import JWKS
 from .jwk.rsa import import_rsa_key
 from .jwk.rsa import load_x509_cert
@@ -67,9 +67,9 @@ class JWx(object):
 
                 if key == "jwk":
                     if isinstance(_val, dict):
-                        self._dict["jwk"] = keyrep(_val)
+                        self._dict["jwk"] = key_from_jwk_dict(_val)
                     elif isinstance(_val, str):
-                        self._dict["jwk"] = keyrep(json.loads(_val))
+                        self._dict["jwk"] = key_from_jwk_dict(json.loads(_val))
                     else:
                         raise ValueError(
                             'JWK must be a string or a JSON object')

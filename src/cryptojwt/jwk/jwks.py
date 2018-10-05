@@ -1,6 +1,6 @@
 import json
 
-from .jwk import keyrep
+from .jwk import key_from_jwk_dict
 from .jwk import jwk_wrap
 from ..exception import HTTPException
 from ..utils import bytes2str_conv
@@ -14,7 +14,7 @@ class JWKS(object):
 
     def load_dict(self, dikt):
         for kspec in dikt["keys"]:
-            self._keys.append(keyrep(kspec))
+            self._keys.append(key_from_jwk_dict(kspec))
 
     def load_jwks(self, jwks):
         """
@@ -127,7 +127,7 @@ class JWKS(object):
     #     return _res
 
     def add(self, item, enc="utf-8"):
-        self._keys.append(keyrep(item, enc))
+        self._keys.append(key_from_jwk_dict(item, enc))
 
     def append(self, key):
         self._keys.append(key)
