@@ -9,8 +9,6 @@ from ..exception import UnknownKeyType
 from ..exception import UnsupportedAlgorithm
 from ..utils import base64url_to_long, b64d, as_bytes
 
-# from . import JWK
-
 from .ec import ECKey
 from .rsa import RSAKey
 from .hmac import SYMKey
