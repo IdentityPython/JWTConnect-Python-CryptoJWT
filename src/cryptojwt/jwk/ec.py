@@ -1,4 +1,5 @@
 from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from .asym import AsymmetricKey
@@ -56,6 +57,42 @@ def ec_construct_private(num):
                                              NIST2SEC[as_unicode(num['crv'])]())
     priv_ecpn = ec.EllipticCurvePrivateNumbers(num['d'], pub_ecpn)
     return priv_ecpn.private_key(default_backend())
+
+
+def import_private_key_from_file(filename, passphrase=None):
+    """
+    Read a private Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        instance
+    """
+    with open(filename, "rb") as key_file:
+        private_key = serialization.load_pem_private_key(
+            key_file.read(),
+            password=passphrase,
+            backend=default_backend())
+
+    return private_key
+
+
+def import_public_key_from_file(filename):
+    """
+    Read a public Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A
+        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        instance
+    """
+    with open(filename, "rb") as key_file:
+        public_key = serialization.load_pem_public_key(
+            key_file.read(),
+            backend=default_backend())
+    return public_key
 
 
 class ECKey(AsymmetricKey):
