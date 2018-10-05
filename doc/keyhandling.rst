@@ -70,6 +70,22 @@ RSA key from you could do like this::
     >>> rsa_key.public_key()
     <cryptography.hazmat.backends.openssl.rsa._RSAPublicKey object at 0x1036b1f60>
 
+If you are dealing with Elliptic Curve keys the equivalent would be::
+
+    >>> from cryptojwt.jwk.ec import new_ec_key
+    >>> ec_key = new_ec_key('P-256')
+    >>> type(ec_key)
+    <class 'cryptojwt.jwk.ec.ECKey'>
+    >>> ec_key.has_private_key()
+    True
+
+and::
+
+    >>> from cryptojwt.jwk.ec import ECKey
+    >>> ec_key = ECKey().load('ec-keypair.pem')
+    >>> ec_key.has_private_key()
+    True
+
 
 
 .. _cryptography: https://cryptography.io/en/latest/
