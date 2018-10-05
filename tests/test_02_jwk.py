@@ -563,3 +563,8 @@ def test_new_rsa_key():
     key = new_rsa_key()
     assert isinstance(key, RSAKey)
     assert key.priv_key
+
+
+def test_load_pem_file():
+    key = RSAKey().load(full_path('server.key'))
+    assert key.has_private_key()
