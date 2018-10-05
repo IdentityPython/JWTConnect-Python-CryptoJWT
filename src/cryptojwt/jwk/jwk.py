@@ -3,6 +3,9 @@ import copy
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
+from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
+from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
 
 from ..exception import WrongKeyType
 from ..exception import UnknownKeyType
@@ -53,13 +56,26 @@ def key_from_jwk_dict(jwk_dict):
             base64url_to_long(_jwk_dict["n"]))
         if _jwk_dict.get("p", None) is not None:
             # Rsa private key.
+            p_long = base64url_to_long(_jwk_dict["p"])
+            q_long = base64url_to_long(_jwk_dict["q"])
+            d_long = base64url_to_long(_jwk_dict["d"])
+
+            if 'dp' not in _jwk_dict:
+                dp_long = rsa_crt_dmp1(d_long, p_long)
+            else:
+                dp_long = base64url_to_long(_jwk_dict["dp"])
+            if 'dq' not in _jwk_dict:
+                dq_long = rsa_crt_dmq1(d_long, q_long)
+            else:
+                dq_long = base64url_to_long(_jwk_dict["dq"])
+            if 'qi' not in _jwk_dict:
+                qi_long = rsa_crt_iqmp(p_long, q_long)
+            else:
+                qi_long = base64url_to_long(_jwk_dict["qi"])
+
             rsa_priv_numbers = rsa.RSAPrivateNumbers(
-                base64url_to_long(_jwk_dict["p"]),
-                base64url_to_long(_jwk_dict["q"]),
-                base64url_to_long(_jwk_dict["d"]),
-                base64url_to_long(_jwk_dict["dp"]),
-                base64url_to_long(_jwk_dict["dq"]),
-                base64url_to_long(_jwk_dict["qi"]), rsa_pub_numbers)
+                p_long, q_long, d_long,
+                dp_long, dq_long, qi_long, rsa_pub_numbers)
             _jwk_dict['priv_key'] = rsa_priv_numbers.private_key(
                 backends.default_backend())
             _jwk_dict['pub_key'] = _jwk_dict['priv_key'].public_key()
