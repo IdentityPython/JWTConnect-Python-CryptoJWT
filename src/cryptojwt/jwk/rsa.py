@@ -500,6 +500,17 @@ class RSAKey(AsymmetricKey):
 
 
 def new_rsa_key(key_size=2048, kid='', use='', public_exponent=65537):
+    """
+    Creates a new RSA key pair and wraps it in a
+    :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
+
+    :param key_size: The size of the key
+    :param kid: The key ID
+    :param use: What the is supposed to be used for. 2 choices 'sig'/'enc'
+    :param public_exponent: The value of the public exponent.
+    :return: A :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
+    """
+
     _key = rsa.generate_private_key(public_exponent=public_exponent,
                                     key_size=key_size,
                                     backend=default_backend())

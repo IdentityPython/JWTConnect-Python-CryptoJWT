@@ -13,7 +13,7 @@ CryptoJWT is supposed to provide you (a Python programmer) with all you need,
    keyhandling
    jws
    jwe
-   source
+   source/index.rst
 
 Indices and tables
 ==================
