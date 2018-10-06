@@ -590,3 +590,11 @@ def test_key_from_jwk_dict_ec():
     _key = key_from_jwk_dict(jwk)
     assert isinstance(_key, ECKey)
     assert _key.has_private_key()
+
+
+def test_key_from_jwk_dict_sym():
+    jwk = {'kty': 'oct', 'key': 'abcdefghijklmnopq'}
+    _key = key_from_jwk_dict(jwk)
+    assert isinstance(_key, SYMKey)
+    jwk = _key.serialize()
+    assert jwk == {'kty': 'oct', 'k': 'YWJjZGVmZ2hpamtsbW5vcHE'}

@@ -5,12 +5,9 @@ import pytest
 import shutil
 import time
 
-from cryptography.hazmat.primitives.asymmetric import rsa
-
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.hmac import SYMKey
 
-from cryptojwt.key_bundle import create_and_store_rsa_key_pair
 from cryptojwt.key_bundle import dump_jwks
 from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_bundle import keybundle_from_local_file
@@ -187,24 +184,6 @@ if os.path.isdir('keys'):
     shutil.rmtree('keys')
 
 
-def test_create_and_store_rsa_key_pair():
-    key = create_and_store_rsa_key_pair()
-    assert isinstance(key, rsa.RSAPrivateKey)
-
-    # default
-    filename = os.path.join('.', 'oidcmsg')
-    assert os.path.isfile(filename)
-    assert os.path.isfile('{}.pub'.format(filename))
-
-    sec_key = create_and_store_rsa_key_pair('seckey', 'keys', size=1024)
-    assert isinstance(sec_key, rsa.RSAPrivateKey)
-
-    # default
-    filename = os.path.join('keys', 'seckey')
-    assert os.path.isfile(filename)
-    assert os.path.isfile('{}.pub'.format(filename))
-
-
 def test_with_sym_key():
     kc = KeyBundle({"kty": "oct", "key": "highestsupersecret", "use": "sig"})
     assert len(kc.get("oct")) == 1
@@ -323,7 +302,7 @@ def test_get_all():
 
 def test_keybundle_from_local_der():
     kb = keybundle_from_local_file(
-        "{}".format(os.path.join('keys', 'rsa_enc')), "der", ['enc'])
+        "{}".format(os.path.join('test_keys', 'rsa.key')), "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
@@ -332,7 +311,8 @@ def test_keybundle_from_local_der():
 
 def test_keybundle_from_local_der_update():
     kb = keybundle_from_local_file(
-        "file://{}".format(os.path.join('keys', 'rsa_enc')), "der", ['enc'])
+        "file://{}".format(os.path.join('test_keys', 'rsa.key')),
+        "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
