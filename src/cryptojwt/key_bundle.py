@@ -407,7 +407,7 @@ class KeyBundle(object):
 
     def jwks(self, private=False):
         """
-        Create a JWKS
+        Create a JWKS as a JSON document
         
         :param private: Whether private key information should be included.
         :return: A JWKS JSON representation of the keys in this bundle
@@ -418,7 +418,7 @@ class KeyBundle(object):
             if private:
                 key = k.serialize(private)
             else:
-                key = k.to_dict()
+                key = k.serialize()
                 for k, v in key.items():
                     key[k] = as_unicode(v)
             keys.append(key)
