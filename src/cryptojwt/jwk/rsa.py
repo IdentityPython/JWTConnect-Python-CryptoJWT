@@ -12,7 +12,8 @@ from ..utils import b64e
 from ..utils import deser
 from ..utils import long_to_base64
 
-from ..exception import DeSerializationNotPossible, UnsupportedKeyType
+from ..exception import DeSerializationNotPossible
+from ..exception import UnsupportedKeyType
 from ..exception import JWKESTException
 from ..exception import SerializationNotPossible
 

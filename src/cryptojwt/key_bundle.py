@@ -2,20 +2,15 @@ import json
 import logging
 import os
 import requests
-import sys
 import time
-
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.rsa import generate_private_key
 
 from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UpdateFailed
 from .jwk.hmac import SYMKey
 from .jwk.ec import ECKey
-from .jwk.ec import NIST2SEC
+from .jwk.ec import new_ec_key
+from .jwk.rsa import new_rsa_key
 from .jwk.rsa import RSAKey
 from .jwk.rsa import import_private_rsa_key_from_file
 from .utils import as_unicode
@@ -56,54 +51,13 @@ def harmonize_usage(use):
         return list(set([MAP[u] for u in use if u in ul]))
 
 
-def create_and_store_rsa_key_pair(name="oidcmsg", path=".", size=2048, use=''):
-    """
-    Mints a new RSA key pair and stores it in a file.
-    
-    :param name: Name of the key file. 2 files will be created one with
-        the private key the name without extension and the other containing
-        the public key with '.pub' as extension. 
-    :param path: Path to where the key files are stored
-    :param size: RSA key size
-    :return: RSA key
-    """
-
-    key = generate_private_key(public_exponent=65537, key_size=size,
-                               backend=default_backend())
-
-    os.makedirs(path, exist_ok=True)
-
-    if name:
-        if use:
-            name = '{}_{}'.format(name, use)
-
-        pem = key.private_bytes(
-            encoding = serialization.Encoding.PEM,
-            format = serialization.PrivateFormat.PKCS8,
-            encryption_algorithm = serialization.NoEncryption())
-
-        with open(os.path.join(path, name), 'wb') as f:
-            f.write(pem)
-
-        public_key = key.public_key()
-        pub_pem = public_key.public_bytes(
-            encoding = serialization.Encoding.PEM,
-            format = serialization.PublicFormat.SubjectPublicKeyInfo)
-
-        with open(os.path.join(path, '{}.pub'.format(name)), 'wb') as f:
-            f.write(pub_pem)
-
-    return key
-
-
 def rsa_init(spec):
     """
     Initiates a :py:class:`oidcmsg.keybundle.KeyBundle` instance
     containing newly minted RSA keys according to a spec.
     
     Example of specification::
-        {'name': 'myrsakey', 'path': 'keystore', 'size':2048, 
-         'use': ['enc', 'sig'] }
+        {'size':2048, 'use': ['enc', 'sig'] }
          
     Using the spec above 2 RSA keys would be minted, one for 
     encryption and one for signing.
@@ -111,36 +65,27 @@ def rsa_init(spec):
     :param spec:
     :return: KeyBundle
     """
-    if 'name' not in spec:
-        try:
-            _key_name = spec['key']
-        except KeyError:
-            pass
-        else:
-            if '/' in _key_name:
-                (head, tail) = os.path.split(spec['key'])
-                spec['path'] = head
-                spec['name'] = tail
-            else:
-                spec['name'] = _key_name
 
-    arg = {}
-    for param in ["name", "path", "size"]:
-        try:
-            arg[param] = spec[param]
-        except KeyError:
-            pass
+    try:
+        size = spec['size']
+    except KeyError:
+        size = 2048
 
     kb = KeyBundle(keytype="RSA")
-    for use in harmonize_usage(spec["use"]):
-        _key = create_and_store_rsa_key_pair(use=use, **arg)
-        kb.append(RSAKey(use=use, priv_key=_key))
+    if 'use' in spec:
+        for use in harmonize_usage(spec["use"]):
+            _key = new_rsa_key(use=use, key_size=size)
+            kb.append(_key)
+    else:
+        _key = new_rsa_key(key_size=size)
+        kb.append(_key)
+
     return kb
 
 
 def ec_init(spec):
     """
-    Initiate a keybundle with an elliptic curve key.
+    Initiate a key bundle with an elliptic curve key.
 
     :param spec: Key specifics of the form::
         {"type": "EC", "crv": "P-256", "use": ["sig"]}
@@ -148,12 +93,15 @@ def ec_init(spec):
     :return: A KeyBundle instance
     """
 
-    _key = ec.generate_private_key(NIST2SEC[spec['crv']], default_backend())
-
-    kb = KeyBundle(keytype="EC", keyusage=spec["use"])
-    for use in spec["use"]:
-        eck = ECKey(use=use).load_key(_key)
+    kb = KeyBundle(keytype="EC")
+    if 'use' in spec:
+        for use in spec["use"]:
+            eck = new_ec_key(crv=spec['crv'], use=use)
+            kb.append(eck)
+    else:
+        eck = new_ec_key(crv=spec['crv'])
         kb.append(eck)
+
     return kb
 
 
