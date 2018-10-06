@@ -207,6 +207,44 @@ bundle::
 **Note** that you will get a JWKS representing the public keys unless you
 specify that you want a representation of the private keys.
 
+As an example of the special functionality of
+:py:class:`cryptojwt.key_bundle.KeyBundle` assume you have imported a file
+containing a JWKS with one key into a key bundle and then some time later
+another key is added to the file.
+This is how key bundle deals with that::
+
+    >>> from cryptojwt.key_bundle import KeyBundle
+    >>> kb = KeyBundle(source="file://{}".format(fname), fileformat='jwks')
+    >>> len(kb)
+    1
+
+Now if we add one key to the file and then some time later we ask for the
+keys in the key bundle::
+
+    >>> _keys = kb.keys()
+    >>> len(_keys)
+    2
+
+It turns out the it contains the 2 keys that are in the file.
+If the change is that one key is removed then something else happens.
+Assume we add one key and remove one of the ones that was there before.
+The file now should contain 2 keys::
+
+    >>> _keys = kb.keys()
+    >>> len(_keys)
+    3
+
+???
+The key that was removed has not disappeared from the key bundle, but it is
+marked as *inactive*. Which means that it should not be used for signing and
+encryption but can be used for decryption and signature verification. ::
+
+    >>> len(kb.get('rsa'))
+    1
+    >>> len(kb.get('rsa', only_active=False))
+    2
+
+
 Key Jar
 -------
 

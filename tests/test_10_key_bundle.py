@@ -500,3 +500,6 @@ def test_update_mark_inactive():
     # 2 active and 1 inactive
     assert len(kb) == 3
     assert len(kb.active_keys()) == 2
+
+    assert len(kb.get('rsa')) == 1
+    assert len(kb.get('rsa', only_active=False)) == 2

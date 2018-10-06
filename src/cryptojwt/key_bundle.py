@@ -353,7 +353,7 @@ class KeyBundle(object):
 
         return res
 
-    def get(self, typ=""):
+    def get(self, typ="", only_active=True):
         """
         Return a list of keys. Either all keys or only keys of a specific type
         
@@ -365,9 +365,14 @@ class KeyBundle(object):
         _typs = [typ.lower(), typ.upper()]
 
         if typ:
-            return [k for k in self._keys if k.kty in _typs]
+            _keys = [k for k in self._keys if k.kty in _typs]
         else:
-            return self._keys
+            _keys = self._keys
+
+        if only_active:
+            return [k for k in _keys if not k.inactive_since]
+        else:
+            return _keys
 
     def keys(self):
         """
