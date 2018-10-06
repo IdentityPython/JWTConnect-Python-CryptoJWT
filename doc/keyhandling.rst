@@ -93,15 +93,16 @@ only know how to serialize into the format described in JWK_.
     >>> rsa_key = new_rsa_key()
     >>> rsa_key.serialize()
     {
-    'kty': 'RSA',
-    'kid': 'NXhZYllJOXdLSW50aUVkcGY4XzZrSVF5blI5aEYxeEJDdFZLV2tHZDlFUQ',
-    'n': 'xRgpX7q-kvQ02EhkHi63TQBR0RMcGCnxCugxtcPmaIX8brilwbkwQyZraEHzW
-    zj-gaQyro_dWR7QqbhgiQ6U9Hj3x6HINJuw7LbqR_GE4TvTu3rJXPh3MqTs7yK6GcgK
-    soTv8wQy6Pwl7gjrQRk37zfIHWLkxU-crz2dd1QdSmStlxRjbczik66llF5ENXE3wVz
-    raPAdjIv1Y4n5dT3kw7QerVv2Dntn5TJ_8QSkmDJW-FA2TQbKBnOd_OgYeKZnGx5cng
-    uWa23uQZTxfGnE7IXA2XYpZhHIgAGMXQ0SaR07MwIZDmreI_Mxypg2ES7XT42qhnxXU
-    iGm9fA8nhHjwQ',
-    'e': 'AQAB'
+      'kty': 'RSA',
+      'kid': 'NXhZYllJOXdLSW50aUVkcGY4XzZrSVF5blI5aEYxeEJDdFZLV2tHZDlFUQ',
+      'n':
+        'xRgpX7q-kvQ02EhkHi63TQBR0RMcGCnxCugxtcPmaIX8brilwbkwQyZraEHzWzj-g
+         aQyro_dWR7QqbhgiQ6U9Hj3x6HINJuw7LbqR_GE4TvTu3rJXPh3MqTs7yK6GcgKso
+         Tv8wQy6Pwl7gjrQRk37zfIHWLkxU-crz2dd1QdSmStlxRjbczik66llF5ENXE3wVz
+         raPAdjIv1Y4n5dT3kw7QerVv2Dntn5TJ_8QSkmDJW-FA2TQbKBnOd_OgYeKZnGx5c
+         nguWa23uQZTxfGnE7IXA2XYpZhHIgAGMXQ0SaR07MwIZDmreI_Mxypg2ES7XT42qh
+         nxXUiGm9fA8nhHjwQ',
+      'e': 'AQAB'
     }
 
 
@@ -112,27 +113,31 @@ You can also get the values for the private key like this::
     >>> rsa_key = new_rsa_key()
     >>> rsa_key.serialize(private=True)
     {
-    'kty': 'RSA',
-    'kid': 'NXhZYllJOXdLSW50aUVkcGY4XzZrSVF5blI5aEYxeEJDdFZLV2tHZDlFUQ',
-    'n': 'xRgpX7q-kvQ02EhkHi63TQBR0RMcGCnxCugxtcPmaIX8brilwbkwQyZraEHz
-    Wzj-gaQyro_dWR7QqbhgiQ6U9Hj3x6HINJuw7LbqR_GE4TvTu3rJXPh3MqTs7yK6Gc
-    gKsoTv8wQy6Pwl7gjrQRk37zfIHWLkxU-crz2dd1QdSmStlxRjbczik66llF5ENXE3
-    wVzraPAdjIv1Y4n5dT3kw7QerVv2Dntn5TJ_8QSkmDJW-FA2TQbKBnOd_OgYeKZnGx
-    5cnguWa23uQZTxfGnE7IXA2XYpZhHIgAGMXQ0SaR07MwIZDmreI_Mxypg2ES7XT42q
-    hnxXUiGm9fA8nhHjwQ',
-    'e': 'AQAB',
-    'd': 's-2jz73WvqdsGsqzg45YTlZtWrXcXv7jC3b_8pTdoiw3UAkHYXwjYBoR0cLr
-    XCsCxO1WS2AQzYxBJ7-neVezih9o7Hl4IPbFJMSzymvlSA1q9OtaKqK1hqljl8gXJv
-    QlN-X-e9coduPB6LWBtxNDqgI9kP44JRzRyHUybL6AYuk970_RoqxH2nr8FqMZbNWl
-    Vk2X-v06EcO4E_ROSl8vqpb811UidXIvWAJw36LAUw0BTpdvpejSVM1B7PZWbzD91T
-    4vwJYOAVdwWxpmA5HEXRbpNJLnMJus7iq7EVyG2ZbA4TXT-EIoASKMyxJtAuKMDk6c
-    SISWay6LwjdBgVMAAQ',
-    'p': '588dwE505-i7wL5mWkhH19xS1RzKahFhA66ZVmPjBaA88TBlaZxsdqEADwqX
-    oMq_XIUh-P5Tc-ueiCw5rUVNTMb45HWr5fnQXtnJt4yMukNpERABIcWvZWLQg_ONW4
-    iAKid9MLg5EYd2VkAAwXwzzdD1hiYEcxMwQVQ3nLmQ8AE',
-    'q': '2amgmjQD5Jx7kAR-9oLFjnuvgbUMBOUieQKUCpeJu8q00S7kHb2Hy6ZsanJ-
-    -Biu1XKz1lxelpN2upsjiKU7f08PB_IPCenBZIU3YwozZd15wCoSyKtffgqk5RXeyi
-    3I1ULKXHxr3L7g-7Yi_APgtInQncNnm0Q_t7A_c-P888E'
+      'kty': 'RSA',
+      'kid': 'NXhZYllJOXdLSW50aUVkcGY4XzZrSVF5blI5aEYxeEJDdFZLV2tHZDlFUQ',
+      'n':
+        'xRgpX7q-kvQ02EhkHi63TQBR0RMcGCnxCugxtcPmaIX8brilwbkwQyZraEHzWzj-
+         gaQyro_dWR7QqbhgiQ6U9Hj3x6HINJuw7LbqR_GE4TvTu3rJXPh3MqTs7yK6GcgK
+         soTv8wQy6Pwl7gjrQRk37zfIHWLkxU-crz2dd1QdSmStlxRjbczik66llF5ENXE3
+         wVzraPAdjIv1Y4n5dT3kw7QerVv2Dntn5TJ_8QSkmDJW-FA2TQbKBnOd_OgYeKZn
+         Gx5cnguWa23uQZTxfGnE7IXA2XYpZhHIgAGMXQ0SaR07MwIZDmreI_Mxypg2ES7X
+         T42qhnxXUiGm9fA8nhHjwQ',
+      'e': 'AQAB',
+      'd':
+        's-2jz73WvqdsGsqzg45YTlZtWrXcXv7jC3b_8pTdoiw3UAkHYXwjYBoR0cLrXCsC
+         xO1WS2AQzYxBJ7-neVezih9o7Hl4IPbFJMSzymvlSA1q9OtaKqK1hqljl8gXJvQl
+         N-X-e9coduPB6LWBtxNDqgI9kP44JRzRyHUybL6AYuk970_RoqxH2nr8FqMZbNWl
+         Vk2X-v06EcO4E_ROSl8vqpb811UidXIvWAJw36LAUw0BTpdvpejSVM1B7PZWbzD9
+         1T4vwJYOAVdwWxpmA5HEXRbpNJLnMJus7iq7EVyG2ZbA4TXT-EIoASKMyxJtAuKM
+         Dk6cSISWay6LwjdBgVMAAQ',
+      'p':
+        '588dwE505-i7wL5mWkhH19xS1RzKahFhA66ZVmPjBaA88TBlaZxsdqEADwqXoMq_
+         XIUh-P5Tc-ueiCw5rUVNTMb45HWr5fnQXtnJt4yMukNpERABIcWvZWLQg_ONW4iA
+         Kid9MLg5EYd2VkAAwXwzzdD1hiYEcxMwQVQ3nLmQ8AE',
+      'q':
+        '2amgmjQD5Jx7kAR-9oLFjnuvgbUMBOUieQKUCpeJu8q00S7kHb2Hy6ZsanJ--Biu
+         1XKz1lxelpN2upsjiKU7f08PB_IPCenBZIU3YwozZd15wCoSyKtffgqk5RXeyi3I
+         1ULKXHxr3L7g-7Yi_APgtInQncNnm0Q_t7A_c-P888E'
     }
 
 And you can of course create a key from a JWK representation::
@@ -155,7 +160,49 @@ Key bundle
 As mentioned above a key bundle is used to manage keys that have a common
 origin.
 
-You can initiate a key bundle in serveral ways.
+You can initiate a key bundle in serveral ways. You can use all the
+import variants we described above and then add the resulting key to a key
+bundle::
+
+    >>> from cryptojwt.jwk.ec import ECKey
+    >>> from cryptojwt.key_bundle import KeyBundle
+    >>> ec_key = ECKey().load('ec-keypair.pem')
+    >>> kb = KeyBundle()
+    >>> kb.append(ec_key)
+    >>> len(kb)
+    1
+    >>> rsa_key = new_rsa_key()
+    >>> kb.append(rsa_key)
+    >>> len(kb)
+    2
+    >>> kb.jwks()
+    {"keys":
+      [
+        {
+          "kty": "EC",
+          "crv": "B-571",
+          "x":
+            "AhnRFzRjeOyo-qqm1HPe2JIC69McD29SKAzaBSMzpiRMqh8_tFGWzh2q3pozv_V
+             4tsWDgl2H0NdLjNTUQV6JlBn52tJBgCYC",
+          "y":
+            "LU86ZrZlKMvposLYkgaJrtwklHumK1b1m_joq5r8NsdwQkyVtl44cucurQz1UUc
+             oYNJ4ecJv1MWb-I6OwGbiVfM7WSsAhAA",
+        },
+        {
+          "kty": "RSA",
+          "kid":
+            "cjBobXZ6UHVVdkFmaEJIQXNLbklNNjBMbHo5cWM4U2VjOFRrRkM4RzNaZw",
+          "e": "AQAB",
+          "n":
+            "pyyKp3Fv5ZmyHInUjdEskmI5A-4R19gmzy8SL5waAPd7DMtndQoa-MyMPVP1je
+             BPdM_WP17bm1IKt3AWIDpXPq2g0KQxiUU6X9hP738CZaqSmff_hiiT0I3VzsUT
+             1SHhdIAeFIeUeuH8RusWo1NnxT7iXRFHbXsG2EOnxr-xB9FZUgMenU4dBIHh2h
+             CUW6EZBsYBWuSTyMwRrNp_ZkrH5VJZSCke7bMvlyLlgMFOoDqhuibxEdRmVJAL
+             7KkfKQjC0OAd6BXrTk1es590MtMsAIIdKXbgcvxZKeGYSjJ8p8HXLelz50uBhh
+             eJdbUmx7MDWCTgouTGzxDaJuCbAR5wMQ",
+        }
+      ]
+    }
 
 
 Key Jar
