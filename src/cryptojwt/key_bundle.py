@@ -107,7 +107,7 @@ def ec_init(spec):
 
 class KeyBundle(object):
     def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
-                 fileformat="jwk", keytype="RSA", keyusage=None, kid=''):
+                 fileformat="jwks", keytype="RSA", keyusage=None, kid=''):
         """
         Contains a set of keys that have a common origin.
         The sources can be serveral:
@@ -120,7 +120,7 @@ class KeyBundle(object):
             with the keys ["kty", "key", "alg", "use", "kid"]
         :param source: Where the key set can be fetch from
         :param verify_ssl: Verify the SSL cert used by the server
-        :param fileformat: For a local file either "jwk" or "der"
+        :param fileformat: For a local file either "jwks" or "der"
         :param keytype: Iff local file and 'der' format what kind of key it is.
             presently only 'rsa' is supported.
         :param keyusage: What the key loaded from file should be used for.
@@ -332,7 +332,7 @@ class KeyBundle(object):
 
             try:
                 if self.remote is False:
-                    if self.fileformat == "jwks":
+                    if self.fileformat in ["jwks", "jwk"]:
                         self.do_local_jwk(self.source)
                     elif self.fileformat == "der":
                         self.do_local_der(self.source, self.keytype,
@@ -347,9 +347,7 @@ class KeyBundle(object):
             now = time.time()
             for _key in _keys:
                 if _key not in self._keys:
-                    try:
-                        _key.inactive_since  # If already marked don't mess
-                    except ValueError:
+                    if not _key.inactive_since:  # If already marked don't mess
                         _key.inactive_since = now
                     self._keys.append(_key)
 

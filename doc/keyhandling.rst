@@ -204,6 +204,8 @@ bundle::
       ]
     }
 
+**Note** that you will get a JWKS representing the public keys unless you
+specify that you want a representation of the private keys.
 
 Key Jar
 -------

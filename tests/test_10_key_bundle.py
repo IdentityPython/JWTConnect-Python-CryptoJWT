@@ -5,7 +5,9 @@ import pytest
 import shutil
 import time
 
-from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.ec import new_ec_key
+
+from cryptojwt.jwk.rsa import RSAKey, new_rsa_key
 from cryptojwt.jwk.hmac import SYMKey
 
 from cryptojwt.key_bundle import dump_jwks
@@ -453,3 +455,48 @@ def test_remote(httpserver):
     assert len(kb.keys())
     assert len(kb.get('rsa')) == 1
     assert len(kb.get('oct')) == 1
+
+
+def test_update_2():
+    rsa_key = new_rsa_key()
+    _jwks = {"keys": [rsa_key.serialize()]}
+    fname = 'tmp_jwks.json'
+    with open(fname, 'w') as fp:
+        fp.write(json.dumps(_jwks))
+
+    kb = KeyBundle(source="file://{}".format(fname), fileformat='jwks')
+    assert len(kb) == 1
+
+    # Added one more key
+    ec_key = new_ec_key(crv='P-256')
+    _jwks = {'keys': [rsa_key.serialize(), ec_key.serialize()]}
+
+    with open(fname, 'w') as fp:
+        fp.write(json.dumps(_jwks))
+
+    kb.update()
+    assert len(kb) == 2
+
+
+def test_update_mark_inactive():
+    rsa_key = new_rsa_key()
+    _jwks = {"keys": [rsa_key.serialize()]}
+    fname = 'tmp_jwks.json'
+    with open(fname, 'w') as fp:
+        fp.write(json.dumps(_jwks))
+
+    kb = KeyBundle(source="file://{}".format(fname), fileformat='jwks')
+    assert len(kb) == 1
+
+    # new set of keys
+    rsa_key = new_rsa_key()
+    ec_key = new_ec_key(crv='P-256')
+    _jwks = {'keys': [rsa_key.serialize(), ec_key.serialize()]}
+
+    with open(fname, 'w') as fp:
+        fp.write(json.dumps(_jwks))
+
+    kb.update()
+    # 2 active and 1 inactive
+    assert len(kb) == 3
+    assert len(kb.active_keys()) == 2
