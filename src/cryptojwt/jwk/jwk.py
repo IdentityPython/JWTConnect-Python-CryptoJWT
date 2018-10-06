@@ -7,6 +7,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
 
+from ..exception import MissingValue
 from ..exception import WrongKeyType
 from ..exception import UnknownKeyType
 from ..exception import UnsupportedAlgorithm
@@ -86,10 +87,10 @@ def key_from_jwk_dict(jwk_dict):
                                                                         'kty']))
         return RSAKey(**_jwk_dict)
     elif _jwk_dict['kty'] == 'oct':
-        if isinstance(_jwk_dict['k'], bytes):
-            _jwk_dict['key'] = b64d(_jwk_dict["k"])
-        else:
-            _jwk_dict['key'] = b64d(as_bytes(_jwk_dict["k"]))
+        if not 'key' in _jwk_dict and not 'k' in _jwk_dict:
+            raise MissingValue(
+                'There has to be one of "k" or "key" in a symmetric key')
+
         return SYMKey(**_jwk_dict)
     else:
         raise UnknownKeyType
