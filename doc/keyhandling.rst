@@ -149,6 +149,20 @@ And you can of course create a key from a JWK representation::
 
 
 
+Key bundle
+----------
+
+As mentioned above a key bundle is used to manage keys that have a common
+origin.
+
+You can initiate a key bundle in serveral ways.
+
+
+Key Jar
+-------
+
+
+
 .. _cryptography: https://cryptography.io/en/latest/
 .. _JWK: https://tools.ietf.org/html/rfc7517
 .. _JWKS: https://tools.ietf.org/html/rfc7517#section-5
