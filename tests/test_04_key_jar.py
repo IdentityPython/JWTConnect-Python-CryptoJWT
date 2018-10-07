@@ -8,10 +8,13 @@ from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import factory
 from cryptojwt.jws.jws import JWS
 
-from cryptojwt.key_bundle import keybundle_from_local_file, rsa_init
+from cryptojwt.key_bundle import keybundle_from_local_file
+from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import build_keyjar, update_keyjar, key_summary, \
-    init_key_jar
+from cryptojwt.key_jar import build_keyjar
+from cryptojwt.key_jar import init_key_jar
+from cryptojwt.key_jar import key_summary
+from cryptojwt.key_jar import update_keyjar
 from cryptojwt.key_jar import KeyJar
 
 __author__ = 'Roland Hedberg'
@@ -176,10 +179,6 @@ JWK2 = {
 }
 
 
-# def test_key_setup():
-#     x = key_setup()
-
-
 def test_build_keyjar():
     keys = [
         {"type": "RSA", "use": ["enc", "sig"]},
@@ -192,7 +191,10 @@ def test_build_keyjar():
         assert "d" not in key  # the JWKS shouldn't contain the private part
         # of the keys
 
-    assert len(keyjar[""]) == 2  # 1 with RSA keys and 1 with EC key
+    assert len(keyjar[""]) == 1  # One key bundle
+    assert len(keyjar.get_issuer_keys('')) == 3  # A total of 3 keys
+    assert len(keyjar.get('sig')) == 2  # 2 for signing
+    assert len(keyjar.get('enc')) == 1  # 1 for encryption
 
 
 def test_build_keyjar_missing(tmpdir):
@@ -200,9 +202,9 @@ def test_build_keyjar_missing(tmpdir):
         {"type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"),
          "use": ["enc", "sig"]}]
 
-    keyjar = build_keyjar(keys)
+    key_jar = build_keyjar(keys)
 
-    assert len(keyjar[""]) == 1
+    assert len(key_jar[""]) == 1
 
 
 class TestKeyJar(object):
@@ -288,17 +290,6 @@ class TestKeyJar(object):
             keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
         assert ks.get('enc', 'oct', 'http://www.example.org/')
-
-    # def test_get_by_kid(self):
-    #     kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH,
-    # "jwks",
-    #                                    ["sig"])
-    #     kj = KeyJar()
-    #     kj.issuer_keys["https://example.com"] = [kb]
-    #
-    #     _key = kj.get_key_by_kid("abc", "https://example.com")
-    #     assert _key
-    #     assert _key.kid == "abc"
 
     def test_dump_issuer_keys(self):
         kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks",

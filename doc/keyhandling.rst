@@ -251,6 +251,46 @@ Key Jar
 A key jar keeps keys sorted by owner/issuer. The keys in a key jar are all
 part of key bundles.
 
+Creating a key jar with your own newly minted keys you would do:
+
+    >>> from cryptojwt.key_jar import build_keyjar
+    >>> key_specs = [
+        {"type": "RSA", "use": ["enc", "sig"]},
+        {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    ]
+    >>> key_jar = build_keyjar(key_specs)
+    >>> len(key_jar.get_issuer_keys(''))
+    3
+
+**Note* that the default issuer ID is the empty string ''.
+
+To import a JWKS you would do::
+
+    >>> from cryptojwt.key_bundle import KeyBundle
+    >>> from cryptojwt.key_jar import KeyJar
+    >>> JWKS = {
+      "keys": [
+        {
+           "kty": "RSA",
+           "e": "AQAB",
+           "kid": "abc",
+           "n":
+             "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7
+              pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEob
+              cyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8"
+        }
+      ]}
+    >>> kb = KeyBundle(JWKS)
+    >>> key_jar = KeyJar()
+    >>> key_jar.add_kb('', kb)
+
+The last line can also be expressed as::
+
+    >>> keyjar[''] = kb
+
+**Note** both variants, adds a key bundle to the list of key bundles that
+belongs to '' it does not overwrite anything that was already there.
+
 
 .. _cryptography: https://cryptography.io/en/latest/
 .. _JWK: https://tools.ietf.org/html/rfc7517
