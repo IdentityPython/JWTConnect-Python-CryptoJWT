@@ -444,6 +444,9 @@ class KeyBundle(object):
         """
         self._keys.append(key)
 
+    def extend(self, keys):
+        self._keys.extend(keys)
+
     def remove(self, key):
         """
         Remove a specific key from this bundle
