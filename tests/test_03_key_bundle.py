@@ -5,9 +5,11 @@ import pytest
 import shutil
 import time
 
+from cryptography.hazmat.primitives.asymmetric import rsa
+
 from cryptojwt.jwk.ec import new_ec_key
 
-from cryptojwt.jwk.rsa import RSAKey, new_rsa_key
+from cryptojwt.jwk.rsa import RSAKey, new_rsa_key, import_rsa_key_from_cert_file
 from cryptojwt.jwk.hmac import SYMKey
 
 from cryptojwt.key_bundle import dump_jwks
@@ -29,6 +31,7 @@ def full_path(local_file):
 
 RSAKEY = os.path.join(BASE_PATH, "cert.key")
 RSA0 = os.path.join(BASE_PATH, "rsa.key")
+CERT = full_path("cert.pem")
 
 JWK0 = {"keys": [
     {'kty': 'RSA', 'e': 'AQAB', 'kid': "abc",
@@ -304,7 +307,8 @@ def test_get_all():
 
 def test_keybundle_from_local_der():
     kb = keybundle_from_local_file(
-        "{}".format(os.path.join('test_keys', 'rsa.key')), "der", ['enc'])
+        "{}".format(os.path.join(BASE_PATH, 'rsa.key')),
+        "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
@@ -313,7 +317,7 @@ def test_keybundle_from_local_der():
 
 def test_keybundle_from_local_der_update():
     kb = keybundle_from_local_file(
-        "file://{}".format(os.path.join('test_keys', 'rsa.key')),
+        "file://{}".format(os.path.join(BASE_PATH, 'rsa.key')),
         "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')
@@ -503,3 +507,111 @@ def test_update_mark_inactive():
 
     assert len(kb.get('rsa')) == 1
     assert len(kb.get('rsa', only_active=False)) == 2
+
+
+def test_loads_0():
+    kb = KeyBundle(JWK0)
+    assert len(kb) == 1
+    key = kb.get("rsa")[0]
+    assert key.kid == 'abc'
+    assert key.kty == 'RSA'
+
+
+def test_loads_1():
+    jwks = {
+        "keys": [
+            {
+                'kty': 'RSA',
+                'use': 'sig',
+                'e': 'AQAB',
+                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
+                'kid': "1"
+            }, {
+                'kty': 'RSA',
+                'use': 'enc',
+                'e': 'AQAB',
+                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
+                'kid': "2"
+            }
+        ]
+    }
+
+    kb = KeyBundle(jwks)
+
+    assert len(kb) == 2
+    assert set(kb.kids()) == {'1', '2'}
+
+
+def test_dump_jwk():
+    kb = KeyBundle()
+    kb.append(RSAKey(pub_key=import_rsa_key_from_cert_file(CERT)))
+    jwks = kb.jwks()
+
+    _wk = json.loads(jwks)
+    assert list(_wk.keys()) == ["keys"]
+    assert len(_wk["keys"]) == 1
+    assert set(_wk["keys"][0].keys()) == {"kty", "e", "n"}
+
+    kb2 = KeyBundle(_wk)
+
+    assert len(kb2) == 1
+    key = kb2.get("rsa")[0]
+    assert key.kty == 'RSA'
+    assert isinstance(key.public_key(), rsa.RSAPublicKey)
+
+JWKS_DICT = {"keys": [
+    {
+        "n": u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
+        "e": u"AQAB",
+        "kty": "RSA",
+        "kid": "5-VBFv40P8D4I-7SFz7hMugTbPs",
+        "use": "enc"
+    },
+    {
+        "k": u"YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
+        "kty": "oct",
+        "use": "enc"
+    },
+    {
+        "kty": "EC",
+        "kid": "7snis",
+        "use": "sig",
+        "x": u'q0WbWhflRbxyQZKFuQvh2nZvg98ak-twRoO5uo2L7Po',
+        "y": u'GOd2jL_6wa0cfnyA0SmEhok9fkYEnAHFKLLM79BZ8_E',
+        "crv": "P-256"
+    }
+]}
+
+
+def test_keys():
+    kb = KeyBundle(JWKS_DICT)
+
+    assert len(kb) == 3
+
+    assert len(kb.get('rsa')) == 1
+    assert len(kb.get('oct')) == 1
+    assert len(kb.get('ec')) == 1
+
+
+EXPECTED = [
+    b'iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA',
+    b'kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI',
+    b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8',
+    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8'
+]
+
+
+def test_thumbprint():
+    kb = KeyBundle(JWKS_DICT)
+    for key in kb:
+        txt = key.thumbprint('SHA-256')
+        assert txt in EXPECTED
+
+
+@pytest.mark.network
+def test_jwks_url():
+    keys = KeyBundle(source='https://login.salesforce.com/id/keys')
+    # Forces read from the network
+    keys.update()
+    assert len(keys)
+

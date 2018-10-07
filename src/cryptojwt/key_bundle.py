@@ -107,7 +107,8 @@ def ec_init(spec):
 
 class KeyBundle(object):
     def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
-                 fileformat="jwks", keytype="RSA", keyusage=None, kid=''):
+                 fileformat="jwks", keytype="RSA", keyusage=None, kid='',
+                 httpc=None):
         """
         Contains a set of keys that have a common origin.
         The sources can be serveral:
@@ -125,6 +126,7 @@ class KeyBundle(object):
             presently only 'rsa' is supported.
         :param keyusage: What the key loaded from file should be used for.
             Only applicable for DER files
+        :param httpc: A HTTP client function
         """
 
         self._keys = []
@@ -139,11 +141,18 @@ class KeyBundle(object):
         self.keyusage = keyusage
         self.imp_jwks = None
         self.last_updated = 0
+        if httpc:
+            self.httpc = httpc
+        else:
+            self.httpc = requests.request
 
         if keys:
             self.source = None
             if isinstance(keys, dict):
-                self.do_keys([keys])
+                if 'keys' in keys:
+                    self.do_keys(keys['keys'])
+                else:
+                    self.do_keys([keys])
             else:
                 self.do_keys(keys)
         else:
@@ -254,7 +263,7 @@ class KeyBundle(object):
 
         try:
             logging.debug('KeyBundle fetch keys from: {}'.format(self.source))
-            r = requests.get(self.source, **args)
+            r = self.httpc('GET', self.source, **args)
         except Exception as err:
             logger.error(err)
             raise UpdateFailed(
@@ -546,6 +555,9 @@ class KeyBundle(object):
             kb.remote = self.remote
 
         return kb
+
+    def __iter__(self):
+        return self._keys.__iter__()
 
 
 def keybundle_from_local_file(filename, typ, usage):

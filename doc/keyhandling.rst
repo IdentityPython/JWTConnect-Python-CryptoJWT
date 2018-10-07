@@ -234,7 +234,7 @@ The file now should contain 2 keys::
     >>> len(_keys)
     3
 
-???
+What ???
 The key that was removed has not disappeared from the key bundle, but it is
 marked as *inactive*. Which means that it should not be used for signing and
 encryption but can be used for decryption and signature verification. ::
@@ -248,6 +248,8 @@ encryption but can be used for decryption and signature verification. ::
 Key Jar
 -------
 
+A key jar keeps keys sorted by owner/issuer. The keys in a key jar are all
+part of key bundles.
 
 
 .. _cryptography: https://cryptography.io/en/latest/

@@ -15,13 +15,13 @@ from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
 import os.path
 
-from cryptojwt.exception import DeSerializationNotPossible, WrongUsage
+from cryptojwt.exception import DeSerializationNotPossible
+from cryptojwt.exception import WrongUsage
 
 from cryptojwt.utils import as_unicode
 from cryptojwt.utils import b64e
 from cryptojwt.utils import long2intarr
 from cryptojwt.utils import base64url_to_long
-from cryptojwt.utils import deser
 from cryptojwt.utils import base64_to_long
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
@@ -31,8 +31,6 @@ from cryptojwt.jwk.rsa import load_x509_cert
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.jwks import JWKS
-from cryptojwt.jwk.jwks import load_jwks
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.hmac import sha256_digest
@@ -106,75 +104,10 @@ def test_kspec():
     assert not _key.has_private_key()
 
 
-def test_loads_0():
-    keys = JWKS()
-    keys.load_dict(JWK)
-    assert len(keys) == 1
-    key = keys["rsa"][0]
-    assert key.kid == 'abc'
-    assert key.kty == 'RSA'
-
-    _ckey = import_rsa_key_from_cert_file(CERT)
-    pn = _ckey.public_numbers()
-    assert deser(key.n) == pn.n
-    assert deser(key.e) == pn.e
-
-
-def test_loads_1():
-    jwk = {
-        "keys": [
-            {
-                'kty': 'RSA',
-                'use': 'foo',
-                'e': 'AQAB',
-                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
-                'kid': "1"
-            }, {
-                'kty': 'RSA',
-                'use': 'bar',
-                'e': 'AQAB',
-                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
-                'kid': "2"
-            }
-        ]
-    }
-
-    keys = JWKS()
-    keys.load_dict(jwk)
-
-    assert len(keys) == 2
-    assert _eq(keys.kids(), ['1', '2'])
-
-
 def test_dumps():
     _ckey = import_rsa_key_from_cert_file(CERT)
     jwk = jwk_wrap(_ckey).serialize()
     assert _eq(list(jwk.keys()), ["kty", "e", "n"])
-
-
-def test_dump_jwk():
-    keylist0 = JWKS()
-    keylist0.wrap_add(import_rsa_key_from_cert_file(CERT))
-    jwk = keylist0.dump_jwks()
-
-    _wk = json.loads(jwk)
-    assert list(_wk.keys()) == ["keys"]
-    assert len(_wk["keys"]) == 1
-    assert _eq(list(_wk["keys"][0].keys()), ["kty", "e", "n"])
-
-
-def test_load_jwk():
-    keylist0 = JWKS()
-    keylist0.wrap_add(import_rsa_key_from_cert_file(CERT))
-    jwk = keylist0.dump_jwks()
-
-    keylist1 = JWKS()
-    keylist1.load_jwks(jwk)
-
-    assert len(keylist1) == 1
-    key = keylist1["rsa"][0]
-    assert key.kty == 'RSA'
-    assert isinstance(key.public_key(), rsa.RSAPublicKey)
 
 
 def test_import_rsa_key():
@@ -266,42 +199,6 @@ def test_cmp_neq_ec():
     assert _key1 != _key2
 
 
-JWKS_DICT = {"keys": [
-    {
-        "n": u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
-        "e": u"AQAB",
-        "kty": "RSA",
-        "kid": "5-VBFv40P8D4I-7SFz7hMugTbPs",
-        "use": "enc"
-    },
-    {
-        "k": u"YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
-        "kty": "oct",
-        "use": "enc"
-    },
-    {
-        "kty": "EC",
-        "kid": "7snis",
-        "use": "sig",
-        "x": u'q0WbWhflRbxyQZKFuQvh2nZvg98ak-twRoO5uo2L7Po',
-        "y": u'GOd2jL_6wa0cfnyA0SmEhok9fkYEnAHFKLLM79BZ8_E',
-        "crv": "P-256"
-    }
-]}
-
-
-def test_keys():
-    keyl = JWKS()
-    keyl.load_dict(JWKS_DICT)
-
-    assert len(keyl) == 3
-
-    assert _eq(keyl.key_types(), ['RSA', 'oct', 'EC'])
-    assert len(keyl['rsa']) == 1
-    assert len(keyl['oct']) == 1
-    assert len(keyl['ec']) == 1
-
-
 def test_get_key():
     ec_key = generate_private_key(NIST2SEC['P-256'], default_backend())
     asym_private_key = ECKey(priv_key=ec_key)
@@ -387,33 +284,12 @@ def test_rsa_pubkey_verify_x509_thumbprint():
         RSAKey(x5c=[cert], x5t="abcdefgh")  # incorrect thumbprint
 
 
-EXPECTED = [
-    b'iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA',
-    b'kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI',
-    b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8',
-    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8'
-]
-
-
-def test_thumbprint():
-    keyl = JWKS()
-    keyl.load_dict(JWKS_DICT)
-    for key in keyl:
-        txt = key.thumbprint('SHA-256')
-        assert txt in EXPECTED
-
-
 def test_thumbprint_7638_example():
     key = RSAKey(
         n='0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw',
         e='AQAB', alg='RS256', kid='2011-04-29')
     thumbprint = key.thumbprint('SHA-256')
     assert thumbprint == b'NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs'
-
-
-def test_load_jwks():
-    keysl = load_jwks(json.dumps(JWKS_DICT))
-    assert len(keysl) == 3
 
 
 def test_encryption_key():
@@ -543,13 +419,6 @@ def test_get_hmac_key_for_encrypt_HS384():
 def test_get_hmac_key_for_encrypt_HS512():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
     assert key.appropriate_for('encrypt', 'HS512')
-
-
-@pytest.mark.network
-def test_jwks_url():
-    keys = JWKS(httpc=requests.request)
-    keys.load_from_url('https://login.salesforce.com/id/keys')
-    assert len(keys)
 
 
 def test_load_x509_cert(httpserver):

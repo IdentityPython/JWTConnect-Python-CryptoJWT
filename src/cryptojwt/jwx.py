@@ -2,9 +2,9 @@ import json
 import logging
 
 import requests
+from cryptojwt.key_bundle import KeyBundle
 
 from .jwk.jwk import key_from_jwk_dict
-from .jwk.jwks import JWKS
 from .jwk.rsa import import_rsa_key
 from .jwk.rsa import load_x509_cert
 from .jwk.rsa import RSAKey
@@ -79,8 +79,7 @@ class JWx(object):
                     _pub_key = import_rsa_key(_val)
                     self._jwk = RSAKey(_pub_key)
                 elif key == "jku":
-                    self._jwks = JWKS(httpc=self.httpc)
-                    self._jwks.load_from_url(_val)
+                    self._jwks = KeyBundle(source=_val, httpc=self.httpc)
                     self._dict['jku'] = _val
                 elif "x5u" in self:
                     try:
@@ -141,7 +140,7 @@ class JWx(object):
         _keys = []
         if self._jwk:
             _keys.append(self._jwk)
-        if self._jwks:
+        if self._jwks is not None:
             _keys.extend(self._jwks.keys())
         return _keys
 

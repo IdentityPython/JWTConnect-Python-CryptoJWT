@@ -2,9 +2,10 @@ import json
 import pytest
 import sys
 
+from cryptojwt.key_bundle import KeyBundle
+
 from cryptojwt import utils
 from cryptojwt.exception import JWKESTException
-from cryptojwt.jwk.jwks import JWKS
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.jws import JWS
@@ -186,7 +187,7 @@ def test_jws_ecdsa_signer_verifier_es256():
 
 def test_jws_verifier_with_multiple_keys():
     # Set up phase: parse the keys and initialize the verifier.
-    jwks = JWKS().load_jwks(test_vector.json_pub_keys)
+    jwks = KeyBundle(json.loads(test_vector.json_pub_keys))
     keys = jwks.keys()
 
     verifier = JWS()

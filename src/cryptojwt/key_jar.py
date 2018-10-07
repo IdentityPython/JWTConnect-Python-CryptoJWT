@@ -97,15 +97,14 @@ class KeyJar(object):
         if issuer not in self.issuer_keys:
             self.issuer_keys[issuer] = []
 
-        _key = b64e(as_bytes(key))
         if usage is None:
             self.issuer_keys[issuer].append(
-                self.keybundle_cls([{"kty": "oct", "k": _key}]))
+                self.keybundle_cls([{"kty": "oct", "key": key}]))
         else:
             for use in usage:
                 self.issuer_keys[issuer].append(
                     self.keybundle_cls([{"kty": "oct",
-                                         "k": _key,
+                                         "key": key,
                                          "use": use}]))
 
     def add_kb(self, issuer, kb):
@@ -188,7 +187,10 @@ class KeyJar(object):
         lst = []
         for bundle in _kj:
             if key_type:
-                _bkeys = bundle.get(key_type)
+                if key_use in ['ver', 'dec']:
+                    _bkeys = bundle.get(key_type, only_active=False)
+                else:
+                    _bkeys = bundle.get(key_type)
             else:
                 _bkeys = bundle.keys()
             for key in _bkeys:
@@ -283,6 +285,12 @@ class KeyJar(object):
             return False
 
     def __getitem__(self, owner):
+        """
+        Get all the key bundles that belong to an entity.
+
+        :param owner: The entity ID
+        :return: A possibly empty list of key bundles
+        """
         try:
             return self.issuer_keys[owner]
         except KeyError:
@@ -344,9 +352,8 @@ class KeyJar(object):
             self.add_url(issuer, jwks_uri)
         elif jwks:
             # jwks should only be considered if no jwks_uri is present
-            _keys = jwks["keys"]
-            self.issuer_keys[issuer].append(
-                self.keybundle_cls(_keys, verify_ssl=self.verify_ssl))
+            _keys = jwks['keys']
+            self.issuer_keys[issuer].append(self.keybundle_cls(_keys))
 
     def find(self, source, issuer):
         """

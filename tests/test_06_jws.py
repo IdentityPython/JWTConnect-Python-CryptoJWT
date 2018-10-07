@@ -6,6 +6,7 @@ import os.path
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptojwt.key_bundle import KeyBundle
 
 from cryptojwt.jws.exception import FormatError
 from cryptojwt.jws.exception import NoSuitableSigningKeys
@@ -21,7 +22,6 @@ from cryptojwt.exception import WrongNumberOfParts
 
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.jwks import JWKS
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import RSAKey
 
@@ -153,8 +153,7 @@ JWK_b = {
     ]
 }
 
-SIGJWKS = JWKS()
-SIGJWKS.load_dict(JWKS_b)
+SIGJWKS = KeyBundle(JWKS_b)
 
 
 def P256():
@@ -468,8 +467,7 @@ def test_sign_2():
               "--7n0Blg0kN88LHZvyZjUB2NhBdFYNxMP8ucy0dOXvWGWzaPmGnq3DM__lN8P4WjD1cCTAVEYKawNBAmGKqrFj1SgpPNsSqiqK-ALM1w6mZ-QGimjOgwCyJy3l9lzZh5D8tKnS2t1pZgE0X5P7lZQWHYpHPqp4jKhETzrCpPGfv0Rl6nmmjp7NlRYBkWKf_HEKE333J6M039m2FbKgxrBg3zmYYpmHuMzVgxxb8LSiv5aqyeyJjxM-YDUAgNQBfKNhONqXyu9DqtSprNkw6sqmuxK0QUVrNYl3b03PgS5Q"
          }]}
 
-    keys = JWKS()
-    keys.load_dict(keyset)
+    keys = KeyBundle(keyset)
     jws = JWS("payload", alg="RS512")
     jws.sign_compact(keys=keys)
 
@@ -637,16 +635,14 @@ def test_is_jws_recognize_flattened_json_serialized_jws():
 
 
 def test_pick_use():
-    keys = JWKS()
-    keys.load_dict(JWK_b)
+    keys = KeyBundle(JWK_b)
     _jws = JWS("foobar", alg="RS256", kid="MnC_VZcATfM5pOYiJHMba9goEKY")
     _keys = _jws.pick_keys(keys, use="sig")
     assert len(_keys) == 1
 
 
 def test_pick_wrong_alg():
-    keys = JWKS()
-    keys.load_dict(JWKS_b)
+    keys = KeyBundle(JWKS_b)
     _jws = JWS("foobar", alg="EC256", kid="rsa1")
     _keys = _jws.pick_keys(keys, use="sig")
     assert len(_keys) == 0

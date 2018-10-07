@@ -41,6 +41,7 @@ def test_jwx_set_jwk_error():
         JWx(jwk=[RSAKey()])
 
 
+@pytest.mark.network
 def test_jws_set_jku():
     jwx = JWx(jku='https://login.salesforce.com/id/keys')
     keys = jwx._get_keys()
@@ -80,6 +81,7 @@ def test_get_headers():
     assert set(_headers.keys()) == {'jwk', 'alg', 'kid'}
 
 
+@pytest.mark.network
 def test_headers_jku():
     jwx = JWx(jku='https://login.salesforce.com/id/keys')
     _headers = jwx.headers()
