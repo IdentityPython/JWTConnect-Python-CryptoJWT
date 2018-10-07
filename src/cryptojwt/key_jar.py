@@ -2,6 +2,8 @@ import json
 import logging
 import os
 
+from requests import request
+
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 
@@ -9,8 +11,6 @@ from .exception import DeSerializationNotPossible
 from .key_bundle import KeyBundle
 from .key_bundle import ec_init
 from .key_bundle import rsa_init
-from .utils import as_bytes
-from .utils import b64e
 
 
 __author__ = 'Roland Hedberg'
@@ -38,7 +38,7 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
-                 remove_after=3600):
+                 remove_after=3600, httpc=None):
         """
         KeyJar init function
         
@@ -52,6 +52,7 @@ class KeyJar(object):
         self.verify_ssl = verify_ssl
         self.keybundle_cls = keybundle_cls
         self.remove_after = remove_after
+        self.httpc = httpc or request
 
     def __repr__(self):
         issuers = list(self.issuer_keys.keys())
@@ -74,10 +75,11 @@ class KeyJar(object):
             raise KeyError("No url given")
 
         if "/localhost:" in url or "/localhost/" in url:
-            kb = self.keybundle_cls(source=url, verify_ssl=False, **kwargs)
+            kb = self.keybundle_cls(source=url, verify_ssl=False,
+                                    httpc=self.httpc, **kwargs)
         else:
             kb = self.keybundle_cls(source=url, verify_ssl=self.verify_ssl,
-                                    **kwargs)
+                                    httpc=self.httpc, **kwargs)
 
         self.add_kb(issuer, kb)
 
@@ -679,10 +681,10 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
 
     kid = 0
 
+    tot_kb = KeyBundle()
     for spec in key_conf:
         typ = spec["type"].upper()
 
-        kb = {}
         if typ == "RSA":
             if "key" in spec:
                 error_to_catch = (OSError, IOError,
@@ -699,6 +701,8 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
                 kb = rsa_init(spec)
         elif typ == "EC":
             kb = ec_init(spec)
+        else:
+            continue
 
         for k in kb.keys():
             if kid_template:
@@ -707,7 +711,9 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
             else:
                 k.add_kid()
 
-        keyjar.add_kb(owner, kb)
+        tot_kb.extend(kb.keys())
+
+    keyjar.add_kb(owner, tot_kb)
 
     return keyjar
 
