@@ -81,6 +81,7 @@ class KeyJar(object):
             kb = self.keybundle_cls(source=url, verify_ssl=self.verify_ssl,
                                     httpc=self.httpc, **kwargs)
 
+        kb.update()
         self.add_kb(issuer, kb)
 
         return kb
@@ -633,6 +634,8 @@ class KeyJar(object):
         kj = KeyJar()
         for issuer in self.owners():
             kj[issuer] = [kb.copy() for kb in self[issuer]]
+
+        kj.verify_ssl = self.verify_ssl
         return kj
 
 
