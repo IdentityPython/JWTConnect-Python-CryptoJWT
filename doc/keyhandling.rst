@@ -19,7 +19,7 @@ CryptoJWT deals with keys by defining 4 'layers'.
        by their owners/issuers.
 
 
-I will not describe who to deal with keys in layer 1, that is done best by
+I will not describe how to deal with keys in layer 1, that is done best by
 cryptography_. So, I'll start at layer 2.
 
 JSON Web Key (JWK)
