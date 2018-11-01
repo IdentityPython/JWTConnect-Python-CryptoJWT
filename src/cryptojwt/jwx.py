@@ -57,6 +57,7 @@ class JWx(object):
         self.jwt = None
         self._jwk = None
         self._jwks = None
+        self._header = {}
 
         if kwargs:
             for key in self.args:
@@ -111,7 +112,7 @@ class JWx(object):
 
     def headers(self, extra=None):
         _extra = extra or {}
-        _header = {}
+        _header = self._header.copy()
         for param in self.args:
             try:
                 _header[param] = _extra[param]

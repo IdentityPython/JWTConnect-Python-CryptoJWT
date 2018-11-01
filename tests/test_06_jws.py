@@ -762,3 +762,24 @@ def test_parse_rsa_algorithm_ps512():
     assert hash
     assert hash.name == 'sha512'
     assert padding.name == 'EMSA-PSS'
+
+
+def test_extra_headers_1():
+    pkey = import_private_rsa_key_from_file(full_path("./size2048.key"))
+    payload = "Please take a moment to register today"
+    keys = [RSAKey(priv_key=pkey)]
+    _jws = JWS(payload, alg='RS256')
+    sjwt = _jws.sign_compact(keys, foo='bar')
+    _jwt = factory(sjwt)
+    assert set(_jwt.jwt.headers.keys()) == {'alg', 'foo'}
+
+
+def test_extra_headers_2():
+    pkey = import_private_rsa_key_from_file(full_path("./size2048.key"))
+    payload = "Please take a moment to register today"
+    keys = [RSAKey(priv_key=pkey)]
+    _jws = JWS(payload, alg='RS256')
+    _jws.set_header_claim('foo', 'bar')
+    sjwt = _jws.sign_compact(keys)
+    _jwt = factory(sjwt)
+    assert set(_jwt.jwt.headers.keys()) == {'alg', 'foo'}

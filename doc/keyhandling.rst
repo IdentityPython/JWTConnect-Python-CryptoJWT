@@ -29,8 +29,8 @@ Let us start with you not having any key at all and you want to create a
 signed JSON Web Token (JWS_).
 What to do ?
 
-Well if you know what kind of key you want, if it is a asymmetric key you can
-use one of the provided factory methods.
+Well if you know what kind of key you want, and if it is a asymmetric key you
+want, you can use one of the provided factory methods.
 
     RSA
         :py:func:`cryptojwt.jwk.rsa.new_rsa_key`
@@ -86,7 +86,7 @@ and::
     >>> ec_key.has_private_key()
     True
 
-When it comes to exporting keys a :py:class:`cryptojwt.jwk.JWK` instance
+When it comes to exporting keys, a :py:class:`cryptojwt.jwk.JWK` instance
 only know how to serialize into the format described in JWK_.
 
     >>> from cryptojwt.jwk.rsa import new_rsa_key
@@ -160,7 +160,7 @@ Key bundle
 As mentioned above a key bundle is used to manage keys that have a common
 origin.
 
-You can initiate a key bundle in serveral ways. You can use all the
+You can initiate a key bundle in several ways. You can use all the
 import variants we described above and then add the resulting key to a key
 bundle::
 
@@ -204,14 +204,14 @@ bundle::
       ]
     }
 
-**Note** that you will get a JWKS representing the public keys unless you
-specify that you want a representation of the private keys.
+**Note** that this will get you a JWKS representing the public keys.
 
 As an example of the special functionality of
 :py:class:`cryptojwt.key_bundle.KeyBundle` assume you have imported a file
 containing a JWKS with one key into a key bundle and then some time later
 another key is added to the file.
-This is how key bundle deals with that::
+
+First import the file with one key::
 
     >>> from cryptojwt.key_bundle import KeyBundle
     >>> kb = KeyBundle(source="file://{}".format(fname), fileformat='jwks')
@@ -225,10 +225,13 @@ keys in the key bundle::
     >>> len(_keys)
     2
 
-It turns out the it contains the 2 keys that are in the file.
+It turns out the key bundle now contains 2 keys. Both the keys that are in the
+file.
+
 If the change is that one key is removed then something else happens.
 Assume we add one key and remove one of the ones that was there before.
-The file now should contain 2 keys::
+The file now contain 2 keys, and you might expect the key bundle to do the
+same::
 
     >>> _keys = kb.keys()
     >>> len(_keys)
@@ -264,7 +267,7 @@ Creating a key jar with your own newly minted keys you would do:
 
 **Note* that the default issuer ID is the empty string ''.
 
-To import a JWKS you would do::
+To import a JWKS you could do it by first creating a key bundle::
 
     >>> from cryptojwt.key_bundle import KeyBundle
     >>> from cryptojwt.key_jar import KeyJar
@@ -290,6 +293,41 @@ The last line can also be expressed as::
 
 **Note** both variants, adds a key bundle to the list of key bundles that
 belongs to '' it does not overwrite anything that was already there.
+
+Adding a JWKS is such a common thing that there is a simpler way to do it::
+
+    >>> from cryptojwt.key_jar import KeyJar
+    >>> JWKS = {
+      "keys": [
+        {
+           "kty": "RSA",
+           "e": "AQAB",
+           "kid": "abc",
+           "n":
+             "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7
+              pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEob
+              cyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8"
+        }
+      ]}
+    >>> key_jar = KeyJar()
+    >>> key_jar.import_jwks(JWKS)
+
+The end result is the same as when you first created a key bundle and then
+added it to the key jar.
+
+When dealing with signed and/or encrypted JSON Web Tokens
+:py:class:`cryptojwt.key_jar.KeyJar` has these nice methods.
+
+    get_jwt_verify_keys
+        :py:func:`cryptojwt.key_jar.KeyJar.get_jwt_verify_keys` takes an
+        signed JWT as input and returns a set of keys that
+        can be used to verify the signature. The set you get back is a best
+        estimate and might not contain **the** key. How good the estimate is
+        depends on the information present in the JWS.
+
+    get_jwt_decrypt_keys
+        :py:func:`cryptojwt.key_jar.KeyJar.get_jwt_decrypt_keys` does the
+        same thing but returns keys that can be used to decrypt a message.
 
 
 .. _cryptography: https://cryptography.io/en/latest/

@@ -98,21 +98,26 @@ class JWS(JWx):
 
         return key, xargs, _alg
 
-    def sign_compact(self, keys=None, protected=None):
+    def sign_compact(self, keys=None, protected=None, **kwargs):
         """
         Produce a JWS using the JWS Compact Serialization
 
         :param keys: A dictionary of keys
         :param protected: The protected headers (a dictionary)
+        :param kwargs: claims you want to add to the standard headers
         :return: A signed JSON Web Token
         """
+
+        _headers = self._header
+        _headers.update(kwargs)
 
         key, xargs, _alg = self.alg_keys(keys, 'sig', protected)
 
         if "typ" in self:
             xargs["typ"] = self["typ"]
 
-        jwt = JWSig(**xargs)
+        _headers.update(xargs)
+        jwt = JWSig(**_headers)
         if _alg == "none":
             return jwt.pack(parts=[self.msg, ""])
 
@@ -383,6 +388,9 @@ class JWS(JWx):
 
     def alg2keytype(self, alg):
         return alg2keytype(alg)
+
+    def set_header_claim(self, key, value):
+        self._header[key] = value
 
 
 def factory(token):
