@@ -68,6 +68,17 @@ Or slightly different::
     >>> print(_verifier.verify_compact(_jwt, [key]))
     "Please take a moment to register today"
 
+Or
+
+    >>> from cryptojwt.jws.jws import factory
+    >>> from cryptojwt.jwk.hmac import SYMKey
+
+    >>> key = SYMKey(key=b'My hollow echo chamber', alg="HS512")
+    >>> _verifier = factory(_jwt, alg="HS512")
+    >>> print(_verifier.verify_compact(_jwt, [key]))
+    "Please take a moment to register today"
+
+In which case the check of the signing algorithm is done by default.
 
 
 .. _RFC7515: https://tools.ietf.org/html/rfc7515

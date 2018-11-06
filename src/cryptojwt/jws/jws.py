@@ -387,13 +387,49 @@ class JWS(JWx):
         return True
 
     def alg2keytype(self, alg):
+        """
+        Translate a signing algorithm into a specific key type.
+
+        :param alg: The signing algorithm
+        :return: A key type or None if there is no key type matching the
+            algorithm
+        """
         return alg2keytype(alg)
 
     def set_header_claim(self, key, value):
+        """
+        Set a specific claim in the header to a specific value.
+
+        :param key: The name of the claim
+        :param value: The value of the claim
+        """
         self._header[key] = value
 
     def verify_alg(self, alg):
+        """
+        Specifically check that the 'alg' claim has a specific value
+
+        :param alg: The expected alg value
+        :raises: KeyError if the 'alg' is not present in the header
+        :return: True if the alg value in the header is the same as the one
+            given.
+        """
         if alg == self.jwt.headers['alg']:
+            return True
+        else:
+            return False
+
+    def verify_header(self, key, val):
+        """
+        Check that a particular header claim is present as a has specific value
+
+        :param key: The claim
+        :param val: The value of the claim
+        :raises: KeyError if the claim is not present in the header
+        :return: True if the claim exists in the header and has the prescribed
+            value
+        """
+        if val == self.jwt.headers[key]:
             return True
         else:
             return False
