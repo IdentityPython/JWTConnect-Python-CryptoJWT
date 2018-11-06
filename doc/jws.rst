@@ -63,8 +63,10 @@ Or slightly different::
 
     >>> key = SYMKey(key=b'My hollow echo chamber', alg="HS512")
     >>> _verifier = factory(_jwt)
+    >>> _verifier.verify_alg('HS512')
+    True
     >>> print(_verifier.verify_compact(_jwt, [key]))
-
+    "Please take a moment to register today"
 
 
 

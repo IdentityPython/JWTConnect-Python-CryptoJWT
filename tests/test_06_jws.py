@@ -819,3 +819,15 @@ def test_extra_headers_3():
     sjwt = _jws.sign_compact(keys, abc=123)
     _jwt = factory(sjwt)
     assert set(_jwt.jwt.headers.keys()) == {'alg', 'foo', 'abc'}
+
+
+def test_factory_verify_alg():
+    pkey = import_private_rsa_key_from_file(full_path("./size2048.key"))
+    payload = "Please take a moment to register today"
+    keys = [RSAKey(priv_key=pkey)]
+    _signer = JWS(payload, alg='RS256')
+    _signer.set_header_claim('foo', 'bar')
+    _jws = _signer.sign_compact(keys, abc=123)
+    _verifier = factory(_jws, alg='RS512')
+    with pytest.raises(SignerAlgError):
+        _verifier.verify_compact(_jws, keys)

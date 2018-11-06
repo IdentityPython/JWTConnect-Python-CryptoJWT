@@ -399,8 +399,8 @@ class JWS(JWx):
             return False
 
 
-def factory(token):
-    _jw = JWS()
+def factory(token, **kwargs):
+    _jw = JWS(**kwargs)
     if _jw.is_jws(token):
         return _jw
     else:
