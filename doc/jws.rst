@@ -37,14 +37,14 @@ The steps:
 Verifying a signature
 ---------------------
 
-Verifying a signature works like this::
+Verifying a signature works like this (_jws comes from the first signing example)::
 
     >>> from cryptojwt.jwk.hmac import SYMKey
     >>> from cryptojwt.jws.jws import JWS
 
     >>> key = SYMKey(key=b'My hollow echo chamber', alg="HS512")
     >>> _verifier = JWS(alg="HS512")
-    >>> _msg = _verifier.verify_compact([key])
+    >>> _msg = _verifier.verify_compact(_jws, [key])
     >>> print(_msg)
     "Please take a moment to register today"
 
@@ -55,6 +55,17 @@ The steps:
     2. Initiate the verifier. If you have a reason to expect that a particular signing algorithm is to be used you
        should give that information to the verifier as shown here. If you don't know you can leave it out.
     3. Verify, using the compact or JSON method.
+
+Or slightly different::
+
+    >>> from cryptojwt.jws.jws import factory
+    >>> from cryptojwt.jwk.hmac import SYMKey
+
+    >>> key = SYMKey(key=b'My hollow echo chamber', alg="HS512")
+    >>> _verifier = factory(_jwt)
+    >>> print(_verifier.verify_compact(_jwt, [key]))
+
+
 
 
 .. _RFC7515: https://tools.ietf.org/html/rfc7515

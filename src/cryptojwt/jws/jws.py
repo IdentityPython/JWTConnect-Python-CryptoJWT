@@ -392,6 +392,12 @@ class JWS(JWx):
     def set_header_claim(self, key, value):
         self._header[key] = value
 
+    def verify_alg(self, alg):
+        if alg == self.jwt.headers['alg']:
+            return True
+        else:
+            return False
+
 
 def factory(token):
     _jw = JWS()

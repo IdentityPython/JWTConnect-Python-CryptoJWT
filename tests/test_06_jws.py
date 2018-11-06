@@ -451,6 +451,7 @@ def test_signer_ps512():
     _rj = factory(_jwt)
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
+    assert _rj.verify_alg('PS512')
 
 
 def test_no_alg_and_alg_none_same():
