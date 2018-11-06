@@ -10,6 +10,7 @@ from cryptojwt.key_bundle import KeyBundle
 
 from cryptojwt.jws.exception import FormatError
 from cryptojwt.jws.exception import NoSuitableSigningKeys
+from cryptojwt.jws.exception import SignerAlgError
 from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash
 from cryptojwt.jws.utils import parse_rsa_algorithm
@@ -342,6 +343,20 @@ def test_jws_2():
     _jws2.verify_compact_verbose(res, keys=[key])
     assert _jws2.msg == msg
     assert _jws2.key == key
+
+
+def test_jws_mm():
+    msg = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}
+    key = SYMKey(key=intarr2bin(HMAC_KEY))
+    _jws = JWS(msg, cty="JWT", alg="HS256", jwk=key.serialize())
+    res = _jws.sign_compact()
+
+    _jws2 = JWS(alg="HS512")
+
+    with pytest.raises(SignerAlgError):
+        _jws2.verify_compact(res, keys=[key])
+
+
 
 
 @pytest.mark.parametrize("ec_func,alg", [
@@ -783,3 +798,12 @@ def test_extra_headers_2():
     sjwt = _jws.sign_compact(keys)
     _jwt = factory(sjwt)
     assert set(_jwt.jwt.headers.keys()) == {'alg', 'foo'}
+
+
+def test_mismatch_alg_and_key():
+    pkey = import_private_rsa_key_from_file(full_path("./size2048.key"))
+    payload = "Please take a moment to register today"
+    keys = [RSAKey(priv_key=pkey)]
+    _jws = JWS(payload, alg='ES256')
+    with pytest.raises(NoSuitableSigningKeys):
+        _jws.sign_compact(keys)
