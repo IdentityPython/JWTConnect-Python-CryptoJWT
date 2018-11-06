@@ -807,3 +807,14 @@ def test_mismatch_alg_and_key():
     _jws = JWS(payload, alg='ES256')
     with pytest.raises(NoSuitableSigningKeys):
         _jws.sign_compact(keys)
+
+
+def test_extra_headers_3():
+    pkey = import_private_rsa_key_from_file(full_path("./size2048.key"))
+    payload = "Please take a moment to register today"
+    keys = [RSAKey(priv_key=pkey)]
+    _jws = JWS(payload, alg='RS256')
+    _jws.set_header_claim('foo', 'bar')
+    sjwt = _jws.sign_compact(keys, abc=123)
+    _jwt = factory(sjwt)
+    assert set(_jwt.jwt.headers.keys()) == {'alg', 'foo', 'abc'}
