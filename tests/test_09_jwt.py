@@ -93,7 +93,7 @@ def test_jwt_pack_unpack_sym():
 
     _kj = KeyJar()
     _kj.add_symmetric(ALICE, 'hemligt ordsprak', usage=['sig'])
-    bob = JWT(key_jar=_kj, iss=BOB)
+    bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256")
     info = bob.unpack(_jwt)
     assert info
 
@@ -115,7 +115,7 @@ def test_jwt_pack_and_unpack_with_alg():
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(BOB_KEY_JAR)
+    bob = JWT(BOB_KEY_JAR, sign_alg='RS384')
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}
@@ -138,7 +138,7 @@ def test_with_jti():
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(key_jar=_kj, iss=BOB)
+    bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256")
     info = bob.unpack(_jwt)
     assert 'jti' in info
 
@@ -160,7 +160,7 @@ def test_msg_cls():
     payload = {'sub': 'sub2'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(key_jar=_kj, iss=BOB)
+    bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256")
     bob.msg_cls = DummyMsg
     info = bob.unpack(_jwt)
     assert isinstance(info, DummyMsg)

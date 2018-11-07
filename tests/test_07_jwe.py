@@ -368,3 +368,13 @@ def test_ecdh_no_setup_dynamic_epk():
     ret_jwe = factory(jwt)
     res = ret_jwe.decrypt(jwt, [eck_bob])
     assert res == plain
+
+
+def test_verify_headers():
+    jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
+    jwt = jwenc.encrypt([eck_bob])
+    assert jwt
+    decryptor = factory(jwt)
+    assert decryptor.jwt.verify_headers(alg='ECDH-ES', enc='A128GCM')
+    assert decryptor.jwt.verify_headers(alg='RS256') is False
+    assert decryptor.jwt.verify_headers(kid='RS256') is False

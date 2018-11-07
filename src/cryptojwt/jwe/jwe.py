@@ -61,8 +61,6 @@ class JWE(JWx):
         """
 
         :param keys: A set of possibly usable keys
-        :param context: If the other party's public or my private key should be
-            used for encryption
         :param cek: Content master key
         :param iv: Initialization vector
         :param kwargs: Extra key word arguments
@@ -206,8 +204,8 @@ class JWE(JWx):
         return alg2keytype(alg)
 
 
-def factory(token):
-    _jwt = JWEnc().unpack(token)
+def factory(token, **kwargs):
+    _jwt = JWEnc().unpack(token, **kwargs)
     if _jwt.is_jwe():
         _jwe = JWE()
         _jwe.jwt = _jwt

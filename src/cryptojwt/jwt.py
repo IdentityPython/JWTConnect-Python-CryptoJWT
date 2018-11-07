@@ -5,6 +5,7 @@ from datetime import datetime
 from json import JSONDecodeError
 
 
+from .exception import HeaderError
 from .exception import VerificationError
 from .utils import as_unicode
 from .jwe.utils import alg2keytype as jwe_alg2keytype
@@ -69,7 +70,7 @@ class JWT(object):
         self.iss = iss  # My identifier
         self.lifetime = lifetime  # default life time of the signature
         self.sign = sign  # default signing or not
-        self.sign_alg = sign_alg  # default signing algorithm
+        self.alg = sign_alg  # default signing algorithm
         self.encrypt = encrypt  # default encrypting or not
         self.enc_alg = enc_alg  # CEK encryption algorithm
         self.enc_enc = enc_enc  # content encryption algorithm
@@ -118,11 +119,11 @@ class JWT(object):
         :return: A possibly extended audience set
         """
         if aud:
-            if recv in aud:
-                _aud = aud
-            elif recv:
+            if recv and recv not in aud:
                 _aud = [recv]
                 _aud.extend(aud)
+            else:
+                _aud = aud
         elif recv:
             _aud = [recv]
         else:
@@ -154,7 +155,7 @@ class JWT(object):
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.my_keys(owner_id, 'sig'), 'sig', alg=self.sign_alg,
+        keys = pick_key(self.my_keys(owner_id, 'sig'), 'sig', alg=self.alg,
                         kid=kid)
 
         if not keys:
@@ -198,13 +199,13 @@ class JWT(object):
             owner = self.iss
 
         if self.sign:
-            if self.sign_alg != 'none':
+            if self.alg != 'none':
                 _key = self.pack_key(owner, kid)
                 _args['kid'] = _key.kid
             else:
                 _key = None
 
-            _jws = JWS(json.dumps(_args), alg=self.sign_alg)
+            _jws = JWS(json.dumps(_args), alg=self.alg)
             _sjwt = _jws.sign_compact([_key])
         else:
             _sjwt = json.dumps(_args)
@@ -242,7 +243,8 @@ class JWT(object):
             keys = self.key_jar.get_jwt_decrypt_keys(rj.jwt)
         return rj.decrypt(token, keys=keys)
 
-    def verify_profile(self, msg_cls, info, **kwargs):
+    @staticmethod
+    def verify_profile(msg_cls, info, **kwargs):
         """
         If a message type is known for this JSON document. Verify that the
         document complies with the message specifications.
@@ -273,14 +275,24 @@ class JWT(object):
         _jwe_header = _jws_header = None
 
         # Check if it's an encrypted JWT
-        _rj = jwe_factory(token)
-        if _rj:
+        _decryptor = jwe_factory(token)
+        if _decryptor:
+            # check headers
+            darg = {}
+            if self.enc_enc:
+                darg['enc'] = self.enc_enc
+            if self.enc_alg:
+                darg['alg'] = self.enc_alg
+
+            if _decryptor.jwt.verify_headers(**darg) is False:
+                raise HeaderError('Wrong alg or enc')
+
             # Yes, try to decode
-            _info = self._decrypt(_rj, token)
-            _jwe_header = _rj.jwt.headers
+            _info = self._decrypt(_decryptor, token)
+            _jwe_header = _decryptor.jwt.headers
             # Try to find out if the information encrypted was a signed JWT
             try:
-                _content_type = _rj.jwt.headers['cty']
+                _content_type = _decryptor.jwt.headers['cty']
             except KeyError:
                 pass
         else:
@@ -289,12 +301,16 @@ class JWT(object):
         # If I have reason to believe the information I have is a signed JWT
         if _content_type.lower() == 'jwt':
             # Check that is a signed JWT
-            _rj = jws_factory(_info)
-            if _rj:
-                _info = self._verify(_rj, _info)
+            _verifier = jws_factory(_info)
+            if _verifier:
+                if self.alg and not _verifier.jwt.verify_headers(alg=self.alg):
+                    raise HeaderError(
+                        'Wrong signing algorithm: "{}" expected "{}"'.format(
+                            _verifier.jwt.headers['alg'], self.alg))
+                _info = self._verify(_verifier, _info)
             else:
                 raise Exception()
-            _jws_header = _rj.jwt.headers
+            _jws_header = _verifier.jwt.headers
         else:
             # So, not a signed JWT
             try:

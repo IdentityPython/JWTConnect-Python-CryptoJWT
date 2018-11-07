@@ -410,33 +410,24 @@ class JWS(JWx):
         Specifically check that the 'alg' claim has a specific value
 
         :param alg: The expected alg value
-        :raises: KeyError if the 'alg' is not present in the header
         :return: True if the alg value in the header is the same as the one
-            given.
+            given. Returns False if no 'alg' claim exists in the header.
         """
-        if alg == self.jwt.headers['alg']:
-            return True
-        else:
-            return False
-
-    def verify_header(self, key, val):
-        """
-        Check that a particular header claim is present as a has specific value
-
-        :param key: The claim
-        :param val: The value of the claim
-        :raises: KeyError if the claim is not present in the header
-        :return: True if the claim exists in the header and has the prescribed
-            value
-        """
-        if val == self.jwt.headers[key]:
-            return True
-        else:
+        try:
+            return self.jwt.verify_header('alg', alg)
+        except KeyError:
             return False
 
 
-def factory(token, **kwargs):
-    _jw = JWS(**kwargs)
+def factory(token):
+    """
+    Instantiate an JWS instance if the token is a signed JWT.
+
+    :param token: The token that might be a signed JWT
+    :return: A JWS instance if the token was a signed JWT, otherwise None
+    """
+
+    _jw = JWS()
     if _jw.is_jws(token):
         return _jw
     else:

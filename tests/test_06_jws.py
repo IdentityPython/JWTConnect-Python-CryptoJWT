@@ -828,6 +828,5 @@ def test_factory_verify_alg():
     _signer = JWS(payload, alg='RS256')
     _signer.set_header_claim('foo', 'bar')
     _jws = _signer.sign_compact(keys, abc=123)
-    _verifier = factory(_jws, alg='RS512')
-    with pytest.raises(SignerAlgError):
-        _verifier.verify_compact(_jws, keys)
+    _verifier = factory(_jws)
+    assert _verifier.jwt.verify_headers(alg='RS512') is False

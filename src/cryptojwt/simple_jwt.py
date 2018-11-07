@@ -1,6 +1,7 @@
 import json
 import logging
 
+from cryptojwt.exception import HeaderError
 from .utils import as_unicode
 from .utils import b64d
 from .utils import b64encode_item
@@ -23,12 +24,14 @@ class SimpleJWT(object):
         self.b64part = [b64encode_item(headers)]
         self.part = [b64d(self.b64part[0])]
 
-    def unpack(self, token):
+    def unpack(self, token, **kwargs):
         """
         Unpacks a JWT into its parts and base64 decodes the parts
         individually
 
         :param token: The JWT
+        :param kwargs: A possible empty set of claims to verify the header
+            against.
         """
         if isinstance(token, str):
             try:
@@ -39,8 +42,18 @@ class SimpleJWT(object):
         part = split_token(token)
         self.b64part = part
         self.part = [b64d(p) for p in part]
-        #self.headers = json.loads(self.part[0].decode())
         self.headers = json.loads(as_unicode(self.part[0]))
+        for key,val in kwargs.items():
+            try:
+                _ok = self.verify_header(key,val)
+            except KeyError:
+                raise
+            else:
+                if not _ok:
+                    raise HeaderError(
+                        'Expected "{}" to be "{}", was "{}"'.format(
+                            key, val, self.headers[key]))
+
         return self
 
     def pack(self, parts=None, headers=None):
@@ -88,3 +101,42 @@ class SimpleJWT(object):
                 pass
 
         return _msg
+
+    def verify_header(self, key, val):
+        """
+        Check that a particular header claim is present and has a specific value
+
+        :param key: The claim
+        :param val: The value of the claim
+        :raises: KeyError if the claim is not present in the header
+        :return: True if the claim exists in the header and has the prescribed
+            value
+        """
+
+        if self.headers[key] == val:
+            return True
+        else:
+            return False
+
+    def verify_headers(self, check_presence=True, **kwargs):
+        """
+        Check that a set of particular header claim are present and has
+        specific values
+
+        :param kwargs: The claim/value sets as a dictionary
+        :return: True if the claim that appears in the header has the
+            prescribed values. If a claim is not present in the header and
+            check_presence is True then False is returned.
+        """
+        for key, val in kwargs.items():
+            try:
+                _ok = self.verify_header(key, val)
+            except KeyError:
+                if check_presence:
+                    return False
+                else:
+                    pass
+            else:
+                if not _ok:
+                    return False
+        return True
