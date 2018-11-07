@@ -80,5 +80,13 @@ Or
 
 In which case the check of the signing algorithm is done by default.
 
+If you have Key Jar instead of a simple set of keys you can do (not showing how the key jar was initiated here)::
+
+    >>> _verifier = factory(_jws, alg=RS256")
+    >>> keys = key_jar.get_jwt_verify_keys(_verifier.jwt)
+    >>> msg = _verifier.verify_compact(token, keys)
+
+This is a trick that is used in :py:class:`cryptojwt.jwt.JWT`
+
 
 .. _RFC7515: https://tools.ietf.org/html/rfc7515
