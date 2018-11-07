@@ -65,7 +65,9 @@ class JWT(object):
     def __init__(self, key_jar=None, iss='', lifetime=0,
                  sign=True, sign_alg='RS256', encrypt=False,
                  enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
-                 iss2msg_cls=None, skew=15):
+                 iss2msg_cls=None, skew=15,
+                 allowed_sign_algs=None, allowed_enc_algs=None,
+                 allowed_enc_encs=None):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
         self.lifetime = lifetime  # default life time of the signature
@@ -80,6 +82,10 @@ class JWT(object):
         self.iss2msg_cls = iss2msg_cls or {}
         # Allowed time skew
         self.skew = skew
+        # When verifying/decrypting
+        self.allowed_sign_algs = allowed_sign_algs
+        self.allowed_enc_algs = allowed_enc_algs
+        self.allowed_enc_encs = allowed_enc_encs
 
     def receiver_keys(self, recv, use):
         return self.key_jar.get(use, owner=recv)
@@ -271,7 +277,6 @@ class JWT(object):
         if not token:
             raise KeyError
 
-        _content_type = 'jwt'
         _jwe_header = _jws_header = None
 
         # Check if it's an encrypted JWT
@@ -279,10 +284,10 @@ class JWT(object):
         if _decryptor:
             # check headers
             darg = {}
-            if self.enc_enc:
-                darg['enc'] = self.enc_enc
-            if self.enc_alg:
-                darg['alg'] = self.enc_alg
+            if self.allowed_enc_encs:
+                darg['enc'] = self.allowed_enc_encs
+            if self.allowed_enc_algs:
+                darg['alg'] = self.allowed_enc_algs
 
             if _decryptor.jwt.verify_headers(**darg) is False:
                 raise HeaderError('Wrong alg or enc')
@@ -294,8 +299,9 @@ class JWT(object):
             try:
                 _content_type = _decryptor.jwt.headers['cty']
             except KeyError:
-                pass
+                _content_type = ''
         else:
+            _content_type = 'jwt'
             _info = token
 
         # If I have reason to believe the information I have is a signed JWT
@@ -303,10 +309,12 @@ class JWT(object):
             # Check that is a signed JWT
             _verifier = jws_factory(_info)
             if _verifier:
-                if self.alg and not _verifier.jwt.verify_headers(alg=self.alg):
+                if self.allowed_sign_algs and not _verifier.jwt.verify_headers(
+                        alg=self.allowed_sign_algs):
                     raise HeaderError(
                         'Wrong signing algorithm: "{}" expected "{}"'.format(
-                            _verifier.jwt.headers['alg'], self.alg))
+                            _verifier.jwt.headers['alg'],
+                            self.allowed_sign_algs))
                 _info = self._verify(_verifier, _info)
             else:
                 raise Exception()

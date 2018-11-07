@@ -113,10 +113,16 @@ class SimpleJWT(object):
             value
         """
 
-        if self.headers[key] == val:
-            return True
+        if isinstance(val, list):
+            if self.headers[key] in val:
+                return True
+            else:
+                return False
         else:
-            return False
+            if self.headers[key] == val:
+                return True
+            else:
+                return False
 
     def verify_headers(self, check_presence=True, **kwargs):
         """
