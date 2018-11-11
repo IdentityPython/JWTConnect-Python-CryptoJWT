@@ -65,6 +65,13 @@ Decrypting using the encrypted message above.
     >>> _dkey = RSAKey(priv_key=priv_key)
     >>> msg = _decryptor.decrypt(jwe, [_dkey])
 
+or if you know what you're doing::
+
+    >>> _decryptor = JWE_RSA()
+    >>> msg = _decryptor.decrypt(jwt, priv_key)
+
+
+
 
 
 .. _RFC7516: https://tools.ietf.org/html/rfc7516
