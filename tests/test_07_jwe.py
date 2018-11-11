@@ -271,14 +271,12 @@ def test_rsa_encrypt_decrypt_rsa_oaep_256_gcm():
 
 def test_encrypt_decrypt_rsa_cbc():
     _key = RSAKey(pub_key=pub_key)
-    _key._keytype = "public"
     _jwe0 = JWE(plain, alg="RSA1_5", enc="A128CBC-HS256")
 
     jwt = _jwe0.encrypt([_key])
 
     _jwe1 = factory(jwt, alg="RSA1_5", enc="A128CBC-HS256")
     _dkey = RSAKey(priv_key=priv_key)
-    _dkey._keytype = "private"
     msg = _jwe1.decrypt(jwt, [_dkey])
 
     assert msg == plain
