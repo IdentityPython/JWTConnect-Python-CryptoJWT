@@ -165,7 +165,7 @@ def test_1():
                 "exp": 1300819380,
                 "http://example.com/is_root": True}
 
-    _jws = JWS(claimset, cty="JWT")
+    _jws = JWS(claimset, cty="JWT", alg='none')
     _jwt = _jws.sign_compact()
 
     _jr = JWS()
@@ -181,7 +181,7 @@ def test_hmac_256():
     _jws = JWS(payload, alg="HS256")
     _jwt = _jws.sign_compact(keys)
 
-    info = JWS().verify_compact(_jwt, keys)
+    info = JWS(alg="HS256").verify_compact(_jwt, keys)
 
     assert info == payload
 
@@ -192,7 +192,7 @@ def test_hmac_384():
     _jws = JWS(payload, alg="HS384")
     _jwt = _jws.sign_compact(keys)
 
-    _rj = JWS()
+    _rj = JWS(alg="HS384")
     info = _rj.verify_compact(_jwt, keys)
 
     assert info == payload
@@ -204,7 +204,7 @@ def test_hmac_512():
     _jws = JWS(payload, alg="HS512")
     _jwt = _jws.sign_compact(keys)
 
-    _rj = JWS()
+    _rj = JWS(alg="HS512")
     info = _rj.verify_compact(_jwt, keys)
     assert info == payload
 
@@ -215,7 +215,7 @@ def test_hmac_from_keyrep():
     _jws = JWS(payload, alg="HS512")
     _jwt = _jws.sign_compact(symkeys)
 
-    _rj = JWS()
+    _rj = JWS(alg="HS512")
     info = _rj.verify_compact(_jwt, symkeys)
     assert info == payload
 
@@ -239,7 +239,7 @@ def test_rs256():
     _jwt = _jws.sign_compact(skeys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="RS256")
     info = _rj.verify_compact(_jwt, vkeys)
 
     assert info == payload
@@ -254,7 +254,7 @@ def test_rs384():
     _jwt = _jws.sign_compact(keys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="RS384")
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
 
@@ -268,7 +268,7 @@ def test_rs512():
     _jwt = _jws.sign_compact(keys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="RS512")
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
 
@@ -304,8 +304,8 @@ def test_a_1_3a():
             "HAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnV"
             "lfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
 
-    # keycol = {"hmac": cryptojwt.intarr2bin(HMAC_KEY)}
-    jwt = JWSig().unpack(_jwt)
+    # alg == '' means I'm fine with whatever I get
+    jwt = JWSig(alg='').unpack(_jwt)
     assert jwt.valid()
 
     hmac = intarr2bin(HMAC_KEY)
@@ -318,7 +318,7 @@ def test_a_1_3b():
             "eHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0c"
             "nVlfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk")
     keys = [SYMKey(key=intarr2bin(HMAC_KEY))]
-    _jws2 = JWS()
+    _jws2 = JWS(alg='')
     _jws2.verify_compact(_jwt, keys)
 
 
@@ -372,7 +372,7 @@ def test_signer_es(ec_func, alg):
     _jwt = _jws.sign_compact(keys)
 
     _pubkey = ECKey().load_key(eck.public_key())
-    _rj = JWS()
+    _rj = JWS(alg=alg)
     info = _rj.verify_compact(_jwt, [_pubkey])
     assert info == payload
 
@@ -386,7 +386,7 @@ def test_signer_es256_verbose():
     _jwt = _jws.sign_compact(keys)
 
     _pubkey = ECKey().load_key(eck.public_key())
-    _rj = JWS()
+    _rj = JWS(alg="ES256")
     info = _rj.verify_compact_verbose(_jwt, [_pubkey])
     assert info['msg'] == payload
     assert info['key'] == _pubkey
@@ -401,7 +401,7 @@ def test_signer_ps256():
     _jwt = _jws.sign_compact(keys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="PS256")
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
 
@@ -415,7 +415,7 @@ def test_signer_ps256_fail():
     _jwt = _jws.sign_compact(keys)[:-5] + 'abcde'
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="PS256")
     try:
         _rj.verify_compact(_jwt, vkeys)
     except BadSignature:
@@ -433,7 +433,7 @@ def test_signer_ps384():
     _jwt = _jws.sign_compact(keys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = JWS()
+    _rj = JWS(alg="PS384")
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
 
@@ -448,7 +448,7 @@ def test_signer_ps512():
     _jwt = _jws.sign_compact(keys)
 
     vkeys = [RSAKey(pub_key=_pkey.public_key())]
-    _rj = factory(_jwt)
+    _rj = factory(_jwt, alg="PS512")
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
     assert _rj.verify_alg('PS512')
@@ -462,7 +462,7 @@ def test_no_alg_and_alg_none_same():
     _jwt0 = _jws.sign_compact([])
 
     # The class instance that sets up the signing operation
-    _jws = JWS(payload)
+    _jws = JWS(payload, alg="none")
 
     # Create a JWS (signed JWT)
     _jwt1 = _jws.sign_compact([])
@@ -506,7 +506,7 @@ def test_signer_protected_headers():
     assert b64d(enc_payload.encode("utf-8")).decode("utf-8") == payload
 
     _pub_key = ECKey().load_key(eck.public_key())
-    _rj = JWS()
+    _rj = JWS(alg='ES256')
     info = _rj.verify_compact(_jwt, [_pub_key])
     assert info == payload
 
@@ -699,7 +699,7 @@ def test_pick_alg_assume_alg_from_single_key():
     expected_alg = "HS256"
     keys = [SYMKey(key="foobar subdued thought", alg=expected_alg)]
 
-    alg = JWS()._pick_alg(keys)
+    alg = JWS(alg=expected_alg)._pick_alg(keys)
     assert alg == expected_alg
 
 

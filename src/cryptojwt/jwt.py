@@ -280,18 +280,17 @@ class JWT(object):
         _jwe_header = _jws_header = None
 
         # Check if it's an encrypted JWT
-        _decryptor = jwe_factory(token)
+        darg = {}
+        if self.allowed_enc_encs:
+            darg['enc'] = self.allowed_enc_encs
+        if self.allowed_enc_algs:
+            darg['alg'] = self.allowed_enc_algs
+        try:
+            _decryptor = jwe_factory(token, **darg)
+        except (KeyError, HeaderError):
+            _decryptor = None
+
         if _decryptor:
-            # check headers
-            darg = {}
-            if self.allowed_enc_encs:
-                darg['enc'] = self.allowed_enc_encs
-            if self.allowed_enc_algs:
-                darg['alg'] = self.allowed_enc_algs
-
-            if _decryptor.jwt.verify_headers(**darg) is False:
-                raise HeaderError('Wrong alg or enc')
-
             # Yes, try to decode
             _info = self._decrypt(_decryptor, token)
             _jwe_header = _decryptor.jwt.headers
@@ -307,14 +306,12 @@ class JWT(object):
         # If I have reason to believe the information I have is a signed JWT
         if _content_type.lower() == 'jwt':
             # Check that is a signed JWT
-            _verifier = jws_factory(_info)
+            if self.allowed_sign_algs:
+                _verifier = jws_factory(_info, alg=self.allowed_sign_algs)
+            else:
+                _verifier = jws_factory(_info, alg=self.allowed_sign_algs)
+
             if _verifier:
-                if self.allowed_sign_algs and not _verifier.jwt.verify_headers(
-                        alg=self.allowed_sign_algs):
-                    raise HeaderError(
-                        'Wrong signing algorithm: "{}" expected "{}"'.format(
-                            _verifier.jwt.headers['alg'],
-                            self.allowed_sign_algs))
                 _info = self._verify(_verifier, _info)
             else:
                 raise Exception()

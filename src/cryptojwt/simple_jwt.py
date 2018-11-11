@@ -44,6 +44,9 @@ class SimpleJWT(object):
         self.part = [b64d(p) for p in part]
         self.headers = json.loads(as_unicode(self.part[0]))
         for key,val in kwargs.items():
+            if not val and key in self.headers:
+                continue
+
             try:
                 _ok = self.verify_header(key,val)
             except KeyError:

@@ -135,7 +135,7 @@ def test_jws_rsa_signer_and_verifier():
 
         # Verify
         pub_key = key_from_jwk_dict(json.loads(json_pub_key))
-        verifier = JWS()
+        verifier = JWS(alg=[alg])
         assert verifier.verify_compact(signed_token, [pub_key])
 
         for modified_token in modify_token(signed_token, calgs):
@@ -146,7 +146,7 @@ def test_jws_rsa_signer_and_verifier():
 def test_jws_ecdsa_verifier_with_rfc_es256():
     # Set up phase: parse the key and initialize the verifier.
     key = key_from_jwk_dict(json.loads(test_vector.es256_ecdsa_pub_key))
-    verifier = JWS()
+    verifier = JWS(alg=['ES256'])
 
     # Use phase
     assert verifier.verify_compact(test_vector.es256_ecdsa_token, [key])
@@ -159,7 +159,7 @@ def test_jws_ecdsa_verifier_with_rfc_es256():
 def test_jws_ecdsa_verifier_with_rfc_es512():
     # Set up phase: parse the key and initialize the verifier.
     key = key_from_jwk_dict(json.loads(test_vector.es512_ecdsa_pub_key))
-    verifier = JWS()
+    verifier = JWS(alg='ES512')
 
     # Use phase
     assert verifier.verify_compact(test_vector.es512_ecdsa_token, [key])
@@ -178,7 +178,7 @@ def test_jws_ecdsa_signer_verifier_es256():
 
     # Verify
     pub_key = key_from_jwk_dict(json.loads(test_vector.es256_ecdsa_pub_key))
-    verifier = JWS()
+    verifier = JWS(alg='ES256')
     assert verifier.verify_compact(signed_token, [pub_key])
     for modified_token in modify_token(signed_token, ['ES384', 'ES512']):
         with pytest.raises(JWKESTException):
@@ -190,7 +190,7 @@ def test_jws_verifier_with_multiple_keys():
     jwks = KeyBundle(json.loads(test_vector.json_pub_keys))
     keys = jwks.keys()
 
-    verifier = JWS()
+    verifier = JWS(alg='RS256')
     assert verifier.verify_compact(test_vector.rsa_token, keys)
     for modified_token in modify_token(
             test_vector.rsa_token, ['RS384', 'RS512', 'PS256', 'PS384',
@@ -198,7 +198,7 @@ def test_jws_verifier_with_multiple_keys():
         with pytest.raises(JWKESTException):
             verifier.verify_compact(modified_token, keys)
 
-    verifier = JWS()
+    verifier = JWS(alg='ES256')
     assert verifier.verify_compact(test_vector.es256_ecdsa_token, keys)
     for modified_token in modify_token(test_vector.es256_ecdsa_token,
                                        ['ES384', 'ES512']):
@@ -225,7 +225,7 @@ def test_jws_verifier_with_kid():
     pub_key = key_from_jwk_dict(
         json.loads(test_vector.test_json_ecdsa_pub_key_kid1))
 
-    verifier = JWS()
+    verifier = JWS(alg='ES256')
     assert verifier.verify_compact(signed_token_kid1, [pub_key])
     # The signature is valid but the kids don't match.
     with pytest.raises(NoSuitableSigningKeys):
@@ -235,7 +235,7 @@ def test_jws_verifier_with_kid():
 def test_jws_mac_verifier_with_rfc():
     # Set up phase: parse the key and initialize the JwsMacVerify
     key = key_from_jwk_dict(json.loads(test_vector.json_hmac_key))
-    verifier = JWS()
+    verifier = JWS(alg='HS256')
 
     # Use phase
     assert verifier.verify_compact(test_vector.hmac_token, [key])
@@ -265,7 +265,7 @@ def test_jws_mac_authenticator_and_verifier():
         signed_token = authenticator.sign_compact([mac_key])
 
         # Verify
-        verifier = JWS()
+        verifier = JWS(alg=alg)
         assert verifier.verify_compact(signed_token, [mac_key])
         for modified_token in modify_token(signed_token, calgs):
             with pytest.raises(JWKESTException):

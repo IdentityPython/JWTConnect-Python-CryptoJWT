@@ -204,8 +204,12 @@ class JWE(JWx):
         return alg2keytype(alg)
 
 
-def factory(token, **kwargs):
-    _jwt = JWEnc().unpack(token, **kwargs)
+def factory(token, alg='', enc=''):
+    try:
+        _jwt = JWEnc().unpack(token, alg=alg, enc=enc)
+    except KeyError:
+        return None
+
     if _jwt.is_jwe():
         _jwe = JWE()
         _jwe.jwt = _jwt

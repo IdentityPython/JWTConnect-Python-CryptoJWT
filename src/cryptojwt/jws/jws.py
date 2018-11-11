@@ -71,6 +71,11 @@ class JWSig(SimpleJWT):
 
 
 class JWS(JWx):
+    def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
+        JWx.__init__(self, msg, with_digest, httpc, **kwargs)
+        if 'alg' not in self:
+            self['alg'] = "RS256"
+
     def alg_keys(self, keys, use, protected=None):
         _alg = self._pick_alg(keys)
 
@@ -188,9 +193,16 @@ class JWS(JWx):
                 else:
                     raise SignerAlgError("none not allowed")
 
-        if "alg" in self and _alg:
-            if self["alg"] != _alg:
-                raise SignerAlgError("Wrong signing algorithm")
+        if "alg" in self and self['alg'] and _alg:
+            if isinstance(self['alg'], list):
+                if _alg not in self["alg"] :
+                    raise SignerAlgError(
+                        "Wrong signing algorithm, expected {} go {}".format(
+                            self['alg'], _alg))
+            elif _alg != self['alg']:
+                raise SignerAlgError(
+                    "Wrong signing algorithm, expected {} go {}".format(
+                        self['alg'], _alg))
 
         if sigalg and sigalg != _alg:
             raise SignerAlgError("Expected {0} got {1}".format(
@@ -419,15 +431,16 @@ class JWS(JWx):
             return False
 
 
-def factory(token):
+def factory(token, alg=''):
     """
     Instantiate an JWS instance if the token is a signed JWT.
 
     :param token: The token that might be a signed JWT
+    :param alg: The expected signature algorithm
     :return: A JWS instance if the token was a signed JWT, otherwise None
     """
 
-    _jw = JWS()
+    _jw = JWS(alg=alg)
     if _jw.is_jws(token):
         return _jw
     else:

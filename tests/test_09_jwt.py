@@ -52,11 +52,11 @@ def test_jwt_pack():
 
 
 def test_jwt_pack_and_unpack():
-    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE)
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg='RS256')
     payload = {'sub': 'sub'}
     _jwt = alice.pack(payload=payload)
 
-    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB)
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"])
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub', 'kid'}

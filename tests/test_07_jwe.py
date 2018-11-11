@@ -276,7 +276,7 @@ def test_encrypt_decrypt_rsa_cbc():
 
     jwt = _jwe0.encrypt([_key])
 
-    _jwe1 = factory(jwt)
+    _jwe1 = factory(jwt, alg="RSA1_5", enc="A128CBC-HS256")
     _dkey = RSAKey(priv_key=priv_key)
     _dkey._keytype = "private"
     msg = _jwe1.decrypt(jwt, [_dkey])
@@ -318,7 +318,7 @@ def test_ecdh_encrypt_decrypt_direct_key():
     jwt = jwenc.encrypt(**kwargs)
 
     # Bob decrypts
-    ret_jwe = factory(jwt)
+    ret_jwe = factory(jwt, alg="ECDH-ES", enc="A128GCM")
     jwdec = JWE_EC()
     jwdec.dec_setup(ret_jwe.jwt, key=bob)
     msg = jwdec.decrypt(ret_jwe.jwt)
@@ -342,7 +342,7 @@ def test_ecdh_encrypt_decrypt_keywrapped_key():
 
     jwt = jwenc.encrypt(**kwargs)
 
-    ret_jwe = factory(jwt)
+    ret_jwe = factory(jwt, alg="ECDH-ES+A128KW", enc="A128GCM")
     jwdec = JWE_EC()
     jwdec.dec_setup(ret_jwe.jwt, key=bob)
     msg = jwdec.decrypt(ret_jwe.jwt)
@@ -365,7 +365,7 @@ def test_ecdh_no_setup_dynamic_epk():
     jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
     jwt = jwenc.encrypt([eck_bob])
     assert jwt
-    ret_jwe = factory(jwt)
+    ret_jwe = factory(jwt, alg="ECDH-ES", enc="A128GCM")
     res = ret_jwe.decrypt(jwt, [eck_bob])
     assert res == plain
 
@@ -374,7 +374,7 @@ def test_verify_headers():
     jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
     jwt = jwenc.encrypt([eck_bob])
     assert jwt
-    decryptor = factory(jwt)
+    decryptor = factory(jwt, alg="ECDH-ES", enc="A128GCM")
     assert decryptor.jwt.verify_headers(alg='ECDH-ES', enc='A128GCM')
     assert decryptor.jwt.verify_headers(alg='RS256') is False
     assert decryptor.jwt.verify_headers(kid='RS256') is False
