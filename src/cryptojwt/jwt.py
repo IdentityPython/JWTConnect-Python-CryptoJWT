@@ -181,7 +181,10 @@ class JWT(object):
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted JsonWebtoken
         """
-        _args = self.pack_init(recv, aud)
+        _args = {}
+        if payload is not None:
+            _args.update(payload)
+        _args.update(self.pack_init(recv, aud))
 
         try:
             _encrypt = kwargs['encrypt']
@@ -197,9 +200,6 @@ class JWT(object):
                 _jti = uuid.uuid4().hex
 
             _args['jti'] = _jti
-
-        if payload is not None:
-            _args.update(payload)
 
         if not owner and self.iss:
             owner = self.iss
