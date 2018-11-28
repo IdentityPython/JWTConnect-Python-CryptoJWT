@@ -15,8 +15,8 @@ CryptoJWT deals with keys by defining 4 'layers'.
        a number of formats and can export a key as a JWK_.
     3. A :py:class:`cryptojwt.key_bundle.KeyBundle` keeps track of a set of
        keys that has the same origin. Like being part of a JWKS_.
-    4. A :py:class:`cryptojwt.key_jar.KeyJar` lastly is there to sort the keys
-       by their owners/issuers.
+    4. A :py:class:`cryptojwt.key_jar.KeyJar` lastly is there to keep the keys
+       sorted by their owners/issuers.
 
 
 I will not describe how to deal with keys in layer 1, that is done best by
@@ -28,6 +28,9 @@ JSON Web Key (JWK)
 Let us start with you not having any key at all and you want to create a
 signed JSON Web Token (JWS_).
 What to do ?
+
+Staring with no key
+...................
 
 Well if you know what kind of key you want, and if it is a asymmetric key you
 want, you can use one of the provided factory methods.
@@ -49,6 +52,9 @@ As an example::
 If you want a symmetric key you only need some sort of "secure random"
 mechanism. You can use this to acquire a byte array of the appropriate length
 (e.g. 32 bytes for AES256), which can be used as a key.
+
+When you have a key in a file on your hard drive
+................................................
 
 If you already has a key, like if you have a PEM encoded private RSA key in
 a file on your machine you can load it this way::
@@ -86,6 +92,9 @@ and::
     >>> ec_key.has_private_key()
     True
 
+Exporting keys
+..............
+
 When it comes to exporting keys, a :py:class:`cryptojwt.jwk.JWK` instance
 only know how to serialize into the format described in JWK_.
 
@@ -106,7 +115,7 @@ only know how to serialize into the format described in JWK_.
     }
 
 
-What you get when doing it like above is the representation of the public key.
+What you get when doing it like above is a representation of the public key.
 You can also get the values for the private key like this::
 
     >>> from cryptojwt.jwk.rsa import new_rsa_key
@@ -266,6 +275,23 @@ Creating a key jar with your own newly minted keys you would do:
     3
 
 **Note* that the default issuer ID is the empty string ''.
+
+You can also use :py:func:`cryptojwt.keyjar.init_key_jar` which will
+load keys from disc if they are there and if not mint new.
+
+    >>> from cryptojwt.key_jar import build_keyjar
+    >>> import os
+    >>> key_specs = [
+        {"type": "RSA", "use": ["enc", "sig"]},
+        {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    ]
+    >>> key_jar = init_key_jar(key_defs=key_specs,
+                               private_path='private.jwks')
+    >>> len(key_jar.get_issuer_keys(''))
+    3
+    >>> os.path.isfile('private.jwks')
+    True
+
 
 To import a JWKS you could do it by first creating a key bundle::
 
