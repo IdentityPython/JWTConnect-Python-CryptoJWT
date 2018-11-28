@@ -1,8 +1,8 @@
 import os
 
-from cryptojwt.jwt import JWT
+from cryptojwt.jwt import JWT, pick_key
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import KeyJar
+from cryptojwt.key_jar import KeyJar, init_key_jar
 
 __author__ = 'Roland Hedberg'
 
@@ -164,3 +164,33 @@ def test_msg_cls():
     bob.msg_cls = DummyMsg
     info = bob.unpack(_jwt)
     assert isinstance(info, DummyMsg)
+
+
+KEY_DEFS = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "RSA", "use": ["enc"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+
+kj = init_key_jar(key_defs=KEY_DEFS)
+
+
+def test_pick_key():
+    keys = kj.get_issuer_keys('')
+
+    _k = pick_key(keys, 'sig', 'RS256')
+    assert len(_k) == 1
+
+    _k = pick_key(keys, 'sig', 'ES256')
+    assert len(_k) == 1
+
+    _k = pick_key(keys, 'sig', 'ES384')
+    assert len(_k) == 1
+
+    _k = pick_key(keys, 'enc', "RSA-OAEP-256")
+    assert len(_k) == 1
+
+    _k = pick_key(keys, 'enc', "ECDH-ES")
+    assert len(_k) == 0
+

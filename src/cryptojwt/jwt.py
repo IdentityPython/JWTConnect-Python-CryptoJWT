@@ -49,14 +49,29 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
             key_type = jws_alg2keytype(alg)
         else:
             key_type = jwe_alg2keytype(alg)
+
     for key in keys:
         if key.use and key.use != use:
             continue
 
         if key.kty == key_type:
-            if key.alg == '' or alg == '' or key.alg == alg:
-                if key.kid == '' or kid == '' or key.kid == kid:
+            if key.kid and kid:
+                if key.kid == kid:
                     res.append(key)
+                else:
+                    continue
+
+            if key.alg == '':
+                if alg:
+                    if key_type == 'EC':
+                        if key.crv == 'P-{}'.format(alg[2:]):
+                            res.append(key)
+                        continue
+                res.append(key)
+            elif alg and key.alg == alg:
+                res.append(key)
+            else:
+                res.append(key)
     return res
 
 
