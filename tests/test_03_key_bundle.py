@@ -9,10 +9,15 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from cryptojwt.jwk.ec import new_ec_key
 
-from cryptojwt.jwk.rsa import RSAKey, new_rsa_key, import_rsa_key_from_cert_file
+from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
+from cryptojwt.jwk.rsa import new_rsa_key
+from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.hmac import SYMKey
 
+from cryptojwt.key_bundle import build_key_bundle, update_key_bundle, \
+    key_rollover
 from cryptojwt.key_bundle import dump_jwks
+from cryptojwt.key_bundle import key_diff
 from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_bundle import keybundle_from_local_file
 from cryptojwt.key_bundle import KeyBundle
@@ -615,3 +620,147 @@ def test_jwks_url():
     keys.update()
     assert len(keys)
 
+
+KEYSPEC = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]}
+    ]
+
+
+KEYSPEC_2 = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+
+
+KEYSPEC_3 = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]},
+    {"type": "EC", "crv": "P-521", "use": ["sig"]}
+    ]
+
+
+KEYSPEC_4 = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+
+
+KEYSPEC_5 = [
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+
+
+def test_key_diff_none():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+
+    diff = key_diff(_kb, KEYSPEC)
+    assert not diff
+
+
+def test_key_diff_add_one_ec():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+
+    diff = key_diff(_kb, KEYSPEC_2)
+    assert diff
+    assert set(diff.keys()) == {'add'}
+    assert len(diff['add']) == 1
+    assert diff['add'][0].kty == 'EC'
+
+
+def test_key_diff_add_two_ec():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+
+    diff = key_diff(_kb, KEYSPEC_3)
+    assert diff
+    assert set(diff.keys()) == {'add'}
+    assert len(diff['add']) == 2
+    assert diff['add'][0].kty == 'EC'
+
+
+def test_key_diff_add_ec_and_rsa():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+
+    diff = key_diff(_kb, KEYSPEC_4)
+    assert diff
+    assert set(diff.keys()) == {'add'}
+    assert len(diff['add']) == 2
+    assert set([k.kty for k in diff['add']]) == {'EC', 'RSA'}
+
+
+def test_key_diff_add_ec_del_rsa():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+
+    diff = key_diff(_kb, KEYSPEC_5)
+    assert diff
+    assert set(diff.keys()) == {'add', 'del'}
+    assert len(diff['add']) == 1
+    assert len(diff['del']) == 1
+    assert diff['add'][0].kty == 'EC'
+    assert diff['del'][0].kty == 'RSA'
+
+
+def test_key_bundle_update_1():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+    diff = key_diff(_kb, KEYSPEC_2)
+    update_key_bundle(_kb, diff)
+
+    # There should be 3 keys
+    assert len(_kb) == 3
+
+    # one RSA
+    assert len(_kb.get('RSA')) == 1
+
+    # 2 EC
+    assert len(_kb.get('EC')) == 2
+
+
+def test_key_bundle_update_2():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+    diff = key_diff(_kb, KEYSPEC_4)
+    update_key_bundle(_kb, diff)
+
+    # There should be 3 keys
+    assert len(_kb) == 4
+
+    # one RSA
+    assert len(_kb.get('RSA')) == 2
+
+    # 2 EC
+    assert len(_kb.get('EC')) == 2
+
+
+def test_key_bundle_update_3():
+    _kb = build_key_bundle(key_conf=KEYSPEC)
+    diff = key_diff(_kb, KEYSPEC_5)
+    update_key_bundle(_kb, diff)
+
+    # There should be 3 keys
+    assert len(_kb) == 3
+
+    # One inactive. Only active is implicit
+    assert len(_kb.get()) == 2
+
+    # one inactive RSA
+    assert len(_kb.get('RSA', only_active=False)) == 1
+    assert len(_kb.get('RSA')) == 0
+
+    # 2 EC
+    assert len(_kb.get('EC')) == 2
+    assert len(_kb.get('EC', only_active=False)) == 2
+
+
+def test_key_rollover():
+    kb_0 = build_key_bundle(key_conf=KEYSPEC)
+    assert len(kb_0.get(only_active=False)) == 2
+    assert len(kb_0.get()) == 2
+
+    kb_1 = key_rollover(kb_0)
+
+    assert len(kb_1.get(only_active=False)) == 4
+    assert len(kb_1.get()) == 2

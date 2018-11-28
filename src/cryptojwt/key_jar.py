@@ -7,10 +7,8 @@ from requests import request
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 
-from .exception import DeSerializationNotPossible
+from .key_bundle import build_key_bundle, key_diff, update_key_bundle
 from .key_bundle import KeyBundle
-from .key_bundle import ec_init
-from .key_bundle import rsa_init
 
 
 __author__ = 'Roland Hedberg'
@@ -287,7 +285,7 @@ class KeyJar(object):
         else:
             return False
 
-    def __getitem__(self, owner):
+    def __getitem__(self, owner=''):
         """
         Get all the key bundles that belong to an entity.
 
@@ -651,8 +649,8 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
     
         keys = [
             {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
-            {"type": "EC", "crv": "P-256", "use": ["sig"]},
-            {"type": "EC", "crv": "P-256", "use": ["enc"]}
+            {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
+            {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"}
         ]
 
     Keys in this specification are:
@@ -671,6 +669,10 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
         The elliptic curve that should be used. Only applies to elliptic curve
         keys :-)
 
+    kid
+        Key ID, can only be used with one usage type is specified. If there
+        are more the one usage type specified 'kid' will just be ignored.
+
     :param key_conf: The key configuration
     :param kid_template: A template by which to build the key IDs. If no
         kid_template is given then the built-in function add_kid() will be used.
@@ -682,39 +684,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
     if keyjar is None:
         keyjar = KeyJar()
 
-    kid = 0
-
-    tot_kb = KeyBundle()
-    for spec in key_conf:
-        typ = spec["type"].upper()
-
-        if typ == "RSA":
-            if "key" in spec:
-                error_to_catch = (OSError, IOError,
-                                  DeSerializationNotPossible)
-                try:
-                    kb = KeyBundle(source="file://%s" % spec["key"],
-                                   fileformat="der",
-                                   keytype=typ, keyusage=spec["use"])
-                except error_to_catch:
-                    kb = rsa_init(spec)
-                except Exception:
-                    raise
-            else:
-                kb = rsa_init(spec)
-        elif typ == "EC":
-            kb = ec_init(spec)
-        else:
-            continue
-
-        for k in kb.keys():
-            if kid_template:
-                k.kid = kid_template % kid
-                kid += 1
-            else:
-                k.add_kid()
-
-        tot_kb.extend(kb.keys())
+    tot_kb = build_key_bundle(key_conf, kid_template)
 
     keyjar.add_kb(owner, tot_kb)
 
@@ -804,6 +774,16 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
             _jwks = open(private_path, 'r').read()
             _kj = KeyJar()
             _kj.import_jwks(json.loads(_jwks), owner)
+            if key_defs:
+                _kb = _kj.issuer_keys[owner][0]
+                _diff = key_diff(_kb, key_defs)
+                if _diff:
+                    update_key_bundle(_kb, _diff)
+                    _kj.issuer_keys[owner] = [_kb]
+                    jwks = _kj.export_jwks(private=True, issuer=owner)
+                    fp = open(private_path, 'w')
+                    fp.write(json.dumps(jwks))
+                    fp.close()
         else:
             _kj = build_keyjar(key_defs, owner=owner)
             jwks = _kj.export_jwks(private=True, issuer=owner)
@@ -824,6 +804,16 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
             _jwks = open(public_path, 'r').read()
             _kj = KeyJar()
             _kj.import_jwks(json.loads(_jwks), owner)
+            if key_defs:
+                _kb = _kj.issuer_keys[owner][0]
+                _diff = key_diff(_kb, key_defs)
+                if _diff:
+                    update_key_bundle(_kb, _diff)
+                    _kj.issuer_keys[owner] = [_kb]
+                    jwks = _kj.export_jwks(issuer=owner)
+                    fp = open(private_path, 'w')
+                    fp.write(json.dumps(jwks))
+                    fp.close()
         else:
             _kj = build_keyjar(key_defs, owner=owner)
             _jwks = _kj.export_jwks(issuer=owner)

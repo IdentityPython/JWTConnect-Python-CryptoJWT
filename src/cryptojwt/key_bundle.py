@@ -1,10 +1,12 @@
 import json
 import logging
 import os
+from functools import cmp_to_key
+
 import requests
 import time
 
-from .exception import JWKException
+from .exception import JWKException, DeSerializationNotPossible
 from .exception import UnknownKeyType
 from .exception import UpdateFailed
 from .jwk.hmac import SYMKey
@@ -609,3 +611,247 @@ def dump_jwks(kbl, target, private=False):
     _txt = json.dumps(res)
     f.write(_txt)
     f.close()
+
+
+def build_key_bundle(key_conf, kid_template=""):
+    """
+    Builds a :py:class:`oidcmsg.key_bundle.KeyBundle` instance based on a key
+    specification.
+
+    An example of such a specification::
+
+        keys = [
+            {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
+            {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
+            {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"}
+        ]
+
+    Keys in this specification are:
+
+    type
+        The type of key. Presently only 'rsa' and 'ec' supported.
+
+    key
+        A name of a file where a key can be found. Only works with PEM encoded
+        RSA keys
+
+    use
+        What the key should be used for
+
+    crv
+        The elliptic curve that should be used. Only applies to elliptic curve
+        keys :-)
+
+    kid
+        Key ID, can only be used with one usage type is specified. If there
+        are more the one usage type specified 'kid' will just be ignored.
+
+    :param key_conf: The key configuration
+    :param kid_template: A template by which to build the key IDs. If no
+        kid_template is given then the built-in function add_kid() will be used.
+    :return: A KeyBundle instance
+    """
+
+    kid = 0
+
+    tot_kb = KeyBundle()
+    for spec in key_conf:
+        typ = spec["type"].upper()
+
+        if typ == "RSA":
+            if "key" in spec:
+                error_to_catch = (OSError, IOError,
+                                  DeSerializationNotPossible)
+                try:
+                    kb = KeyBundle(source="file://%s" % spec["key"],
+                                   fileformat="der",
+                                   keytype=typ, keyusage=spec["use"])
+                except error_to_catch:
+                    kb = rsa_init(spec)
+                except Exception:
+                    raise
+            else:
+                kb = rsa_init(spec)
+        elif typ == "EC":
+            kb = ec_init(spec)
+        else:
+            continue
+
+        if 'kid' in spec and len(kb) == 1:
+            ks = kb.keys()
+            ks[0].kid = spec['kid']
+        else:
+            for k in kb.keys():
+                if kid_template:
+                    k.kid = kid_template % kid
+                    kid += 1
+                else:
+                    k.add_kid()
+
+        tot_kb.extend(kb.keys())
+
+    return tot_kb
+
+
+def _cmp(kd1, kd2):
+    if kd1 == kd2:
+        return 0
+    elif kd1< kd2:
+        return -1
+    elif kd1 > kd2:
+        return 1
+
+
+def sort_func(kd1, kd2):
+    _l = _cmp(kd1['type'], kd2['type'])
+    if _l:
+        return _l
+
+    if kd1['type'] == 'EC':
+        _l = _cmp(kd1['crv'], kd2['crv'])
+        if _l:
+            return _l
+
+    _l = _cmp(kd1['type'], kd2['type'])
+    if _l:
+        return _l
+
+    _l = _cmp(kd1['use'][0], kd2['use'][0])
+    if _l:
+        return _l
+
+    try:
+        _kid1 = kd1['kid']
+    except KeyError:
+        _kid1 = None
+
+    try:
+        _kid2 = kd2['kid']
+    except KeyError:
+        _kid2 = None
+
+    if _kid1 and _kid2:
+        return _cmp(_kid1, _kid2)
+    elif _kid1:
+        return -1
+    elif _kid2:
+        return 1
+
+    return 0
+
+
+def order_key_defs(key_def):
+    """
+
+    :param key_def:
+    :return:
+    """
+    _int = []
+    # First make sure all defs only reference one usage
+    for kd in key_def:
+        if len(kd['use']) > 1:
+            for _use in kd['use']:
+                _kd = kd.copy()
+                _kd['use'] = _use
+                _int.append(_kd)
+        else:
+            _int.append(kd)
+
+    _int.sort(key=cmp_to_key(sort_func))
+
+    return _int
+
+
+def key_diff(key_bundle, key_defs, owner=''):
+    """
+    Compares a KeyJar instance with a key specification and returns
+    what new keys should be created and added to the key_jar and which should be
+    removed from the key_jar.
+
+    :param key_jar:
+    :param key_defs:
+    :return:
+    """
+
+    keys = key_bundle.get()
+    diff = {}
+
+    # My own sorted copy
+    key_defs = order_key_defs(key_defs)[:]
+    used = []
+
+    for key in keys:
+        match = False
+        for kd in key_defs:
+            if key.use not in kd['use']:
+                continue
+
+            if key.kty != kd['type']:
+                continue
+
+            if key.kty == 'EC':
+                # special test only for EC keys
+                if key.crv != kd['crv']:
+                    continue
+
+            try:
+                _kid = kd['kid']
+            except KeyError:
+                pass
+            else:
+                if key.kid != _kid:
+                    continue
+
+            match = True
+            used.append(kd)
+            key_defs.remove(kd)
+            break
+
+        if not match:
+            try:
+                diff['del'].append(key)
+            except KeyError:
+                diff['del'] = [key]
+
+    if key_defs:
+        _kb = build_key_bundle(key_defs)
+        diff['add'] = _kb.keys()
+
+    return diff
+
+
+def update_key_bundle(key_bundle, diff):
+    try:
+        _add = diff['add']
+    except KeyError:
+        pass
+    else:
+        key_bundle.extend(_add)
+
+    try:
+        _del = diff['del']
+    except KeyError:
+        pass
+    else:
+        _now = time.time()
+        for k in _del:
+            k.inactive_since = _now
+
+
+def key_rollover(kb):
+    key_spec = []
+    for key in kb.get():
+        _spec = {'type': key.kty, 'use':[key.use]}
+        if key.kid:
+            _spec['kid'] = key.kid
+        if key.kty == 'EC':
+            _spec['crv'] = key.crv
+
+        key_spec.append(_spec)
+
+    diff = {'del': kb.get()}
+    _kb = build_key_bundle(key_spec)
+    diff['add'] = _kb.keys()
+
+    update_key_bundle(kb, diff)
+    return kb

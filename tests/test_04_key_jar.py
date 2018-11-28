@@ -30,27 +30,35 @@ def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
 
-JWK0 = {"keys": [
-    {'kty': 'RSA', 'e': 'AQAB', 'kid': "abc",
-     'n':
-         'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5'
-         'B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'}
-]}
+JWK0 = {
+    "keys": [
+        {
+            'kty': 'RSA', 'e': 'AQAB', 'kid': "abc",
+            'n':
+                'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5'
+                'B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'
+            }
+        ]
+    }
 
-JWK1 = {"keys": [
-    {
-        "n":
-            "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
-            "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
-            "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
-            "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
-            "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
-        "e": "AQAB", "kty": "RSA", "kid": "rsa1"},
-    {
-        "k":
-            "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
-        "kty": "oct"},
-]}
+JWK1 = {
+    "keys": [
+        {
+            "n":
+                "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
+                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
+                "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
+                "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
+                "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
+            "e": "AQAB", "kty": "RSA", "kid": "rsa1"
+            },
+        {
+            "k":
+                "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
+            "kty": "oct"
+            },
+        ]
+    }
 
 JWK2 = {
     "keys": [
@@ -86,9 +94,9 @@ JWK2 = {
                 "+lo13YLnsVrmQ16NCBYq2nQFNPuNJw6t3XUbwBHXpF46aLT1/eGf/7Xx6iy8y"
                 "PJX4DyrpFTutDz882RWofGEO5t4Cw+zZg70dJ/hH/ODYRMorfXEW"
                 "+8uKmXMKmX2wyxMKvfiPbTy5LmAU8Jvjs2tLg4rOBcXWLAIarZ"
-            ],
+                ],
             "x5t": "kriMPdmBvx68skT8-mPAB3BseeA"
-        },
+            },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/{tenantid}/v2.0/",
@@ -117,9 +125,9 @@ JWK2 = {
                 "/WWcs5w8vbt1i8Kk6o19W2MjZ95JaECKjBDYRlhG1KmSBtrs"
                 "KsCBQoBzwH/rXfksTO9JoUYLXiW0IppB7DhNH4PJ5hZI91R8rR0H3"
                 "/bKkLSuDaKLWSqMhozdhXsIIKvJQ=="
-            ],
+                ],
             "x5t": "MnC_VZcATfM5pOYiJHMba9goEKY"
-        },
+            },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -146,9 +154,9 @@ JWK2 = {
                 "RV2PPZ7iRgMF/Fyvqi96Gd8X53ds/FaiQpZjUUtcO3fk0hDRQPtCYMII5jq"
                 "+YAYjSybvF84saB7HGtucVRn2nMZc5cAC42QNYIlPM"
                 "qA=="
-            ],
+                ],
             "x5t": "GvnPApfWMdLRi8PDmisFn7bprKg"
-        },
+            },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -172,18 +180,18 @@ JWK2 = {
                 "IEte2MWN78sHvLLTWTAkiQSlGf1Zb0durw+OvlunQ2AKbK79Qv0Q+wwGuK"
                 "+oymWc3GSdP1wZqk9dhrQxb3FtdU2tMke01QTut6wr7"
                 "ig=="
-            ],
+                ],
             "x5t": "dEtpjbEvbhfgwUI-bdK5xAU_9UQ"
-        }
-    ]
-}
+            }
+        ]
+    }
 
 
 def test_build_keyjar():
     keys = [
         {"type": "RSA", "use": ["enc", "sig"]},
         {"type": "EC", "crv": "P-256", "use": ["sig"]},
-    ]
+        ]
 
     keyjar = build_keyjar(keys)
     jwks = keyjar.export_jwks()
@@ -199,8 +207,10 @@ def test_build_keyjar():
 
 def test_build_keyjar_missing(tmpdir):
     keys = [
-        {"type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"),
-         "use": ["enc", "sig"]}]
+        {
+            "type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"]
+            }]
 
     key_jar = build_keyjar(keys)
 
@@ -313,7 +323,8 @@ class TestKeyJar(object):
                  'qaTEYLPpXaoKWDSnJNonr79tL0T7iuJmO1l705oO3Y0TQ'
                  '-INLY6jnKG_RpsvyvGNnwP9pMvcP1phKsWZ10ofuuhJGRp8IxQL9Rfz'
                  'T87OvF0RBSO1U73h09YP-corWDsnKIi6TbzRpN5YDw',
-            'kid': 'abc'}
+            'kid': 'abc'
+            }
 
     def test_no_use(self):
         kb = KeyBundle(JWK0["keys"])
@@ -353,7 +364,7 @@ def test_get_signing_key_use_undefined():
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]}
-]
+    ]
 
 
 def test_remove_after():
@@ -389,20 +400,24 @@ def test_remove_after():
     assert set(_new).intersection(set(_old)) == set()
 
 
-JWK_UK = {"keys": [
-    {
-        "n":
-            "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
-            "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
-            "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
-            "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
-            "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
-        "e": "AQAB", "kty": "RSA", "kid": "rsa1"},
-    {
-        "k":
-            "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
-        "kty": "buz"},
-]}
+JWK_UK = {
+    "keys": [
+        {
+            "n":
+                "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
+                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
+                "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
+                "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
+                "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
+            "e": "AQAB", "kty": "RSA", "kid": "rsa1"
+            },
+        {
+            "k":
+                "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
+            "kty": "buz"
+            },
+        ]
+    }
 
 
 def test_load_unknown_keytype():
@@ -411,9 +426,11 @@ def test_load_unknown_keytype():
     assert len(kj.get_issuer_keys('')) == 1
 
 
-JWK_FP = {"keys": [
-    {"e": "AQAB", "kty": "RSA", "kid": "rsa1"},
-]}
+JWK_FP = {
+    "keys": [
+        {"e": "AQAB", "kty": "RSA", "kid": "rsa1"},
+        ]
+    }
 
 
 def test_load_missing_key_parameter():
@@ -433,7 +450,7 @@ JWKS_SPO = {
             "crv": "P-256",
             "x": "1XXUXq75gOPZ4bEj1o2Z5XKJWSs6LmL6fAOK3vyMzSc",
             "y": "ac1h_DwyuUxhkrD9oKMJ-b_KuiVvvSARIwT-XoEmDXs"
-        },
+            },
         {
             "kid":
                 "91pD1H81rXUvrfg9mkngIG-tXjnldykKUVbITDIU1SgJvq91b8clOcJuEHNAq61eIvg8owpEvWcWAtlbV2awyA",
@@ -443,7 +460,7 @@ JWKS_SPO = {
             "crv": "P-256",
             "x": "2DfQoLpZS2j3hHEcHDkzV8ISx-RdLt6Opy8YZYVm4AQ",
             "y": "ycvkFMBIzgsowiaf6500YlG4vaMSK4OF7WVtQpUbEE0"
-        },
+            },
         {
             "kid": "0sIEl3MUJiCxrqleEBBF-_bZq5uClE84xp-wpt8oOI"
                    "-WIeNxBjSR4ak_OTOmLdndB0EfDLtC7X1JrnfZILJkxA",
@@ -453,7 +470,7 @@ JWKS_SPO = {
             "n":
                 "yG9914Q1j63Os4jX5dBQbUfImGq4zsXJD4R59XNjGJlEt5ek6NoiDl0ucJO3_7_R9e5my2ONTSqZhtzFW6MImnIn8idWYzJzO2EhUPCHTvw_2oOGjeYTE2VltIyY_ogIxGwY66G0fVPRRH9tCxnkGOrIvmVgkhCCGkamqeXuWvx9MCHL_gJbZJVwogPSRN_SjA1gDlvsyCdA6__CkgAFcSt1sGgiZ_4cQheKexxf1-7l8R91ZYetz53drk2FS3SfuMZuwMM4KbXt6CifNhzh1Ye-5Tr_ZENXdAvuBRDzfy168xnk9m0JBtvul9GoVIqvCVECB4MPUb7zU6FTIcwRAw",
             "e": "AQAB"
-        },
+            },
         {
             "kid":
                 "zyDfdEU7pvH0xEROK156ik8G7vLO1MIL9TKyL631kSPtr9tnvs9XOIiq5jafK2hrGr2qqvJdejmoonlGqWWZRA",
@@ -463,7 +480,7 @@ JWKS_SPO = {
             "n":
                 "68be-nJp46VLj4Ci1V36IrVGYqkuBfYNyjQTZD_7yRYcERZebowOnwr3w0DoIQpl8iL2X8OXUo7rUW_LMzLxKx2hEmdJfUn4LL2QqA3KPgjYz8hZJQPG92O14w9IZ-8bdDUgXrg9216H09yq6ZvJrn5Nwvap3MXgECEzsZ6zQLRKdb_R96KFFgCiI3bEiZKvZJRA7hM2ePyTm15D9En_Wzzfn_JLMYgE_DlVpoKR1MsTinfACOlwwdO9U5Dm-5elapovILTyVTgjN75i-wsPU2TqzdHFKA-4hJNiWGrYPiihlAFbA2eUSXuEYFkX43ahoQNpeaf0mc17Jt5kp7pM2w",
             "e": "AQAB"
-        },
+            },
         {
             "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
                    "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
@@ -472,7 +489,7 @@ JWKS_SPO = {
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ"
-        },
+            },
         {
             "kid":
                 "bL33HthM3fWaYkY2_pDzUd7a65FV2R2LHAKCOsye8eNmAPDgRgpHWPYpWFVmeaujUUEXRyDLHN-Up4QH_sFcmw",
@@ -481,9 +498,9 @@ JWKS_SPO = {
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "CS01DGXDBPV9cFmd8tgFu3E7eHn1UcP7N1UCgd_JgZo"
-        }
-    ]
-}
+            }
+        ]
+    }
 
 
 def test_load_spomky_keys():
@@ -530,11 +547,11 @@ class TestVerifyJWTKeys(object):
             {"type": "RSA", "use": ["sig"]},
             {"type": "RSA", "use": ["sig"]},
             {"type": "RSA", "use": ["sig"]},
-        ]
+            ]
 
         skey = [
             {"type": "RSA", "use": ["sig"]},
-        ]
+            ]
 
         # Alice has multiple keys
         self.alice_keyjar = build_keyjar(mkey)
@@ -721,14 +738,14 @@ def test_get_decrypt_keys():
     kj.add_kb('', kb)
 
     jwt = JWEnc()
-    jwt.headers = {'alg':'RS256'}
-    jwt.part = [{'alg':'RS256'},'{"aud": "Bob", "iss": "Alice"}',
+    jwt.headers = {'alg': 'RS256'}
+    jwt.part = [{'alg': 'RS256'}, '{"aud": "Bob", "iss": "Alice"}',
                 'aksjdhaksjbd']
 
     keys = kj.get_jwt_decrypt_keys(jwt)
     assert keys
 
-    jwt.part = [{'alg':'RS256'},'{"iss": "Alice"}', 'aksjdhaksjbd']
+    jwt.part = [{'alg': 'RS256'}, '{"iss": "Alice"}', 'aksjdhaksjbd']
 
     keys = kj.get_jwt_decrypt_keys(jwt)
     assert keys
@@ -756,45 +773,104 @@ def test_key_summary():
     assert out
 
 
+PUBLIC_FILE = '{}/public_jwks.json'.format(BASEDIR)
+PRIVATE_FILE = '{}/private_jwks.json'.format(BASEDIR)
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]}
+    ]
+KEYSPEC_2 = [
+    {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
-]
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+KEYSPEC_3 = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]},
+    {"type": "EC", "crv": "P-521", "use": ["sig"]}
+    ]
+KEYSPEC_4 = [
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "RSA", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+KEYSPEC_5 = [
+    {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
 
 
 def test_init_key_jar():
     # Nothing written to file
     _keyjar = init_key_jar(key_defs=KEYSPEC)
     assert list(_keyjar.owners()) == ['']
+    assert len(_keyjar.get_issuer_keys('')) == 2
 
 
 def test_init_key_jar_dump_public():
-    pub_file = '{}/pub_client.jwks'.format(BASEDIR)
-    if os.path.isfile(pub_file):
-        os.unlink(pub_file)
+    for _file in [PRIVATE_FILE, PUBLIC_FILE]:
+        if os.path.isfile(_file):
+            os.unlink(_file)
 
     # JWKS with public keys written to file
-    _keyjar = init_key_jar(public_path=pub_file, key_defs=KEYSPEC)
+    _keyjar = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC)
     assert list(_keyjar.owners()) == ['']
 
     # JWKS will be read from disc, not created new
-    _keyjar2 = init_key_jar(public_path=pub_file, key_defs=KEYSPEC)
+    _keyjar2 = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC)
     assert list(_keyjar2.owners()) == ['']
 
     # verify that the 2 Key jars contains the same keys
 
 
 def test_init_key_jar_dump_private():
-    private_path = '{}/pub_client.jwks'.format(BASEDIR)
-    if os.path.isfile(private_path):
-        os.unlink(private_path)
+    for _file in [PRIVATE_FILE, PUBLIC_FILE]:
+        if os.path.isfile(_file):
+            os.unlink(_file)
 
-    # New set of keys, JWKS with private keys written to file
-    _keyjar = init_key_jar(public_path='{}/pub_client.jwks'.format(BASEDIR),
-                           private_path=private_path, key_defs=KEYSPEC)
-    assert list(_keyjar.owners()) == ['']
+    # New set of keys, JWKSs with keys and public written to file
+    _keyjar = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
+                           owner='https://example.com')
+    assert list(_keyjar.owners()) == ['https://example.com']
 
     # JWKS will be read from disc, not created new
-    _keyjar2 = init_key_jar(public_path='{}/pub_client.jwks'.format(BASEDIR),
-                           private_path=private_path, key_defs=KEYSPEC)
+    _keyjar2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC)
     assert list(_keyjar2.owners()) == ['']
+
+
+def test_init_key_jar_update():
+    for _file in [PRIVATE_FILE, PUBLIC_FILE]:
+        if os.path.isfile(_file):
+            os.unlink(_file)
+
+    # New set of keys, JWKSs with keys and public written to file
+    _keyjar_1 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
+                             owner='https://example.com',
+                             public_path=PUBLIC_FILE)
+    assert list(_keyjar_1.owners()) == ['https://example.com']
+
+    _keyjar_2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
+                             public_path=PUBLIC_FILE)
+
+    # Both should contain the same RSA key
+    rsa1 = _keyjar_1.get_signing_key('RSA', 'https://example.com')
+    rsa2 = _keyjar_2.get_signing_key('RSA', '')
+
+    assert len(rsa1) == 1
+    assert len(rsa2) == 1
+    assert rsa1[0] == rsa2[0]
+
+    # keyjar1 should only contain one EC key while keyjar2 should contain 3.
+
+    ec1 = _keyjar_1.get_signing_key('EC', 'https://example.com')
+    ec2 = _keyjar_2.get_signing_key('EC', '')
+    assert len(ec1) == 1
+    assert len(ec2) == 2
+
+    # The file on disc should have changed
+    _keyjar_3 = init_key_jar(private_path=PRIVATE_FILE)
+
+    assert len(_keyjar_3.get_signing_key('RSA')) == 1
+    assert len(_keyjar_3.get_signing_key('EC')) == 2
