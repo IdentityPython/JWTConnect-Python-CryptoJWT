@@ -694,6 +694,13 @@ def build_key_bundle(key_conf, kid_template=""):
 
 
 def _cmp(kd1, kd2):
+    """
+    Compare 2 keys
+
+    :param kd1: First key
+    :param kd2: Second key
+    :return: -1,0,1 depending on whether kd1 is le,eq or gt then kd2
+    """
     if kd1 == kd2:
         return 0
     elif kd1< kd2:
@@ -703,6 +710,12 @@ def _cmp(kd1, kd2):
 
 
 def sort_func(kd1, kd2):
+    """
+    Compares 2 key descriptions
+    :param kd1: First key description
+    :param kd2: Second key description
+    :return: -1,0,1 depending on whether kd1 le,eq or gt then kd2
+    """
     _l = _cmp(kd1['type'], kd2['type'])
     if _l:
         return _l
@@ -742,9 +755,12 @@ def sort_func(kd1, kd2):
 
 def order_key_defs(key_def):
     """
+    Sort a set of key definitions. A key definition that defines more then
+    one usage type are splitted into as many definitions as the number of
+    usage types specified. One key definition per usage type.
 
-    :param key_def:
-    :return:
+    :param key_def: A set of key definitions
+    :return: The set of definitions as a sorted list
     """
     _int = []
     # First make sure all defs only reference one usage
@@ -762,15 +778,16 @@ def order_key_defs(key_def):
     return _int
 
 
-def key_diff(key_bundle, key_defs, owner=''):
+def key_diff(key_bundle, key_defs):
     """
-    Compares a KeyJar instance with a key specification and returns
-    what new keys should be created and added to the key_jar and which should be
-    removed from the key_jar.
+    Creates a difference dictionary with keys that should added and keys that
+    should be deleted from a Key Bundle to get it updated to a state that
+    mirrors What is in the key_defs specification.
 
-    :param key_jar:
-    :param key_defs:
-    :return:
+    :param key_bundle: The original KeyBundle
+    :param key_defs: A set of key definitions
+    :return: A dictionary with possible keys 'add' and 'del'. The values
+    for the keys are lists of :py:class:`cryptojwt.jwk.JWK` instances
     """
 
     keys = key_bundle.get()
@@ -821,6 +838,15 @@ def key_diff(key_bundle, key_defs, owner=''):
 
 
 def update_key_bundle(key_bundle, diff):
+    """
+    Apply a diff specification to a KeyBundle.
+    The keys that are to be added are added.
+    The keys that should be deleted are marked as inactive.
+
+    :param key_bundle: The original KeyBundle
+    :param diff: The difference specification
+    :return: An updated key_bundle
+    """
     try:
         _add = diff['add']
     except KeyError:
@@ -839,11 +865,18 @@ def update_key_bundle(key_bundle, diff):
 
 
 def key_rollover(kb):
+    """
+    A nifty function that lets you do a key rollover that encompasses creating
+    a completely new set of keys. One new per every old one. With the same
+    specifications as the old one.
+    All the old ones are marked as inactive.
+
+    :param kb:
+    :return:
+    """
     key_spec = []
     for key in kb.get():
         _spec = {'type': key.kty, 'use':[key.use]}
-        if key.kid:
-            _spec['kid'] = key.kid
         if key.kty == 'EC':
             _spec['crv'] = key.crv
 
