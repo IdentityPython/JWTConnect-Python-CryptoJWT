@@ -274,10 +274,11 @@ Creating a key jar with your own newly minted keys you would do:
     >>> len(key_jar.get_issuer_keys(''))
     3
 
-**Note* that the default issuer ID is the empty string ''.
+**Note** that the default issuer ID is the empty string ''.
+**Note** also that different RSA keys are minted for signing and for encryption.
 
 You can also use :py:func:`cryptojwt.keyjar.init_key_jar` which will
-load keys from disc if they are there and if not mint new.
+load keys from disc if they are there and if not mint new.::
 
     >>> from cryptojwt.key_jar import build_keyjar
     >>> import os
@@ -317,8 +318,8 @@ The last line can also be expressed as::
 
     >>> keyjar[''] = kb
 
-**Note** both variants, adds a key bundle to the list of key bundles that
-belongs to '' it does not overwrite anything that was already there.
+**Note** both variants adds a key bundle to the list of key bundles that
+belongs to '', it does not overwrite anything that was already there.
 
 Adding a JWKS is such a common thing that there is a simpler way to do it::
 
