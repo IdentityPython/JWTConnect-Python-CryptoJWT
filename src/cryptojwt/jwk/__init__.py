@@ -44,10 +44,11 @@ class JWK(object):
             if not isinstance(alg, str):
                 alg = as_unicode(alg)
 
-            if alg not in [
-                "HS256", "HS384", "HS512", "RS256", "RS384", "RS512", "ES256",
-                "ES384","ES512", "PS256", "PS384", "PS512"
-                ]:
+            # The list comes from https://tools.ietf.org/html/rfc7518#page-6
+            # Should map against SIGNER_ALGS in cryptojwt.jws.jws
+            if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
+                           "RS512", "ES256", "ES384","ES512", "PS256",
+                           "PS384", "PS512", "none"]:
                 raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
 
         self.alg = alg
@@ -148,7 +149,7 @@ class JWK(object):
 
         if self.kid:
             if not isinstance(self.kid, str):
-                raise HeaderError("kid of wrong value type")
+                raise ValueError("kid of wrong value type")
         return True
 
     def __eq__(self, other):

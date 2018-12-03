@@ -2,6 +2,8 @@ import json
 import logging
 
 import requests
+
+from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
 
 from .jwk.jwk import key_from_jwk_dict
@@ -67,28 +69,36 @@ class JWx(object):
                     continue
 
                 if key == "jwk":
+                    # value MUST be a string
                     if isinstance(_val, dict):
-                        self._dict["jwk"] = key_from_jwk_dict(_val)
+                        _k = key_from_jwk_dict(_val)
+                        self._dict["jwk"] = _val
                     elif isinstance(_val, str):
-                        self._dict["jwk"] = key_from_jwk_dict(json.loads(_val))
+                        # verify that it's a real JWK
+                        _val = json.loads(_val)
+                        _j = key_from_jwk_dict(_val)
+                        self._dict["jwk"] = _val
+                    elif isinstance(_val, JWK):
+                        self._dict['jwk'] = _val.to_dict()
                     else:
                         raise ValueError(
-                            'JWK must be a string or a JSON object')
+                            'JWK must be a string a JSON object or a JWK '
+                            'instance')
                     self._jwk = self._dict['jwk']
                 elif key == "x5c":
                     self._dict["x5c"] = _val
                     _pub_key = import_rsa_key(_val)
-                    self._jwk = RSAKey(_pub_key)
+                    self._jwk = RSAKey(pub_key=_pub_key).to_dict()
                 elif key == "jku":
                     self._jwks = KeyBundle(source=_val, httpc=self.httpc)
                     self._dict['jku'] = _val
                 elif "x5u" in self:
                     try:
                         _spec = load_x509_cert(self["x5u"], self.httpc, {})
-                        self._jwk = RSAKey(pub_key=_spec['rsa'])
+                        self._jwk = RSAKey(pub_key=_spec['rsa']).to_dict()
                     except Exception:
                         # ca_chain = load_x509_cert_chain(self["x5u"])
-                        pass
+                        raise ValueError('x5u')
                 else:
                     self._dict[key] = _val
 
@@ -110,12 +120,11 @@ class JWx(object):
     def keys(self):
         return list(self._dict.keys())
 
-    def headers(self, extra=None):
-        _extra = extra or {}
+    def headers(self, **kwargs):
         _header = self._header.copy()
         for param in self.args:
             try:
-                _header[param] = _extra[param]
+                _header[param] = kwargs[param]
             except KeyError:
                 try:
                     if self._dict[param]:
@@ -124,9 +133,27 @@ class JWx(object):
                     pass
 
         if "jwk" in self:
-            _header["jwk"] = self["jwk"].serialize()
-        elif "jwk" in _extra:
-            _header["jwk"] = extra["jwk"].serialize()
+            _header["jwk"] = self["jwk"]
+        else:
+            try:
+                _jwk = kwargs['jwk']
+            except KeyError:
+                pass
+            else:
+                try:
+                    _header["jwk"] = _jwk.serialize()  # JWK instance
+                except AttributeError:
+                    if isinstance(_jwk, dict):
+                        _header['jwk'] = _jwk  # dictionary
+                    else:
+                        try:
+                            _d = json.loads(_jwk) # JSON
+                            # Verify that it's a valid JWK
+                            _k = key_from_jwk_dict(_d)
+                        except Exception:
+                            raise
+                        else:
+                            _header['jwk'] = _d
 
         if "kid" in self:
             if not isinstance(self["kid"], str):
@@ -135,12 +162,9 @@ class JWx(object):
         return _header
 
     def _get_keys(self):
-        logger.debug("_get_keys(): self._dict.keys={0}".format(
-            self._dict.keys()))
-
         _keys = []
         if self._jwk:
-            _keys.append(self._jwk)
+            _keys.append(key_from_jwk_dict(self._jwk))
         if self._jwks is not None:
             _keys.extend(self._jwks.keys())
         return _keys
@@ -153,8 +177,8 @@ class JWx(object):
         The assumption is that upper layer has made certain you only get
         keys you can use.
 
-        :param alg:
-        :param use:
+        :param alg: The crypto algorithm
+        :param use: What the key should be used for
         :param keys: A list of JWK instances
         :return: A list of JWK instances that fulfill the requirements
         """

@@ -15,14 +15,15 @@ from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
 import os.path
 
-from cryptojwt.exception import DeSerializationNotPossible
+from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 
-from cryptojwt.utils import as_unicode
+from cryptojwt.utils import as_unicode, as_bytes
 from cryptojwt.utils import b64e
 from cryptojwt.utils import long2intarr
 from cryptojwt.utils import base64url_to_long
 from cryptojwt.utils import base64_to_long
+from cryptojwt.jwk import JWK
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
@@ -50,7 +51,7 @@ KEY = full_path("server.key")
 N = 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'
 E = 'AQAB'
 
-JWK = {"keys": [
+JWK_0 = {"keys": [
     {'kty': 'RSA', 'use': 'foo', 'e': E, 'kid': "abc",
      'n': N}
 ]}
@@ -98,8 +99,8 @@ def test_kspec():
 
     jwk = _key.serialize()
     assert jwk["kty"] == "RSA"
-    assert jwk["e"] == JWK["keys"][0]["e"]
-    assert jwk["n"] == JWK["keys"][0]["n"]
+    assert jwk["e"] == JWK_0["keys"][0]["e"]
+    assert jwk["n"] == JWK_0["keys"][0]["n"]
 
     assert not _key.has_private_key()
 
@@ -467,3 +468,54 @@ def test_key_from_jwk_dict_sym():
     assert isinstance(_key, SYMKey)
     jwk = _key.serialize()
     assert jwk == {'kty': 'oct', 'k': 'YWJjZGVmZ2hpamtsbW5vcHE'}
+
+
+def test_jwk_wrong_alg():
+    with pytest.raises(UnsupportedAlgorithm):
+        _j = JWK(alg='xyz')
+
+
+def test_jwk_conversion():
+    _j = JWK(use=b'sig', kid=b'1', alg=b'RS512')
+    assert _j.use == 'sig'
+    args = _j.common()
+    assert set(args.keys()) == {'kty', 'use', 'kid', 'alg'}
+
+
+def test_str():
+    _j = RSAKey(alg="RS512", use='sig', n=N, e=E)
+    s = '{}'.format(_j)
+    assert s.startswith("{") and s.endswith("}")
+    sp = s.replace("'", '"')
+    _d = json.loads(sp)
+    assert set(_d.keys()) == {'alg', 'use', 'n', 'e', 'kty'}
+
+
+def test_verify():
+    _j = RSAKey(alg=b"RS512", use=b'sig', n=as_bytes(N), e=E)
+    assert _j.verify()
+
+
+def test_verify_wrong_kid():
+    _j = RSAKey(alg=b"RS512", use=b'sig', n=as_bytes(N), e=E, kid=1)
+    with pytest.raises(ValueError):
+        _j.verify()
+
+
+def test_cmp():
+    _j1 = RSAKey(alg="RS256", use="sig", n=N, e=E)
+    _j2 = RSAKey(alg="RS256", use="sig", n=N, e=E)
+    assert _j1 == _j2
+
+
+def test_cmp_jwk():
+    _j1 = JWK(use='sig', kid='1', alg='RS512')
+    _j2 = JWK(use='sig', kid='1', alg='RS512')
+
+    assert _j1 == _j2
+
+def test_appropriate():
+    _j1 = JWK(use='sig', kid='1', alg='RS512')
+
+    assert _j1.appropriate_for('sign')
+    assert _j1.appropriate_for('encrypt') is False

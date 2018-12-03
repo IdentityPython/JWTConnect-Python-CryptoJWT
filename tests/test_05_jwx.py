@@ -77,7 +77,7 @@ def test_get_headers():
     _headers = jwx.headers()
     assert set(_headers.keys()) == {'jwk', 'alg'}
 
-    _headers = jwx.headers({'kid': '123'})
+    _headers = jwx.headers(kid='123')
     assert set(_headers.keys()) == {'jwk', 'alg', 'kid'}
 
 
@@ -92,3 +92,9 @@ def test_decode():
     jwx = JWx(cty='JWT')
     _msg = jwx._decode(b'eyJmb28iOiJiYXIifQ')
     assert _msg == {'foo':'bar'}
+
+
+def test_extra_headers():
+    jwx = JWx()
+    headers = jwx.headers(jwk=JSON_RSA_PUB_KEY, alg="RS256")
+    assert set(headers.keys()) == {'jwk', 'alg'}

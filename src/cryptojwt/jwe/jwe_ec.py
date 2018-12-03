@@ -177,9 +177,18 @@ class JWE_EC(JWEKey):
 
         return self.cek
 
-    def encrypt(self, iv="", cek="", **kwargs):
+    def encrypt(self, key=None, iv="", cek="", **kwargs):
+        """
 
+        :param key: *Not used>, only there to present the same API as
+            JWE_RSA and JWE_SYM
+        :param iv:
+        :param cek:
+        :param kwargs:
+        :return:
+        """
         _msg = as_bytes(self.msg)
+
         _args = self._dict
         try:
             _args["kid"] = kwargs["kid"]

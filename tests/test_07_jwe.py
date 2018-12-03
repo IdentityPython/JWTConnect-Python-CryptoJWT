@@ -10,7 +10,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptojwt.exception import MissingKey
 from cryptojwt.exception import Unsupported
 from cryptojwt.exception import VerificationError
-from cryptojwt.jwe.exception import UnsupportedBitLength
+from cryptojwt.jwe.exception import UnsupportedBitLength, \
+    NoSuitableEncryptionKey
 
 from cryptojwt.utils import b64e
 
@@ -376,3 +377,20 @@ def test_verify_headers():
     assert decryptor.jwt.verify_headers(alg='ECDH-ES', enc='A128GCM')
     assert decryptor.jwt.verify_headers(alg='RS256') is False
     assert decryptor.jwt.verify_headers(kid='RS256') is False
+
+
+def test_encrypt_no_keys():
+    jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
+    with pytest.raises(NoSuitableEncryptionKey):
+        jwenc.encrypt()
+
+
+def test_encrypt_jwk_key():
+    # This is a weird case. Signing the JWT with a key that is
+    # published in the JWT. Still it should be possible.
+    jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM", jwk=eck_bob)
+    _enc = jwenc.encrypt()
+    assert _enc
+    decryptor = factory(_enc, alg="ECDH-ES", enc="A128GCM")
+    res = decryptor.decrypt()
+    assert res == plain

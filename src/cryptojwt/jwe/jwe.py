@@ -1,5 +1,6 @@
 import logging
 
+from cryptojwt.jwk.jwk import key_from_jwk_dict
 from ..jwk.asym import AsymmetricKey
 from ..jwx import JWx
 
@@ -146,6 +147,11 @@ class JWE(JWx):
             keys = self.pick_keys(keys, use="enc", alg=_alg)
         else:
             keys = self.pick_keys(self._get_keys(), use="enc", alg=_alg)
+
+        try:
+            keys.append(key_from_jwk_dict(_jwe.headers['jwk']))
+        except KeyError:
+            pass
 
         if not keys and not cek:
             raise NoSuitableDecryptionKey(_alg)
