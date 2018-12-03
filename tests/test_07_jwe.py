@@ -394,3 +394,14 @@ def test_encrypt_jwk_key():
     decryptor = factory(_enc, alg="ECDH-ES", enc="A128GCM")
     res = decryptor.decrypt()
     assert res == plain
+
+
+def test_sym_encrypt_decrypt_JWE():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    decryptor = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
+
+    resp = decryptor.decrypt(_jwe, [encryption_key])
+    assert resp == plain

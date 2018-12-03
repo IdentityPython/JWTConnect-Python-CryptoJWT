@@ -1,7 +1,10 @@
 import logging
 
-from cryptojwt.jwk.jwk import key_from_jwk_dict
 from ..jwk.asym import AsymmetricKey
+from ..jwk.ec import ECKey
+from ..jwk.hmac import SYMKey
+from ..jwk.jwk import key_from_jwk_dict
+from ..jwk.rsa import RSAKey
 from ..jwx import JWx
 
 from .exception import DecryptionFailed
@@ -82,14 +85,16 @@ class JWE(JWx):
 
         # Determine Encryption Class by Algorithm
         if _alg in ["RSA-OAEP", "RSA-OAEP-256", "RSA1_5"]:
+            keys = [k for k in keys if isinstance(k, RSAKey)]
             encrypter = JWE_RSA(self.msg, **self._dict)
         elif _alg.startswith("A") and _alg.endswith("KW"):
+            keys = [k for k in keys if isinstance(k, SYMKey)]
             encrypter = JWE_SYM(self.msg, **self._dict)
         elif _alg.startswith("ECDH-ES"):
-
-            # ECDH-ES Requires the Server ECDH-ES Key to be set
+            keys = [k for k in keys if isinstance(k, ECKey)]
             if not keys:
-                raise NoSuitableECDHKey(_alg)
+                logger.error(KEY_ERR.format(_alg))
+                raise NoSuitableEncryptionKey(_alg)
 
             encrypter = JWE_EC(**self._dict)
             cek, encrypted_key, iv, params, eprivk = encrypter.enc_setup(
@@ -100,6 +105,10 @@ class JWE(JWx):
             logger.error("'{}' is not a supported algorithm".format(_alg))
             raise NotSupportedAlgorithm
 
+        if not keys:
+            logger.error(KEY_ERR.format(_alg))
+            raise NoSuitableEncryptionKey(_alg)
+
         if cek:
             kwargs["cek"] = cek
 
@@ -107,10 +116,14 @@ class JWE(JWx):
             kwargs["iv"] = iv
 
         for key in keys:
-            if isinstance(key, AsymmetricKey):
-                _key = key.public_key()
-            else:
+            if isinstance(key, SYMKey):
                 _key = key.key
+            elif isinstance(key, ECKey):
+                _key = key.public_key()
+            elif isinstance(key, RSAKey):
+                    _key = key.public_key()
+            else:
+                raise ValueError('Unknown key type')
 
             if key.kid:
                 encrypter["kid"] = key.kid

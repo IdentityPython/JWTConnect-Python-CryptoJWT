@@ -11,7 +11,7 @@ from .jwenc import JWEnc
 from ..exception import MissingKey
 from ..exception import WrongNumberOfParts
 from ..jwk.hmac import SYMKey
-from ..utils import intarr2str
+from ..utils import intarr2str, as_bytes
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class JWE_SYM(JWEKey):
         :param kwargs: Extra keyword arguments, just ignore for now.
         :return:
         """
-        _msg = self.msg
+        _msg = as_bytes(self.msg)
 
         _args = self._dict
         try:
@@ -60,8 +60,8 @@ class JWE_SYM(JWEKey):
 
         _enc = self["enc"]
         _auth_data = jwe.b64_encode_header()
-        ctxt, tag, cek = self.enc_setup(_enc, _msg.encode(),
-                                        auth_data=_auth_data, key=cek, iv=iv)
+        ctxt, tag, cek = self.enc_setup(_enc, _msg, auth_data=_auth_data,
+                                        key=cek, iv=iv)
         return jwe.pack(parts=[jek, iv, ctxt, tag])
 
     def decrypt(self, token, key=None, cek=None):
