@@ -76,8 +76,8 @@ class JWE_EC(JWEKey):
             apv = get_random_bytes(16)
 
         # Handle Local Key and Ephemeral Public Key
-        if not key:
-            raise Exception("EC Key Required for ECDH-ES JWE Encryption Setup")
+        if not key or not isinstance(key, ECKey):
+            raise ValueError("EC Key Required for ECDH-ES JWE Encryption Setup")
 
         # epk is either an Elliptic curve key instance or a JWK description of
         # one. This key belongs to the entity on the other side.
@@ -88,10 +88,11 @@ class JWE_EC(JWEKey):
                                            default_backend())
             epk = ECKey().load_key(_epk.public_key())
         else:
-            if isinstance(_epk, ec.EllipticCurvePublicKey):
+            if isinstance(_epk, ec.EllipticCurvePrivateKey):
                 epk = ECKey().load_key(_epk)
             elif isinstance(_epk, ECKey):
                 epk = _epk
+                _epk = epk.private_key()
             else:
                 raise ValueError("epk of a type I can't handle")
 
@@ -113,7 +114,7 @@ class JWE_EC(JWEKey):
             try:
                 dk_len = KEY_LEN[self.enc]
             except KeyError:
-                raise Exception(
+                raise ValueError(
                     "Unknown key length for algorithm %s" % self.enc)
 
             cek = ecdh_derive_key(_epk, key.pub_key, apu, apv,

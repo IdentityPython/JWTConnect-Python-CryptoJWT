@@ -85,29 +85,15 @@ class JWE(JWx):
 
         # Determine Encryption Class by Algorithm
         if _alg in ["RSA-OAEP", "RSA-OAEP-256", "RSA1_5"]:
-            keys = [k for k in keys if isinstance(k, RSAKey)]
             encrypter = JWE_RSA(self.msg, **self._dict)
         elif _alg.startswith("A") and _alg.endswith("KW"):
-            keys = [k for k in keys if isinstance(k, SYMKey)]
             encrypter = JWE_SYM(self.msg, **self._dict)
-        elif _alg.startswith("ECDH-ES"):
-            keys = [k for k in keys if isinstance(k, ECKey)]
-            if not keys:
-                logger.error(KEY_ERR.format(_alg))
-                raise NoSuitableEncryptionKey(_alg)
-
+        else:  # _alg.startswith("ECDH-ES"):
             encrypter = JWE_EC(**self._dict)
             cek, encrypted_key, iv, params, eprivk = encrypter.enc_setup(
                 self.msg, key=keys[0], **self._dict)
             kwargs["encrypted_key"] = encrypted_key
             kwargs["params"] = params
-        else:
-            logger.error("'{}' is not a supported algorithm".format(_alg))
-            raise NotSupportedAlgorithm
-
-        if not keys:
-            logger.error(KEY_ERR.format(_alg))
-            raise NoSuitableEncryptionKey(_alg)
 
         if cek:
             kwargs["cek"] = cek
@@ -120,10 +106,8 @@ class JWE(JWx):
                 _key = key.key
             elif isinstance(key, ECKey):
                 _key = key.public_key()
-            elif isinstance(key, RSAKey):
-                    _key = key.public_key()
-            else:
-                raise ValueError('Unknown key type')
+            else:  # isinstance(key, RSAKey):
+                _key = key.public_key()
 
             if key.kid:
                 encrypter["kid"] = key.kid
@@ -138,8 +122,8 @@ class JWE(JWx):
                     "Encrypted message using key with kid={}".format(key.kid))
                 return token
 
-        logger.error("Could not find any suitable encryption key")
-        raise NoSuitableEncryptionKey()
+        # logger.error("Could not find any suitable encryption key")
+        # raise NoSuitableEncryptionKey()
 
     def decrypt(self, token=None, keys=None, alg=None, cek=None):
         if token:
@@ -174,11 +158,6 @@ class JWE(JWx):
         elif _alg.startswith("A") and _alg.endswith("KW"):
             decrypter = JWE_SYM(self.msg, **self._dict)
         elif _alg.startswith("ECDH-ES"):
-
-            # ECDH-ES Requires the Server ECDH-ES Key to be set
-            if not keys:
-                raise NoSuitableECDHKey(_alg)
-
             decrypter = JWE_EC(**self._dict)
 
             if isinstance(keys[0], AsymmetricKey):

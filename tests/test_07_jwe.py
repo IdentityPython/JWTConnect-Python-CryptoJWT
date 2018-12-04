@@ -7,13 +7,15 @@ import array
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptojwt.exception import MissingKey
+from oic import rndstr
+
+from cryptojwt.exception import MissingKey, BadSyntax, HeaderError
 from cryptojwt.exception import Unsupported
 from cryptojwt.exception import VerificationError
 from cryptojwt.jwe.exception import UnsupportedBitLength, \
-    NoSuitableEncryptionKey
+    NoSuitableEncryptionKey, WrongEncryptionAlgorithm, NoSuitableDecryptionKey
 
-from cryptojwt.utils import b64e
+from cryptojwt.utils import b64e, as_bytes
 
 from cryptojwt.jwe.aes import AES_CBCEncrypter
 from cryptojwt.jwe.aes import AES_GCMEncrypter
@@ -349,6 +351,50 @@ def test_ecdh_encrypt_decrypt_keywrapped_key():
     assert msg == plain
 
 
+def test_ecdh_enc_setup_wrong_key():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
+    with pytest.raises(ValueError):
+        jwenc.enc_setup(plain, key=priv_key)
+
+
+def test_ecdh_enc_setup_enk():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
+    assert jwenc.enc_setup(plain, key=eck_bob, epk=alice)
+
+
+def test_ecdh_enc_setup_enk_eckey():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
+    assert jwenc.enc_setup(plain, key=eck_bob, epk=eck_alice)
+
+
+def test_ecdh_setup_iv():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
+    iv0 = rndstr(16)
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, iv=iv0,
+                                                              key=eck_bob)
+    assert iv == iv0
+
+
+def test_ecdh_setup_cek():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
+    cek0 = as_bytes(rndstr(16))
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, cek=cek0,
+                                                              key=eck_bob)
+    assert cek == cek0
+
+
+def test_ecdh_setup_unknown_alg():
+    jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A384GCM")
+    with pytest.raises(ValueError):
+        jwenc.enc_setup(plain, key=eck_bob)
+
+
+def test_ecdh_setup_unknown_alg_2():
+    jwenc = JWE_EC(plain, alg="ECDH-ES", enc="A384GCM")
+    with pytest.raises(ValueError):
+        jwenc.enc_setup(plain, key=eck_bob)
+
+
 def test_sym_encrypt_decrypt():
     encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
                             kid="some-key-id")
@@ -373,10 +419,10 @@ def test_verify_headers():
     jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
     jwt = jwenc.encrypt([eck_bob])
     assert jwt
-    decryptor = factory(jwt, alg="ECDH-ES", enc="A128GCM")
-    assert decryptor.jwt.verify_headers(alg='ECDH-ES', enc='A128GCM')
-    assert decryptor.jwt.verify_headers(alg='RS256') is False
-    assert decryptor.jwt.verify_headers(kid='RS256') is False
+    decrypter = factory(jwt, alg="ECDH-ES", enc="A128GCM")
+    assert decrypter.jwt.verify_headers(alg='ECDH-ES', enc='A128GCM')
+    assert decrypter.jwt.verify_headers(alg='RS256') is False
+    assert decrypter.jwt.verify_headers(kid='RS256') is False
 
 
 def test_encrypt_no_keys():
@@ -391,17 +437,101 @@ def test_encrypt_jwk_key():
     jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM", jwk=eck_bob)
     _enc = jwenc.encrypt()
     assert _enc
-    decryptor = factory(_enc, alg="ECDH-ES", enc="A128GCM")
-    res = decryptor.decrypt()
+    decrypter = factory(_enc, alg="ECDH-ES", enc="A128GCM")
+    res = decrypter.decrypt()
     assert res == plain
 
 
-def test_sym_encrypt_decrypt_JWE():
+def test_sym_encrypt_decrypt_jwe():
     encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
                             kid="some-key-id")
     jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
     _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
-    decryptor = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
+    decrypter = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
 
-    resp = decryptor.decrypt(_jwe, [encryption_key])
+    resp = decrypter.decrypt(_jwe, [encryption_key])
     assert resp == plain
+
+
+def test_sym_jwenc():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    decrypter = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
+
+    _jwenc = decrypter.jwt
+    assert _jwenc.b64_protected_header() == _jwenc.b64part[0]
+    assert _jwenc.b64_encrypted_key() == _jwenc.b64part[1]
+    assert _jwenc.b64_initialization_vector() == _jwenc.b64part[2]
+    assert _jwenc.b64_ciphertext() == _jwenc.b64part[3]
+    assert _jwenc.b64_authentication_tag() == _jwenc.b64part[4]
+
+    assert _jwenc.protected_header() == _jwenc.part[0]
+    assert _jwenc.encrypted_key() == _jwenc.part[1]
+    assert _jwenc.initialization_vector() == _jwenc.part[2]
+    assert _jwenc.ciphertext() == _jwenc.part[3]
+    assert _jwenc.authentication_tag() == _jwenc.part[4]
+
+
+def test_wrong_key_type():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwenc = JWE(plain, alg="ECDH-ES", enc="A128GCM")
+    with pytest.raises(NoSuitableEncryptionKey):
+        jwenc.encrypt([encryption_key])
+
+
+def test_wrong_alg():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    with pytest.raises(HeaderError):
+        decrypter = factory(_jwe, alg="A192KW", enc="A128CBC-HS256")
+
+
+def test_wrong_alg_2():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    decrypter = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
+    with pytest.raises(WrongEncryptionAlgorithm):
+        decrypter.decrypt(_jwe, [encryption_key], alg='A192KW')
+
+
+def test_no_key():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    decrypter = factory(_jwe, alg="A128KW", enc="A128CBC-HS256")
+    with pytest.raises(NoSuitableDecryptionKey):
+        decrypter.decrypt(_jwe, [])
+
+
+def test_unknown_alg():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+    jwenc = JWE(plain, alg="BCD", enc="A128GCM")
+    with pytest.raises(ValueError):
+        jwenc.encrypt([encryption_key])
+
+
+def test_nothing():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+
+    decrypter = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    with pytest.raises(ValueError):
+        decrypter.decrypt(keys=[encryption_key])
+
+
+def test_invalid():
+    encryption_key = SYMKey(use="enc", key='DukeofHazardpass',
+                            kid="some-key-id")
+
+    decrypter = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    with pytest.raises(BadSyntax):
+        decrypter.decrypt('a.b.c.d.e', keys=[encryption_key])

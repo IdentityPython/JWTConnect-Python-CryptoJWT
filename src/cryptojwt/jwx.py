@@ -191,7 +191,7 @@ class JWx(object):
         _k = self.alg2keytype(alg)
         if _k is None:
             logger.error("Unknown algorithm '%s'" % alg)
-            return []
+            raise ValueError('Unknown cryptography algorithm')
 
         logger.debug("Picking key by key type={0}".format(_k))
         _kty = [_k.lower(), _k.upper(), _k.lower().encode("utf-8"),
