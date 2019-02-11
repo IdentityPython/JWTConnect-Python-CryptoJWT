@@ -12,7 +12,9 @@ class RSASigner(Signer):
         (self.hash, self.padding) = parse_rsa_algorithm(algorithm)
 
     def sign(self, msg, key):
-        """Computes the signature for message.
+        """
+        Create a signature over a message as defined in RFC7515 using an
+        RSA key
 
         :param msg: the message.
         :type msg: bytes

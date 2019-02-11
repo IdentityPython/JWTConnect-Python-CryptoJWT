@@ -24,10 +24,11 @@ class JWE_SYM(JWEKey):
 
     def encrypt(self, key, iv="", cek="", **kwargs):
         """
+        Produces a JWE as defined in RFC7516 using symmetric keys
 
         :param key: Shared symmetric key
-        :param iv: initialization vector
-        :param cek:
+        :param iv: Initialization vector
+        :param cek: Content master key
         :param kwargs: Extra keyword arguments, just ignore for now.
         :return:
         """

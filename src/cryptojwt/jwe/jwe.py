@@ -63,6 +63,7 @@ class JWE(JWx):
 
     def encrypt(self, keys=None, cek="", iv="", **kwargs):
         """
+        Encrypt a payload
 
         :param keys: A set of possibly usable keys
         :param cek: Content master key

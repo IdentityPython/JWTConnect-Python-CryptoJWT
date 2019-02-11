@@ -36,14 +36,6 @@ cryptojwt\.jwk\.jwk module
     :undoc-members:
     :show-inheritance:
 
-cryptojwt\.jwk\.jwks module
----------------------------
-
-.. automodule:: cryptojwt.jwk.jwks
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 cryptojwt\.jwk\.rsa module
 --------------------------
 

@@ -787,7 +787,7 @@ def key_diff(key_bundle, key_defs):
     :param key_bundle: The original KeyBundle
     :param key_defs: A set of key definitions
     :return: A dictionary with possible keys 'add' and 'del'. The values
-    for the keys are lists of :py:class:`cryptojwt.jwk.JWK` instances
+        for the keys are lists of :py:class:`cryptojwt.jwk.JWK` instances
     """
 
     keys = key_bundle.get()

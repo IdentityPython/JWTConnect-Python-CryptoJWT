@@ -22,7 +22,8 @@ class HMACSigner(Signer):
 
     def sign(self, msg, key):
         """
-        Create a signature over a message
+        Create a signature over a message as defined in RFC7515 using a
+        symmetric key
 
         :param msg: The message
         :param key: The key

@@ -21,13 +21,13 @@ class JWE_RSA(JWEKey):
 
     def encrypt(self, key, iv="", cek="", **kwargs):
         """
-        Produces a JWE using RSA algorithms
+        Produces a JWE as defined in RFC7516 using RSA algorithms
 
         :param key: RSA key
-        :param context:
-        :param iv:
-        :param cek:
-        :return: A jwe
+        :param iv: Initialization vector
+        :param cek: Content master key
+        :param kwargs: Extra keyword arguments
+        :return: A signed payload
         """
 
         _msg = as_bytes(self.msg)
