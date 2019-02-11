@@ -660,8 +660,8 @@ def test_pick_use():
 def test_pick_wrong_alg():
     keys = KeyBundle(JWKS_b)
     _jws = JWS("foobar", alg="EC256", kid="rsa1")
-    _keys = _jws.pick_keys(keys, use="sig")
-    assert len(_keys) == 0
+    with pytest.raises(ValueError):
+        _keys = _jws.pick_keys(keys, use="sig")
 
 
 def test_dj_usage():
