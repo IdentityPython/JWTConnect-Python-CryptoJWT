@@ -30,10 +30,11 @@ class ECDSASigner(Signer):
 
     def sign(self, msg, key):
         """
-        Signs a message using a Elliptic curve key.
+        Create a signature over a message as defined in RFC7515 using an
+        Elliptic curve key
 
         :param msg: The message
-        :param key: An ec.EllipticCurvePrivateKey
+        :param key: An ec.EllipticCurvePrivateKey instance
         :return:
         """
 
@@ -43,12 +44,13 @@ class ECDSASigner(Signer):
                 "ec.EllipticCurvePrivateKey")
 
         self._cross_check(key.public_key())
-
+        num_bits = key.curve.key_size
+        num_bytes = (num_bits + 7) // 8
         asn1sig = key.sign(msg, ec.ECDSA(self.hash_algorithm()))
         # Cryptography returns ASN.1-encoded signature data; decode as JWS
         # uses raw signatures (r||s)
         (r, s) = decode_dss_signature(asn1sig)
-        return int_to_bytes(r) + int_to_bytes(s)
+        return int_to_bytes(r, num_bytes) + int_to_bytes(s, num_bytes)
 
     def verify(self, msg, sig, key):
         """
@@ -65,6 +67,11 @@ class ECDSASigner(Signer):
                 "The public key must be an instance of "
                 "ec.EllipticCurvePublicKey")
         self._cross_check(key)
+
+        num_bits = key.curve.key_size
+        num_bytes = (num_bits + 7) // 8
+        if len(sig) != 2 * num_bytes:
+            raise ValueError('Invalid signature')
 
         try:
             # cryptography uses ASN.1-encoded signature data; split JWS
