@@ -427,6 +427,10 @@ class KeyJar(object):
         """
         return self.import_jwks(json.loads(jwks), issuer)
 
+    def import_jwks_from_file(self, filename, issuer):
+        with open(filename) as jwks_file:
+            self.import_jwks_as_json(jwks_file.read(), issuer)
+
     def __eq__(self, other):
         if not isinstance(other, KeyJar):
             return False
