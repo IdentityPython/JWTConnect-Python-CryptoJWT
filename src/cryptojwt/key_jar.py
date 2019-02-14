@@ -800,6 +800,9 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
 
         if public_path:
             jwks = _kj.export_jwks(issuer=owner)  # public part
+            head, tail = os.path.split(public_path)
+            if head and not os.path.isdir(head):
+                os.makedirs(head)
             fp = open(public_path, 'w')
             fp.write(json.dumps(jwks))
             fp.close()

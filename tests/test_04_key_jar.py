@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import time
 
 import pytest
@@ -874,3 +875,21 @@ def test_init_key_jar_update():
 
     assert len(_keyjar_3.get_signing_key('RSA')) == 1
     assert len(_keyjar_3.get_signing_key('EC')) == 2
+
+
+OIDC_KEYS = {
+    'private_path': "{}/priv/jwks.json".format(BASEDIR),
+    'key_defs': KEYSPEC,
+    'public_path': '{}/public/jwks.json'.format(BASEDIR)
+}
+
+
+def test_init_key_jar_create_directories():
+    # make sure the directories are gone
+    for _dir in ['priv', 'public']:
+        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
+            shutil.rmtree("{}/{}".format(BASEDIR,_dir))
+
+    _keyjar = init_key_jar(**OIDC_KEYS)
+    assert len(_keyjar.get_signing_key('RSA')) == 1
+    assert len(_keyjar.get_signing_key('EC')) == 1
