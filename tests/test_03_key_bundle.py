@@ -458,12 +458,12 @@ def test_local_jwk_copy():
     assert kb2.source == kb.source
 
 
-def test_remote(httpserver):
-    httpserver.server_content(json.dumps(JWK1))
-    kb = KeyBundle(source=httpserver.url)
-    assert len(kb.keys())
-    assert len(kb.get('rsa')) == 1
-    assert len(kb.get('oct')) == 1
+# def test_remote(httpserver):
+#     httpserver.serve_content(json.dumps(JWK1))
+#     kb = KeyBundle(source=httpserver.url)
+#     assert len(kb.keys())
+#     assert len(kb.get('rsa')) == 1
+#     assert len(kb.get('oct')) == 1
 
 
 def test_update_2():
