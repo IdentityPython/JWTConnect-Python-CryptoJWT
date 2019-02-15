@@ -1,20 +1,23 @@
 # from __future__ import print_function
 import hashlib
 import os
+import string
 import sys
 import array
 
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from oic import rndstr
 
-from cryptojwt.exception import MissingKey, BadSyntax, HeaderError
+from cryptojwt.exception import BadSyntax
+from cryptojwt.exception import HeaderError
+from cryptojwt.exception import MissingKey
 from cryptojwt.exception import Unsupported
 from cryptojwt.exception import VerificationError
-from cryptojwt.jwe.exception import UnsupportedBitLength, \
-    NoSuitableEncryptionKey, WrongEncryptionAlgorithm, NoSuitableDecryptionKey
-
+from cryptojwt.jwe.exception import NoSuitableDecryptionKey
+from cryptojwt.jwe.exception import NoSuitableEncryptionKey
+from cryptojwt.jwe.exception import UnsupportedBitLength
+from cryptojwt.jwe.exception import WrongEncryptionAlgorithm
 from cryptojwt.utils import b64e, as_bytes
 
 from cryptojwt.jwe.aes import AES_CBCEncrypter
@@ -33,6 +36,22 @@ from cryptojwt.jwk.rsa import RSAKey
 
 
 __author__ = 'rohe0002'
+
+try:
+    import random.SystemRandom as rnd
+except ImportError:
+    import random as rnd
+
+
+def rndstr(size=16):
+    """
+    Returns a string of random ascii characters or digits
+
+    :param size: The length of the string
+    :return: string
+    """
+    _basech = string.ascii_letters + string.digits
+    return "".join([rnd.choice(_basech) for _ in range(size)])
 
 
 def intarr2bytes(arr):
