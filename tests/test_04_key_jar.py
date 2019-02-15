@@ -670,7 +670,9 @@ def test_repr():
     kj['Bob'] = [KeyBundle(JWK1['keys'])]
     kj['C'] = [KeyBundle(JWK2['keys'])]
     txt = kj.__repr__()
-    assert txt == "<KeyJar(issuers=['Alice', 'Bob', 'C'])>"
+    assert "<KeyJar(issuers=[" in txt
+    _d = eval(txt[16:-2])
+    assert set(_d) == {'Alice', 'Bob', 'C'}
 
 
 def test_get_wrong_owner():

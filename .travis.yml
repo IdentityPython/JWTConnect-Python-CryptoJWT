@@ -3,8 +3,8 @@ language: python
 sudo: false
 
 python:
-  - "3.5"
   - "3.6"
+  - "3.7"
 
 install:
   - pip install tox
@@ -12,11 +12,10 @@ install:
 env:
    - TOXENV=quality
 
-# Everything behaves under python 3.6 except python3.5
 matrix:
   include:
-    - python: 3.5
-      env: TOXENV=py35
+    - python: 3.6
+      env: TOXENV=py36
 
 script:
   - tox -e $TOXENV
