@@ -197,11 +197,11 @@ class JWS(JWx):
             if isinstance(self['alg'], list):
                 if _alg not in self["alg"] :
                     raise SignerAlgError(
-                        "Wrong signing algorithm, expected {} go {}".format(
+                        "Wrong signing algorithm, expected {} got {}".format(
                             self['alg'], _alg))
             elif _alg != self['alg']:
                 raise SignerAlgError(
-                    "Wrong signing algorithm, expected {} go {}".format(
+                    "Wrong signing algorithm, expected {} got {}".format(
                         self['alg'], _alg))
 
         if sigalg and sigalg != _alg:
@@ -374,7 +374,7 @@ class JWS(JWx):
 
     def _is_compact_jws(self, jws):
         """
-        Check if we've go a compact signed JWT
+        Check if we've got a compact signed JWT
 
         :param jws: The message
         :return: True/False
