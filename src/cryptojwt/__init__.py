@@ -8,6 +8,13 @@ from .utils import b64encode_item
 from .utils import b64d
 from .utils import split_token
 
+from cryptojwt.jwk import JWK
+from cryptojwt.jws.jws import JWS
+from cryptojwt.jwe.jwe import JWE
+from cryptojwt.jwt import JWT
+from cryptojwt.key_jar import KeyJar
+from cryptojwt.key_bundle import KeyBundle
+
 try:
     from builtins import zip
     from builtins import hex
