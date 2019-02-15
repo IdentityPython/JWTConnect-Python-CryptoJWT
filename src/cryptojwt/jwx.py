@@ -11,7 +11,7 @@ from .jwk.rsa import import_rsa_key
 from .jwk.rsa import load_x509_cert
 from .jwk.rsa import RSAKey
 from .exception import HeaderError
-from .utils import b64d, as_bytes
+from .utils import b64d, as_bytes, as_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -247,7 +247,7 @@ class JWx(object):
         _msg = b64d(as_bytes(payload))
         if "cty" in self:
             if self["cty"] == "JWT":
-                _msg = json.loads(_msg)
+                _msg = json.loads(as_unicode(_msg))
         return _msg
 
     def dump_header(self):
