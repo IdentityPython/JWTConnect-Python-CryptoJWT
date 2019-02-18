@@ -215,7 +215,7 @@ def test_get_key():
     assert key.key
 
 
-def test_private_key_from_jwk():
+def test_private_rsa_key_from_jwk():
     keys = []
 
     kspec = json.loads(open(full_path("jwk_private_key.json")).read())
@@ -238,6 +238,56 @@ def test_private_key_from_jwk():
                ['n', 'alg', 'dq', 'e', 'q', 'p', 'dp', 'd', 'ext', 'key_ops',
                 'kty', 'qi'])
     assert _eq(list(_d.keys()), kspec.keys())
+
+
+def test_public_key_from_jwk():
+    keys = []
+
+    kspec = json.loads(open(full_path("jwk_private_key.json")).read())
+    keys.append(key_from_jwk_dict(kspec, private=False))
+
+    key = keys[0]
+
+    assert isinstance(key.n, (bytes, str))
+    assert isinstance(key.e, (bytes, str))
+
+    _d = key.to_dict()
+
+    assert _eq(list(_d.keys()), ['n', 'alg', 'e', 'ext', 'key_ops', 'kty'])
+
+
+def test_ec_private_key_from_jwk():
+    keys = []
+
+    kspec = json.loads(open(full_path("jwk_private_ec_key.json")).read())
+    keys.append(key_from_jwk_dict(kspec))
+
+    key = keys[0]
+
+    assert isinstance(key.x, (bytes, str))
+    assert isinstance(key.y, (bytes, str))
+    assert isinstance(key.d, (bytes, str))
+
+    _d = key.to_dict()
+
+    assert _eq(list(_d.keys()), ['alg', 'kty', 'crv', 'x', 'y', 'd'])
+    assert _eq(list(_d.keys()), kspec.keys())
+
+
+def test_ec_public_key_from_jwk():
+    keys = []
+
+    kspec = json.loads(open(full_path("jwk_private_ec_key.json")).read())
+    keys.append(key_from_jwk_dict(kspec, private=False))
+
+    key = keys[0]
+
+    assert isinstance(key.x, (bytes, str))
+    assert isinstance(key.y, (bytes, str))
+
+    _d = key.to_dict()
+
+    assert _eq(list(_d.keys()), ['x', 'y', 'alg', 'crv', 'kty'])
 
 
 def test_rsa_pubkey_from_x509_cert_chain():

@@ -19,7 +19,47 @@ from .rsa import RSAKey
 from .hmac import SYMKey
 
 
-def key_from_jwk_dict(jwk_dict):
+EC_PUBLIC_REQUIRED = frozenset(['crv', 'x', 'y'])
+EC_PUBLIC = EC_PUBLIC_REQUIRED
+EC_PRIVATE_REQUIRED = frozenset(['d'])
+EC_PRIVATE_OPTIONAL = frozenset()
+EC_PRIVATE = EC_PRIVATE_REQUIRED | EC_PRIVATE_OPTIONAL
+
+RSA_PUBLIC_REQUIRED = frozenset(['e', 'n'])
+RSA_PUBLIC = RSA_PUBLIC_REQUIRED
+RSA_PRIVATE_REQUIRED = frozenset(['p', 'q', 'd'])
+RSA_PRIVATE_OPTIONAL = frozenset(['qi', 'dp', 'dq'])
+RSA_PRIVATE = RSA_PRIVATE_REQUIRED | RSA_PRIVATE_OPTIONAL
+
+
+def ensure_ec_params(jwk_dict, private):
+    """Ensure all required EC parameters are present in dictionary"""
+    provided = frozenset(jwk_dict.keys())
+    if private is not None and private:
+        required = EC_PUBLIC_REQUIRED | EC_PRIVATE_REQUIRED
+    else:
+        required = EC_PUBLIC_REQUIRED
+    return ensure_params('EC', provided, required)
+
+
+def ensure_rsa_params(jwk_dict, private):
+    """Ensure all required RSA parameters are present in dictionary"""
+    provided = frozenset(jwk_dict.keys())
+    if private is not None and private:
+        required = RSA_PUBLIC_REQUIRED | RSA_PRIVATE_REQUIRED
+    else:
+        required = RSA_PUBLIC_REQUIRED
+    return ensure_params('RSA', provided, required)
+
+
+def ensure_params(kty, provided, required):
+    """Ensure all required parameters are present in dictionary"""
+    if not required <= provided:
+        missing = required - provided
+        raise MissingValue('Missing properties for kty={}, {}'.format(kty, str(list(missing))))
+
+
+def key_from_jwk_dict(jwk_dict, private=None):
     """Load JWK from dictionary
 
     :param jwk_dict: Dictionary representing a JWK
@@ -28,7 +68,17 @@ def key_from_jwk_dict(jwk_dict):
     # uncouple from the original item
     _jwk_dict = copy.copy(jwk_dict)
 
+    if 'kty' not in _jwk_dict:
+        raise MissingValue('kty missing')
+
     if _jwk_dict['kty'] == 'EC':
+        ensure_ec_params(_jwk_dict, private)
+
+        if private is not None and not private:
+            # remove private components
+            for v in EC_PRIVATE:
+                _jwk_dict.pop(v, None)
+
         if _jwk_dict["crv"] in NIST2SEC:
             curve = NIST2SEC[_jwk_dict["crv"]]()
         else:
@@ -50,6 +100,13 @@ def key_from_jwk_dict(jwk_dict):
                 backends.default_backend())
         return ECKey(**_jwk_dict)
     elif _jwk_dict['kty'] == 'RSA':
+        ensure_rsa_params(_jwk_dict, private)
+
+        if private is not None and not private:
+            # remove private components
+            for v in RSA_PRIVATE:
+                _jwk_dict.pop(v, None)
+
         rsa_pub_numbers = rsa.RSAPublicNumbers(
             base64url_to_long(_jwk_dict["e"]),
             base64url_to_long(_jwk_dict["n"]))
@@ -81,13 +138,13 @@ def key_from_jwk_dict(jwk_dict):
         else:
             _jwk_dict['pub_key'] = rsa_pub_numbers.public_key(
                 backends.default_backend())
-            
+
         if _jwk_dict['kty'] != "RSA":
             raise WrongKeyType('"{}" should have been "RSA"'.format(_jwk_dict[
                                                                         'kty']))
         return RSAKey(**_jwk_dict)
     elif _jwk_dict['kty'] == 'oct':
-        if not 'key' in _jwk_dict and not 'k' in _jwk_dict:
+        if 'key' not in _jwk_dict and 'k' not in _jwk_dict:
             raise MissingValue(
                 'There has to be one of "k" or "key" in a symmetric key')
 
