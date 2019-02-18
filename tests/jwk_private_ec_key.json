@@ -1,0 +1,8 @@
+{
+  "kty": "EC",
+  "crv": "P-256",
+  "alg": "ES256",
+  "x": "Ijdv9ZAD7QaEYnEqY5als5NFbNP_LsyZgJMTcQhNsYo",
+  "y": "Hpc9vdz77lQG0NJf5FZAaeOJTR-bMjIw9kkCE1duxKE",
+  "d": "omnOYCv3UxQRIogRcd2VIHhaj46FTZU8GfdYS4qX2_w"
+}
