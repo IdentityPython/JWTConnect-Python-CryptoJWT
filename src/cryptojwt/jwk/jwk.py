@@ -59,7 +59,7 @@ def ensure_params(kty, provided, required):
         raise MissingValue('Missing properties for kty={}, {}'.format(kty, str(list(missing))))
 
 
-def key_from_jwk_dict(jwk_dict, private = None):
+def key_from_jwk_dict(jwk_dict, private=None):
     """Load JWK from dictionary
 
     :param jwk_dict: Dictionary representing a JWK
@@ -138,13 +138,13 @@ def key_from_jwk_dict(jwk_dict, private = None):
         else:
             _jwk_dict['pub_key'] = rsa_pub_numbers.public_key(
                 backends.default_backend())
-            
+
         if _jwk_dict['kty'] != "RSA":
             raise WrongKeyType('"{}" should have been "RSA"'.format(_jwk_dict[
                                                                         'kty']))
         return RSAKey(**_jwk_dict)
     elif _jwk_dict['kty'] == 'oct':
-        if not 'key' in _jwk_dict and not 'k' in _jwk_dict:
+        if 'key' not in _jwk_dict and 'k' not in _jwk_dict:
             raise MissingValue(
                 'There has to be one of "k" or "key" in a symmetric key')
 
