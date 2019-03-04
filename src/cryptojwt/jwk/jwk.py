@@ -173,4 +173,3 @@ def jwk_wrap(key, use="", kid=""):
 
     kspec.serialize()
     return kspec
-

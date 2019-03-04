@@ -1,22 +1,22 @@
 import json
 import logging
 import os
+import time
 from functools import cmp_to_key
 
 import requests
-import time
 
-from .exception import JWKException, DeSerializationNotPossible
+from .exception import DeSerializationNotPossible
+from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UpdateFailed
-from .jwk.hmac import SYMKey
 from .jwk.ec import ECKey
 from .jwk.ec import new_ec_key
-from .jwk.rsa import new_rsa_key
+from .jwk.hmac import SYMKey
 from .jwk.rsa import RSAKey
 from .jwk.rsa import import_private_rsa_key_from_file
+from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
-
 
 __author__ = 'Roland Hedberg'
 

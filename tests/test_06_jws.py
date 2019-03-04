@@ -357,8 +357,6 @@ def test_jws_mm():
         _jws2.verify_compact(res, keys=[key])
 
 
-
-
 @pytest.mark.parametrize("ec_func,alg", [
     (ec.SECP256R1, "ES256"),
     (ec.SECP384R1, "ES384"),
