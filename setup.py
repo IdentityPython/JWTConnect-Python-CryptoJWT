@@ -33,7 +33,7 @@ setup(
     author="Roland Hedberg",
     author_email="roland@catalogix.se",
     license="Apache 2.0",
-    packages=["cryptojwt", "cryptojwt/jwe", "cryptojwt/jwk", "cryptojwt/jws"],
+    packages=["cryptojwt", "cryptojwt/jwe", "cryptojwt/jwk", "cryptojwt/jws", "cryptojwt/tools"],
     package_dir={"": "src"},
     classifiers=[
         "Development Status :: 4 - Beta",
