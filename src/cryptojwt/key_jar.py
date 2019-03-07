@@ -732,7 +732,8 @@ def key_summary(keyjar, issuer):
         return ', '.join(key_list)
 
 
-def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
+def init_key_jar(public_path='', private_path='', key_defs='', owner='',
+                 read_only=True):
     """
     A number of cases here:
 
@@ -770,6 +771,9 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
         private keys.
     :param key_defs: A definition of what keys should be created if they are
         not already available
+    :param owner: The owner of the keys
+    :param read_only: This function should not attempt to write anything
+        to a file system.
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
@@ -782,23 +786,27 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
                 _kb = _kj.issuer_keys[owner][0]
                 _diff = key_diff(_kb, key_defs)
                 if _diff:
-                    update_key_bundle(_kb, _diff)
-                    _kj.issuer_keys[owner] = [_kb]
-                    jwks = _kj.export_jwks(private=True, issuer=owner)
-                    fp = open(private_path, 'w')
-                    fp.write(json.dumps(jwks))
-                    fp.close()
+                    if read_only:
+                        logger.error('Not allowed to write to disc!')
+                    else:
+                        update_key_bundle(_kb, _diff)
+                        _kj.issuer_keys[owner] = [_kb]
+                        jwks = _kj.export_jwks(private=True, issuer=owner)
+                        fp = open(private_path, 'w')
+                        fp.write(json.dumps(jwks))
+                        fp.close()
         else:
             _kj = build_keyjar(key_defs, owner=owner)
-            jwks = _kj.export_jwks(private=True, issuer=owner)
-            head, tail = os.path.split(private_path)
-            if head and not os.path.isdir(head):
-                os.makedirs(head)
-            fp = open(private_path, 'w')
-            fp.write(json.dumps(jwks))
-            fp.close()
+            if not read_only:
+                jwks = _kj.export_jwks(private=True, issuer=owner)
+                head, tail = os.path.split(private_path)
+                if head and not os.path.isdir(head):
+                    os.makedirs(head)
+                fp = open(private_path, 'w')
+                fp.write(json.dumps(jwks))
+                fp.close()
 
-        if public_path:
+        if public_path and not read_only:
             jwks = _kj.export_jwks(issuer=owner)  # public part
             head, tail = os.path.split(public_path)
             if head and not os.path.isdir(head):
@@ -815,21 +823,25 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner=''):
                 _kb = _kj.issuer_keys[owner][0]
                 _diff = key_diff(_kb, key_defs)
                 if _diff:
-                    update_key_bundle(_kb, _diff)
-                    _kj.issuer_keys[owner] = [_kb]
-                    jwks = _kj.export_jwks(issuer=owner)
-                    fp = open(private_path, 'w')
-                    fp.write(json.dumps(jwks))
-                    fp.close()
+                    if read_only:
+                        logger.error('Not allowed to write to disc!')
+                    else:
+                        update_key_bundle(_kb, _diff)
+                        _kj.issuer_keys[owner] = [_kb]
+                        jwks = _kj.export_jwks(issuer=owner)
+                        fp = open(private_path, 'w')
+                        fp.write(json.dumps(jwks))
+                        fp.close()
         else:
             _kj = build_keyjar(key_defs, owner=owner)
-            _jwks = _kj.export_jwks(issuer=owner)
-            head, tail = os.path.split(public_path)
-            if head and not os.path.isdir(head):
-                os.makedirs(head)
-            fp = open(public_path, 'w')
-            fp.write(json.dumps(_jwks))
-            fp.close()
+            if not read_only:
+                _jwks = _kj.export_jwks(issuer=owner)
+                head, tail = os.path.split(public_path)
+                if head and not os.path.isdir(head):
+                    os.makedirs(head)
+                fp = open(public_path, 'w')
+                fp.write(json.dumps(_jwks))
+                fp.close()
     else:
         _kj = build_keyjar(key_defs, owner=owner)
 
