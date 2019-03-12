@@ -133,7 +133,6 @@ class KeyBundle(object):
 
         self._keys = []
         self.remote = False
-        self.verify_ssl = verify_ssl
         self.cache_time = cache_time
         self.time_out = 0
         self.etag = ""
@@ -145,8 +144,10 @@ class KeyBundle(object):
         self.last_updated = 0
         if httpc:
             self.httpc = httpc
+            self.verify_ssl = None
         else:
             self.httpc = requests.request
+            self.verify_ssl = verify_ssl
 
         if keys:
             self.source = None
@@ -261,7 +262,10 @@ class KeyBundle(object):
 
         :return: True or False if load was successful        
         """
-        args = {"verify": self.verify_ssl}
+        if self.verify_ssl:
+            args = {"verify": self.verify_ssl}
+        else:
+            args = {}
 
         try:
             logging.debug('KeyBundle fetch keys from: {}'.format(self.source))
