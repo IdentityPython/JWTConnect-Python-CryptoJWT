@@ -119,7 +119,7 @@ class ECKey(AsymmetricKey):
     public_members = AsymmetricKey.public_members[:]
     public_members.extend(["kty", "alg", "use", "kid", "crv", "x", "y"])
     # required attributes
-    required = ['kty','crv', 'x', 'y']
+    required = ['kty', 'crv', 'x', 'y']
 
     def __init__(self, kty="EC", alg="", use="", kid="", key=None,
                  crv="", x="", y="", d="", **kwargs):
