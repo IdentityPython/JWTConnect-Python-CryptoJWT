@@ -569,3 +569,22 @@ def test_appropriate():
 
     assert _j1.appropriate_for('sign')
     assert _j1.appropriate_for('encrypt') is False
+
+def test_thumbprint_ec():
+    jwk = key_from_jwk_dict({
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "MJ05vpfkWoIce1MwUpZYAyotenxp4yYVHJuc6lN_J0o",
+        "y": "Kfzs5wbqnEWUlFElN8ErWEL5YL2WQ1yowxzHejlzlZ0"
+    })
+    thumbprint = "RCWR9g8NPt9iZeq-lh-qXbiFxXcU0_o1YLitDj3kpg0"
+    assert (jwk.thumbprint('SHA-256').decode()) == thumbprint
+
+def test_thumbprint_rsa():
+    jwk = key_from_jwk_dict({
+        "kty": "RSA",
+        "e": "AQAB",
+        "n": "3xIyjRLL1LYi2FULhN6koVwtsaixgXa5TBOMcq2EMsk_Fq-tSXmxA8ATYcUnuSGX3PGJ5pHwIF42eesIzQV5ypYklF0sLAkmkXow_TMDX0qoc4rdfc2prq-mzPWwGcYoRsjDKiSUFOUSKB41zQ6sMY2k4BWZVo1bEL0CVpVct1DDhqSME6uUKex9T2AbwWNvwFacrwJaWyKixBhiPSwVBn7dUWDnJiM39_4Lnw6JnriXcli-aJlPuXm5F_qspXL4Pfn9nR5Z9j9Qf7NFif7nVRyg8cx7OYTbbsoIbMYYG-boVPLL7ebEBZVIUysqH_WkNJlkl5m7gAs5DB_KfMx18Q",
+    })
+    thumbprint = "Q1wZMrouq_iCnG7mr2y03Zxf7iE9mie-y_Mfh9-Cgk0"
+    assert (jwk.thumbprint('SHA-256').decode()) == thumbprint
