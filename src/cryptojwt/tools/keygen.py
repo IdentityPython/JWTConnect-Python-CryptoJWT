@@ -71,7 +71,7 @@ def main():
 
     jwk_dict = jwk.serialize(private=True)
     print(json.dumps(jwk_dict, sort_keys=True, indent=4))
-    print("SHA-256: " + b64e(jwk.thumbprint('SHA-256')).decode(), file=sys.stderr)
+    print("SHA-256: " + jwk.thumbprint('SHA-256').decode(), file=sys.stderr)
 
 
 if __name__ == "__main__":
