@@ -324,7 +324,7 @@ class JWT(object):
             if self.allowed_sign_algs:
                 _verifier = jws_factory(_info, alg=self.allowed_sign_algs)
             else:
-                _verifier = jws_factory(_info, alg=self.allowed_sign_algs)
+                _verifier = jws_factory(_info)
 
             if _verifier:
                 _info = self._verify(_verifier, _info)

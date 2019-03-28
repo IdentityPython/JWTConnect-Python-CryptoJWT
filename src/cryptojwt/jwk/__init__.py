@@ -1,7 +1,6 @@
 import json
 
 from .utils import DIGEST_HASH
-from ..exception import HeaderError
 from ..exception import UnsupportedAlgorithm
 from ..utils import as_unicode
 from ..utils import b64e
