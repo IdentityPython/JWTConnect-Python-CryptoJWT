@@ -1,9 +1,9 @@
 # from __future__ import print_function
+import array
 import hashlib
 import os
 import string
 import sys
-import array
 
 import pytest
 from cryptography.hazmat.backends import default_backend
@@ -14,26 +14,24 @@ from cryptojwt.exception import HeaderError
 from cryptojwt.exception import MissingKey
 from cryptojwt.exception import Unsupported
 from cryptojwt.exception import VerificationError
+from cryptojwt.jwe.aes import AES_CBCEncrypter
+from cryptojwt.jwe.aes import AES_GCMEncrypter
 from cryptojwt.jwe.exception import NoSuitableDecryptionKey
 from cryptojwt.jwe.exception import NoSuitableEncryptionKey
 from cryptojwt.jwe.exception import UnsupportedBitLength
 from cryptojwt.jwe.exception import WrongEncryptionAlgorithm
-from cryptojwt.utils import b64e, as_bytes
-
-from cryptojwt.jwe.aes import AES_CBCEncrypter
-from cryptojwt.jwe.aes import AES_GCMEncrypter
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwe.jwe import factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
-from cryptojwt.jwe.jwe_rsa import JWE_RSA
 from cryptojwt.jwe.jwe_hmac import JWE_SYM
+from cryptojwt.jwe.jwe_rsa import JWE_RSA
 from cryptojwt.jwe.utils import split_ctx_and_tag
-
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import RSAKey
-
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.utils import as_bytes
+from cryptojwt.utils import b64e
 
 __author__ = 'rohe0002'
 
@@ -129,8 +127,8 @@ def test_jwe_09_a1():
     assert bytes2intarr(tag) == [130, 17, 32, 198, 120, 167, 144, 113, 0,
                                  50, 158, 49, 102, 208, 118, 152]
 
-    #tag = long2hexseq(tag)
-    #iv = long2hexseq(iv)
+    # tag = long2hexseq(tag)
+    # iv = long2hexseq(iv)
     res = b".".join([b64_header, b64_ejek, b64e(iv), b64e(ctxt), b64e(tag)])
 
     # print(res.split(b'.'))
@@ -154,7 +152,7 @@ def test_aesgcm_bit_length():
     enc_msg = encrypter.encrypt(b'Murder must advertise.',
                                 b'Dorothy L. Sayers')
     ctx, tag = split_ctx_and_tag(enc_msg)
-    _msg = encrypter.decrypt(ctx, iv=b'Dorothy L. Sayers',tag=tag)
+    _msg = encrypter.decrypt(ctx, iv=b'Dorothy L. Sayers', tag=tag)
     assert _msg == b'Murder must advertise.'
 
 
