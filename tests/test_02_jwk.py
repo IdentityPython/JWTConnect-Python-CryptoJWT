@@ -200,6 +200,14 @@ def test_cmp_neq_ec():
     assert _key1 != _key2
 
 
+def test_cmp_eq_ec():
+    ec_key = generate_private_key(NIST2SEC['P-256'], default_backend())
+    _key1 = ECKey(priv_key=ec_key)
+    _key2 = ECKey(priv_key=ec_key)
+
+    assert _key1 == _key2
+
+
 def test_get_key():
     ec_key = generate_private_key(NIST2SEC['P-256'], default_backend())
     asym_private_key = ECKey(priv_key=ec_key)

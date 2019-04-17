@@ -278,8 +278,10 @@ class ECKey(AsymmetricKey):
         if cmp_keys(self.pub_key, other.pub_key, ec.EllipticCurvePublicKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key,
-                            ec.EllipticCurvePublicKey):
-                    return False
+                            ec.EllipticCurvePrivateKey):
+                    return True
+            elif self.private_key():
+                return False
             else:
                 return True
 
@@ -289,7 +291,7 @@ class ECKey(AsymmetricKey):
 def cmp_keys(a, b, key_type):
     if isinstance(a, key_type):
         if isinstance(b, key_type):
-            if a.curve != b.curve:
+            if a.curve.name != b.curve.name:
                 return False
             if a.key_size != b.key_size:
                 return False

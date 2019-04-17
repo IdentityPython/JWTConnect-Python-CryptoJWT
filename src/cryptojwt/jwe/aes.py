@@ -111,7 +111,7 @@ class AES_GCMEncrypter(Encrypter):
         :param msg: The message to be encrypted
         :param iv: MUST be present, at least 96-bit long
         :param auth_data: Associated data
-        :return: The ciphertext bytes with the 16 byte tag appended.
+        :return: The cipher text bytes with the 16 byte tag appended.
         """
         if not iv:
             raise ValueError('Missing Nonce')
