@@ -49,6 +49,7 @@ setup(
     entry_points={
          "console_scripts": [
              "jwkgen = cryptojwt.tools.keygen:main",
+             "jwkconv = cryptojwt.tools.keyconf:main",
          ]
      }
 )
