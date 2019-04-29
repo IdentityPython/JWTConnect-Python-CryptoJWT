@@ -45,11 +45,6 @@ def pem2ec(filename: str, kid: str = None, private: bool = False, passphrase: st
     return jwk
 
 
-def jwk2bin(jwk: JWK) -> bytes:
-    """Convert symmetric key from JWK to binary"""
-    return jwk.key
-
-
 def pem2jwk(filename: str, kid: str, private: bool = False) -> bytes:
 
     with open(filename, 'rt') as file:
@@ -79,6 +74,9 @@ def pem2jwk(filename: str, kid: str, private: bool = False) -> bytes:
 
 def jwk2pem(jwk: JWK, private: bool = False) -> bytes:
     """Convert asymmetric key from JWK to PEM"""
+
+    if jwk.kty == 'oct':
+        return jwk.key
 
     if private:
         passphrase = getpass('Private key passphrase: ')
@@ -121,10 +119,7 @@ def main():
 
     if f.endswith('.json'):
         jwk = jwk_from_file(f, args.private)
-        if jwk.kty == 'oct':
-            serialized = jwk2bin(jwk)
-        else:
-            serialized = jwk2pem(jwk, args.private)
+        serialized = jwk2pem(jwk, args.private)
 
         if args.output:
             with open(args.output, mode='wt') as file:
