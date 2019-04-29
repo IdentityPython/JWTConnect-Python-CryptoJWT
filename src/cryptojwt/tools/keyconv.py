@@ -98,7 +98,7 @@ def jwk2pem(jwk: JWK, private: bool = False) -> bytes:
 
 def main():
     """ Main function"""
-    parser = argparse.ArgumentParser(description='JWK Key Conversion Utility')
+    parser = argparse.ArgumentParser(description='JWK Conversion Utility')
 
     parser.add_argument('--kid',
                         dest='kid',
@@ -137,7 +137,7 @@ def main():
             with open(args.output, mode='wt') as file:
                 file.write(json.dumps(serialized))
         else:
-            print(serialized)
+            print(json.dumps(serialized, indent=4))
     else:
         exit(-1)
 
