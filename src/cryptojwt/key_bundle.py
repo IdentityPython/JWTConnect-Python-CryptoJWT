@@ -144,7 +144,10 @@ class KeyBundle(object):
         self.last_updated = 0
         if httpc:
             self.httpc = httpc
-            self.verify_ssl = None
+            if httpc == requests.request:
+                self.verify_ssl = verify_ssl
+            else:
+                self.verify_ssl = None
         else:
             self.httpc = requests.request
             self.verify_ssl = verify_ssl
