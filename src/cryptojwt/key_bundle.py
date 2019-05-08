@@ -266,7 +266,7 @@ class KeyBundle(object):
 
         :return: True or False if load was successful        
         """
-        if self.verify_ssl:
+        if self.verify_ssl is not None:
             args = {"verify": self.verify_ssl}
         else:
             args = {}
