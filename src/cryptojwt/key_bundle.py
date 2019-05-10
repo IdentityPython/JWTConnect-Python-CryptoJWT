@@ -6,6 +6,7 @@ from functools import cmp_to_key
 
 import requests
 
+from cryptojwt.jwk.hmac import new_sym_key
 from .exception import DeSerializationNotPossible
 from .exception import JWKException
 from .exception import UnknownKeyType
@@ -80,6 +81,38 @@ def rsa_init(spec):
             kb.append(_key)
     else:
         _key = new_rsa_key(key_size=size)
+        kb.append(_key)
+
+    return kb
+
+
+def sym_init(spec):
+    """
+    Initiates a :py:class:`oidcmsg.keybundle.KeyBundle` instance
+    containing newly minted SYM keys according to a spec.
+
+    Example of specification::
+        {'bytes':24, 'use': ['enc', 'sig'] }
+
+    Using the spec above 2 SYM keys would be minted, one for
+    encryption and one for signing.
+
+    :param spec:
+    :return: KeyBundle
+    """
+
+    try:
+        size = int(spec['bytes'])
+    except KeyError:
+        size = 24
+
+    kb = KeyBundle(keytype="OCT")
+    if 'use' in spec:
+        for use in harmonize_usage(spec["use"]):
+            _key = new_sym_key(use=use, bytes=size)
+            kb.append(_key)
+    else:
+        _key = new_sym_key(bytes=size)
         kb.append(_key)
 
     return kb
@@ -682,6 +715,8 @@ def build_key_bundle(key_conf, kid_template=""):
                 kb = rsa_init(spec)
         elif typ == "EC":
             kb = ec_init(spec)
+        elif typ.upper() == "OCT":
+            kb = sym_init(spec)
         else:
             continue
 
