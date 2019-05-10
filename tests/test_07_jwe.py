@@ -53,7 +53,7 @@ def rndstr(size=16):
 
 
 def intarr2bytes(arr):
-    return array.array('B', arr).tostring()
+    return array.array('B', arr).tobytes()
 
 
 def bytes2intarr(bts):

@@ -851,7 +851,7 @@ def test_init_key_jar_update():
     # New set of keys, JWKSs with keys and public written to file
     _keyjar_1 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
                              owner='https://example.com',
-                             public_path=PUBLIC_FILE)
+                             public_path=PUBLIC_FILE, read_only=False)
     assert list(_keyjar_1.owners()) == ['https://example.com']
 
     _keyjar_2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
@@ -865,18 +865,28 @@ def test_init_key_jar_update():
     assert len(rsa2) == 1
     assert rsa1[0] == rsa2[0]
 
-    # keyjar1 should only contain one EC key while keyjar2 should contain 3.
+    # keyjar1 should only contain one EC key while keyjar2 should contain 2.
 
     ec1 = _keyjar_1.get_signing_key('EC', 'https://example.com')
     ec2 = _keyjar_2.get_signing_key('EC', '')
     assert len(ec1) == 1
     assert len(ec2) == 2
 
-    # The file on disc should have changed
+    # The file on disc should not have changed
     _keyjar_3 = init_key_jar(private_path=PRIVATE_FILE)
 
     assert len(_keyjar_3.get_signing_key('RSA')) == 1
-    assert len(_keyjar_3.get_signing_key('EC')) == 2
+    assert len(_keyjar_3.get_signing_key('EC')) == 1
+
+    _keyjar_4 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
+                             public_path=PUBLIC_FILE, read_only=False)
+
+    # Now it should
+    _keyjar_5 = init_key_jar(private_path=PRIVATE_FILE)
+
+    assert len(_keyjar_5.get_signing_key('RSA')) == 1
+    assert len(_keyjar_5.get_signing_key('EC')) == 2
+
 
 
 OIDC_KEYS = {

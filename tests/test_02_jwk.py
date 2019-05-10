@@ -408,8 +408,8 @@ RSA3 = RSAKey(
 
 def test_equal():
     assert RSA1 == RSA1
-    assert RSA1 != RSA2
-    assert RSA2 == RSA3
+    assert RSA1 != RSA2  # different keys altogether
+    assert RSA2 != RSA3  # different kid
 
 
 def test_get_asym_key_for_verify():

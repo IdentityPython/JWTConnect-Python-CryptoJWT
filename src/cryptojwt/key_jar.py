@@ -786,10 +786,10 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner='',
                 _kb = _kj.issuer_keys[owner][0]
                 _diff = key_diff(_kb, key_defs)
                 if _diff:
+                    update_key_bundle(_kb, _diff)
                     if read_only:
                         logger.error('Not allowed to write to disc!')
                     else:
-                        update_key_bundle(_kb, _diff)
                         _kj.issuer_keys[owner] = [_kb]
                         jwks = _kj.export_jwks(private=True, issuer=owner)
                         fp = open(private_path, 'w')
