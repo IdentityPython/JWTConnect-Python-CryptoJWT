@@ -1,4 +1,5 @@
 import logging
+import os
 
 from .utils import sha256_digest
 from .utils import sha384_digest
@@ -139,3 +140,7 @@ class SYMKey(JWK):
                 return False
 
         return True
+
+
+def new_sym_key(use='', bytes=24, kid=''):
+    return SYMKey(use=use, kid=kid, key=as_unicode(os.urandom(bytes)))
