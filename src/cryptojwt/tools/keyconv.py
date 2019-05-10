@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Convert symmetric JWK from/to binary format"""
+"""Convert JWK from/to PEM and other formats"""
 
 import argparse
 import json
