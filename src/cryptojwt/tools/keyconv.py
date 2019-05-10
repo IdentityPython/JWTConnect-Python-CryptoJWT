@@ -6,11 +6,13 @@ import argparse
 import json
 from binascii import hexlify
 from getpass import getpass
+from typing import Optional
 
 from cryptography.hazmat.primitives import serialization
 from cryptojwt.jwk import JWK
 from cryptojwt.jwk.ec import (ECKey, import_private_key_from_file,
                               import_public_key_from_file)
+from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import (RSAKey, import_private_rsa_key_from_file,
                                import_public_rsa_key_from_file)
 from cryptojwt.jwx import key_from_jwk_dict
@@ -45,8 +47,15 @@ def pem2ec(filename: str, kid: str = None, private: bool = False, passphrase: st
     return jwk
 
 
-def pem2jwk(filename: str, kid: str, private: bool = False) -> bytes:
+def bin2jwk(filename: str, kid: str) -> bytes:
+    """Read raw key from filename and return JWK"""
+    with open(filename, 'rb') as file:
+        content = file.read()
+    return SYMKey(kid=kid, key=content)
 
+
+def pem2jwk(filename: str, kid: str, private: bool = False) -> JWK:
+    """Read PEM from filename and return JWK"""
     with open(filename, 'rt') as file:
         content = file.readlines()
     header = content[0]
@@ -72,8 +81,8 @@ def pem2jwk(filename: str, kid: str, private: bool = False) -> bytes:
     return jwk
 
 
-def jwk2pem(jwk: JWK, private: bool = False) -> bytes:
-    """Convert asymmetric key from JWK to PEM"""
+def export_jwk(jwk: JWK, private: bool = False) -> bytes:
+    """Export JWK as PEM/bin"""
 
     if jwk.kty == 'oct':
         return jwk.key
@@ -95,6 +104,27 @@ def jwk2pem(jwk: JWK, private: bool = False) -> bytes:
 
     return serialized
 
+
+def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) -> None:
+    """Output JWK to file"""
+    serialized = jwk.serialize(private=private)
+    if filename is not None:
+        with open(filename, mode='wt') as file:
+            file.write(json.dumps(serialized))
+    else:
+        print(json.dumps(serialized, indent=4))
+
+
+def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = None) -> None:
+    """Output data to file"""
+    if filename is not None:
+        with open(filename, mode='wb') as file:
+            file.write(data)
+    else:
+        if binary:
+            print(hexlify(data).decode())
+        else:
+            print(data.decode())
 
 def main():
     """ Main function"""
@@ -119,25 +149,14 @@ def main():
 
     if f.endswith('.json'):
         jwk = jwk_from_file(f, args.private)
-        serialized = jwk2pem(jwk, args.private)
-
-        if args.output:
-            with open(args.output, mode='wt') as file:
-                file.write(serialized)
-        else:
-            if jwk.kty == 'oct':
-                print(hexlify(serialized).decode())
-            else:
-                print(serialized.decode())
+        serialized = export_jwk(jwk, args.private)
+        output_bytes(data=serialized, binary=(jwk.kty == 'oct'), filename=args.output)
+    elif f.endswith('.bin'):
+        jwk = bin2jwk(f, args.kid)
+        output_jwk(jwk=jwk, private=True, filename=args.output)
     elif f.endswith('.pem'):
         jwk = pem2jwk(f, args.kid, args.private)
-        serialized = jwk.serialize(private=args.private)
-
-        if args.output:
-            with open(args.output, mode='wt') as file:
-                file.write(json.dumps(serialized))
-        else:
-            print(json.dumps(serialized, indent=4))
+        output_jwk(jwk=jwk, private=args.private, filename=args.output)
     else:
         exit(-1)
 
