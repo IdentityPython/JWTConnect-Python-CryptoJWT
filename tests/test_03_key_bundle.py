@@ -564,6 +564,7 @@ def test_dump_jwk():
     assert key.kty == 'RSA'
     assert isinstance(key.public_key(), rsa.RSAPublicKey)
 
+
 JWKS_DICT = {"keys": [
     {
         "n": u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
@@ -602,7 +603,8 @@ EXPECTED = [
     b'iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA',
     b'kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI',
     b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8',
-    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8'
+    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8',
+    b'akXzyGlXg8yLhsCczKb_r8VERLx7-iZBUMIVgg2K7p4'
 ]
 
 
@@ -653,6 +655,13 @@ KEYSPEC_4 = [
 KEYSPEC_5 = [
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
+    ]
+
+
+KEYSPEC_6 = [
+    {"type": "oct", "bytes": "24", "use": ["enc"], 'kid':'code'},
+    {"type": "oct", "bytes": "24", "use": ["enc"], 'kid': 'token'},
+    {"type": "oct", "bytes": "24", "use": ["enc"], 'kid': 'refresh_token'}
     ]
 
 
@@ -764,3 +773,12 @@ def test_key_rollover():
 
     assert len(kb_1.get(only_active=False)) == 4
     assert len(kb_1.get()) == 2
+
+
+def test_build_key_bundle_sym():
+    _kb = build_key_bundle(key_conf=KEYSPEC_6)
+    assert len(_kb) == 3
+
+    assert len(_kb.get('RSA')) == 0
+    assert len(_kb.get('EC')) == 0
+    assert len(_kb.get('OCT')) == 3

@@ -17,6 +17,7 @@ import os.path
 
 from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
+from cryptojwt.jwk.hmac import new_sym_key
 
 from cryptojwt.utils import as_unicode, as_bytes
 from cryptojwt.utils import b64e
@@ -578,6 +579,7 @@ def test_appropriate():
     assert _j1.appropriate_for('sign')
     assert _j1.appropriate_for('encrypt') is False
 
+
 def test_thumbprint_ec():
     jwk = key_from_jwk_dict({
         "kty": "EC",
@@ -588,6 +590,7 @@ def test_thumbprint_ec():
     thumbprint = "RCWR9g8NPt9iZeq-lh-qXbiFxXcU0_o1YLitDj3kpg0"
     assert (jwk.thumbprint('SHA-256').decode()) == thumbprint
 
+
 def test_thumbprint_rsa():
     jwk = key_from_jwk_dict({
         "kty": "RSA",
@@ -596,3 +599,11 @@ def test_thumbprint_rsa():
     })
     thumbprint = "Q1wZMrouq_iCnG7mr2y03Zxf7iE9mie-y_Mfh9-Cgk0"
     assert (jwk.thumbprint('SHA-256').decode()) == thumbprint
+
+
+def test_mint_new_sym_key():
+    key = new_sym_key(bytes=24, use='sig', kid='one')
+    assert key
+    assert key.use == 'sig'
+    assert key.kid == 'one'
+    assert len(key.key) == 24
