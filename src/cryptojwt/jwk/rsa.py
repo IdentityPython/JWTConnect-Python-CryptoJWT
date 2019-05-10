@@ -487,6 +487,20 @@ class RSAKey(AsymmetricKey):
         if not other.pub_key:
             other.deserialize()
 
+        if self.use and other.use:
+            if self.use != other.use:
+                return False
+
+        if self.kid:
+            if other.kid:
+                if self.kid != other.kid:
+                    return False
+            else:
+                return False
+        else:
+            if other.kid:
+                return False
+
         try:
             pn1 = self.priv_key.private_numbers()
             pn2 = other.priv_key.private_numbers()
