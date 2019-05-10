@@ -275,6 +275,9 @@ class ECKey(AsymmetricKey):
         :return: True if the keys as the same otherwise False
         """
 
+        if self.__class__ != other.__class__:
+            return False
+
         if cmp_keys(self.pub_key, other.pub_key, ec.EllipticCurvePublicKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key,
