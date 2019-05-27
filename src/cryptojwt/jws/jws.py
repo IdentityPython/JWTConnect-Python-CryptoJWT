@@ -292,7 +292,7 @@ class JWS(JWx):
 
         return json.dumps(res)
 
-    def verify_json(self, jws, keys=None, allow_none=False, sigalg=None):
+    def verify_json(self, jws, keys=None, allow_none=False, sigalg=None, at_least_one=False):
         """
 
         :param jws:
@@ -301,6 +301,7 @@ class JWS(JWx):
         """
 
         _jwss = json.loads(jws)
+        _verified = False
 
         try:
             _payload = _jwss["payload"]
@@ -328,13 +329,20 @@ class JWS(JWx):
             all_headers.update(
                 json.loads(b64d_enc_dec(protected_headers) or {}))
             self.__init__(**all_headers)
+            try:
+                _tmp = self.verify_compact(token, keys, allow_none, sigalg)
+                _verified = True
+                if _claim is None:
+                    _claim = _tmp
+                else:
+                    if _claim != _tmp:
+                        raise ValueError()
+            except NoSuitableSigningKeys as exc:
+                if not at_least_one:
+                    raise exc
 
-            _tmp = self.verify_compact(token, keys, allow_none, sigalg)
-            if _claim is None:
-                _claim = _tmp
-            else:
-                if _claim != _tmp:
-                    raise ValueError()
+        if not _verified:
+            raise NoSuitableSigningKeys("No valid signature found")
 
         return _claim
 
