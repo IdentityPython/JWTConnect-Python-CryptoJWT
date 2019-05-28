@@ -373,7 +373,7 @@ class KeyJar(object):
 
         return None
 
-    def export_jwks(self, private=False, issuer=""):
+    def export_jwks(self, private=False, issuer="", usage=None):
         """
         Produces a dictionary that later can be easily mapped into a 
         JSON string representing a JWKS.
@@ -385,7 +385,7 @@ class KeyJar(object):
         keys = []
         for kb in self.issuer_keys[issuer]:
             keys.extend([k.serialize(private) for k in kb.keys() if
-                         k.inactive_since == 0])
+                         k.inactive_since == 0 and (usage is None or (hasattr(k, 'use') and k.use == usage))])
         return {"keys": keys}
 
     def export_jwks_as_json(self, private=False, issuer=""):

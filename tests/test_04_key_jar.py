@@ -206,6 +206,21 @@ def test_build_keyjar():
     assert len(keyjar.get('enc')) == 1  # 1 for encryption
 
 
+def test_build_keyjar_usage():
+    keys = [
+        {"type": "RSA", "use": ["enc", "sig"]},
+        {"type": "EC", "crv": "P-256", "use": ["sig"]},
+        {"type": "oct", "use": ["enc"]},
+        {"type": "oct", "use": ["enc"]},
+        ]
+
+    keyjar = build_keyjar(keys)
+    jwks_sig = keyjar.export_jwks(usage='sig')
+    jwks_enc = keyjar.export_jwks(usage='enc')
+    assert len(jwks_sig.get('keys')) == 2  # A total of 2 keys with use=sig
+    assert len(jwks_enc.get('keys')) == 3  # A total of 3 keys with use=enc
+
+
 def test_build_keyjar_missing(tmpdir):
     keys = [
         {
