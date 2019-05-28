@@ -295,13 +295,17 @@ class JWS(JWx):
 
     def verify_json(self, jws, keys=None, allow_none=False, at_least_one=False):
         """
+        Verifies a JSON serialized signed JWT. The object may contain multiple
+        signatures. In the case that the verifier does not have the whole
+        set of necessary keys she may chose to accept that some verifications
+        fails due to no suitable key.
 
         :param jws: The JSON document representing the signed JSON
         :param keys: Keys that might be useful for verifying the signatures
         :param allow_none: Allow the None signature algorithm. Is the same
             as allowing no signature at all.
         :param at_least_one: At least one of the signatures must verify
-            correctly. No suitable signing key is the only allow exception.
+            correctly. No suitable signing key is the only allowed exception.
         :return:
         """
 

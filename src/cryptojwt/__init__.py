@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-__version__ = '0.7.6'
+__version__ = '0.7.7'
 
 logger = logging.getLogger(__name__)
 
