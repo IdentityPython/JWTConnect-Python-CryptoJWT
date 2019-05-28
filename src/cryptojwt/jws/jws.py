@@ -2,6 +2,7 @@
 import json
 import logging
 
+from cryptojwt.jws.exception import JWSException
 
 try:
     from builtins import str
@@ -292,11 +293,15 @@ class JWS(JWx):
 
         return json.dumps(res)
 
-    def verify_json(self, jws, keys=None, allow_none=False, sigalg=None):
+    def verify_json(self, jws, keys=None, allow_none=False, at_least_one=False):
         """
 
-        :param jws:
-        :param keys:
+        :param jws: The JSON document representing the signed JSON
+        :param keys: Keys that might be useful for verifying the signatures
+        :param allow_none: Allow the None signature algorithm. Is the same
+            as allowing no signature at all.
+        :param at_least_one: At least one of the signatures must verify
+            correctly. No suitable signing key is the only allow exception.
         :return:
         """
 
@@ -317,7 +322,7 @@ class JWS(JWx):
                     signature[key] = _jwss[key]
             _signs = [signature]
 
-        _claim = None
+        _claim = last_exception = None
         for _sign in _signs:
             protected_headers = _sign.get("protected", "")
             token = b".".join([protected_headers.encode(), _payload.encode(),
@@ -329,12 +334,27 @@ class JWS(JWx):
                 json.loads(b64d_enc_dec(protected_headers) or {}))
             self.__init__(**all_headers)
 
-            _tmp = self.verify_compact(token, keys, allow_none, sigalg)
+            try:
+                _tmp = self.verify_compact(token, keys, allow_none)
+            except NoSuitableSigningKeys:
+                if at_least_one is True:
+                    logger.warning(
+                        'Could not verify signature with headers: {}'.format(
+                            all_headers))
+                    continue
+                else:
+                    raise
+            except JWSException as err:
+                raise
+
             if _claim is None:
                 _claim = _tmp
             else:
                 if _claim != _tmp:
                     raise ValueError()
+
+        if not _claim:
+            raise NoSuitableSigningKeys('None')
 
         return _claim
 
