@@ -35,8 +35,7 @@ def ec_construct_public(num):
     public key instance.
 
     :param num: A dictionary with public attributes and their values
-    :return: A
-        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
         instance.
     """
     ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
@@ -50,8 +49,7 @@ def ec_construct_private(num):
     curve private key instance.
 
     :param num: A dictionary with public and private attributes and their values
-    :return: A
-        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance.
     """
     pub_ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
@@ -66,8 +64,7 @@ def import_private_key_from_file(filename, passphrase=None):
 
     :param filename: The name of the file
     :param passphrase: A pass phrase to use to unpack the PEM file.
-    :return: A
-        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance
     """
     with open(filename, "rb") as key_file:
@@ -84,9 +81,7 @@ def import_public_key_from_file(filename):
     Read a public Elliptic Curve key from a PEM file.
 
     :param filename: The name of the file
-    :param passphrase: A pass phrase to use to unpack the PEM file.
-    :return: A
-        cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance
     """
     with open(filename, "rb") as key_file:
@@ -188,17 +183,18 @@ class ECKey(AsymmetricKey):
                 {'x': _x, 'y': _y, 'crv': self.crv})
 
     def _serialize(self, key):
+        mlen = int(key.key_size/8)
         if isinstance(key, ec.EllipticCurvePublicKey):
             pn = key.public_numbers()
-            self.x = long_to_base64(pn.x)
-            self.y = long_to_base64(pn.y)
+            self.x = long_to_base64(pn.x, mlen)
+            self.y = long_to_base64(pn.y, mlen)
             self.crv = SEC2NIST[pn.curve.name]
         elif isinstance(key, ec.EllipticCurvePrivateKey):
             pn = key.private_numbers()
-            self.x = long_to_base64(pn.public_numbers.x)
-            self.y = long_to_base64(pn.public_numbers.y)
+            self.x = long_to_base64(pn.public_numbers.x, mlen)
+            self.y = long_to_base64(pn.public_numbers.y, mlen)
             self.crv = SEC2NIST[pn.public_numbers.curve.name]
-            self.d = long_to_base64(pn.private_value)
+            self.d = long_to_base64(pn.private_value, mlen)
 
     def serialize(self, private=False):
         """
