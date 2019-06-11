@@ -32,9 +32,10 @@ def long2intarr(long_int):
 
 def long_to_base64(n, mlen=0):
     bys = long2intarr(n)
-    _len = mlen - len(bys)
-    if _len:
-        bys = [0] * _len + bys
+    if mlen:
+        _len = mlen - len(bys)
+        if _len:
+            bys = [0] * _len + bys
     data = struct.pack('%sB' % len(bys), *bys)
     if not len(data):
         data = '\x00'
