@@ -54,7 +54,7 @@ def bin2jwk(filename: str, kid: str) -> bytes:
     return SYMKey(kid=kid, key=content)
 
 
-def pem2jwk(filename: str, kid: str, private: bool = False) -> JWK:
+def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = False) -> JWK:
     """Read PEM from filename and return JWK"""
     with open(filename, 'rt') as file:
         content = file.readlines()
@@ -67,7 +67,14 @@ def pem2jwk(filename: str, kid: str, private: bool = False) -> JWK:
     else:
         passphrase = None
 
-    if 'BEGIN EC PRIVATE KEY' in header:
+    if 'BEGIN PUBLIC KEY' in header:
+        if kty is not None and kty = 'EC':
+            jwk = pem2ec(filename, kid, private=False)
+        elif kty is not None and kty = 'RSA':
+            jwk = pem2rsa(filename, kid, private=False)
+        else:
+            raise ValueError("Unknown key type")
+    elif 'BEGIN EC PRIVATE KEY' in header:
         jwk = pem2ec(filename, kid, private=True, passphrase=passphrase)
     elif 'BEGIN EC PUBLIC KEY' in header:
         jwk = pem2ec(filename, kid, private=False)
@@ -134,6 +141,10 @@ def main():
                         dest='kid',
                         metavar='key_id',
                         help='Key ID')
+    parser.add_argument('--kty',
+                        dest='kty',
+                        metavar='type',
+                        help='Key type')
     parser.add_argument('--private',
                         dest='private',
                         action='store_true',
@@ -152,10 +163,10 @@ def main():
         serialized = export_jwk(jwk, args.private)
         output_bytes(data=serialized, binary=(jwk.kty == 'oct'), filename=args.output)
     elif f.endswith('.bin'):
-        jwk = bin2jwk(f, args.kid)
+        jwk = bin2jwk(filename=f, kid=args.kid)
         output_jwk(jwk=jwk, private=True, filename=args.output)
     elif f.endswith('.pem'):
-        jwk = pem2jwk(f, args.kid, args.private)
+        jwk = pem2jwk(filename=f, kid=args.kid, private=args.private, kty=args.kty)
         output_jwk(jwk=jwk, private=args.private, filename=args.output)
     else:
         exit(-1)
