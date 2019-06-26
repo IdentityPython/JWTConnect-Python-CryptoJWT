@@ -68,9 +68,9 @@ def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = 
         passphrase = None
 
     if 'BEGIN PUBLIC KEY' in header:
-        if kty is not None and kty = 'EC':
+        if kty is not None and kty == 'EC':
             jwk = pem2ec(filename, kid, private=False)
-        elif kty is not None and kty = 'RSA':
+        elif kty is not None and kty == 'RSA':
             jwk = pem2rsa(filename, kid, private=False)
         else:
             raise ValueError("Unknown key type")
