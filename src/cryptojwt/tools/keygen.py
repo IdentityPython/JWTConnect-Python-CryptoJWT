@@ -43,7 +43,7 @@ def main():
                         dest='rsa_exp',
                         type=int,
                         metavar='exponent',
-                        help=f'RSA public key exponent (default {DEFAULT_RSA_EXP})',
+                        help='RSA public key exponent (default {})'.format(DEFAULT_RSA_EXP),
                         default=DEFAULT_RSA_EXP)
     parser.add_argument('--kid',
                         dest='kid',
@@ -66,7 +66,7 @@ def main():
         randomkey = os.urandom(args.keysize)
         jwk = SYMKey(key=randomkey, kid=args.kid)
     else:
-        print(f"Unknown key type: {args.kty}", file=sys.stderr)
+        print("Unknown key type: {}".format(args.kty), file=sys.stderr)
         exit(1)
 
     jwk_dict = jwk.serialize(private=True)
