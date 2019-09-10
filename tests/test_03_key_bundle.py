@@ -1,26 +1,26 @@
 # pylint: disable=missing-docstring,no-self-use
 import json
 import os
-import pytest
 import shutil
 import time
 
+import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from cryptojwt.jwk.ec import new_ec_key
-
+from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.hmac import SYMKey
-
-from cryptojwt.key_bundle import build_key_bundle, update_key_bundle, \
-    key_rollover
+from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_bundle import build_key_bundle
 from cryptojwt.key_bundle import dump_jwks
 from cryptojwt.key_bundle import key_diff
-from cryptojwt.key_bundle import rsa_init
+from cryptojwt.key_bundle import key_rollover
 from cryptojwt.key_bundle import keybundle_from_local_file
-from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_bundle import rsa_init
+from cryptojwt.key_bundle import unique_keys
+from cryptojwt.key_bundle import update_key_bundle
 
 __author__ = 'Roland Hedberg'
 
@@ -116,13 +116,16 @@ JWK2 = {
             "x5c": [
                 "MIIC4jCCAcqgAwIBAgIQQNXrmzhLN4VGlUXDYCRT3zANBgkqhkiG9w0BAQsFADAtMSswKQYDVQQDEyJhY2NvdW50cy5hY2Nlc3Njb"
                 "250cm9sLndpbmRvd3MubmV0MB4XDTE0MTAyODAwMDAwMFoXDTE2MTAyNzAwMDAwMFowLTErMCkGA1UEAxMiYWNjb3VudHMuYWNjZX"
-                "NzY29udHJvbC53aW5kb3dzLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALyKs/uPhEf7zVizjfcr/ISGFe9+yUO"
+                "NzY29udHJvbC53aW5kb3dzLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALyKs"
+                "/uPhEf7zVizjfcr/ISGFe9+yUO"
                 "qwpel38zgutvLHmFD39E2hpPdQhcXn4c4dt1fU5KvkbcDdVbP8+e4TvNpJMy"
                 "/nEB2V92zCQ/hhBjilwhF1ETe1TMmVjALs0KFvbxW"
                 "9ZN3EdUVvxFvz/gvG29nQhl4QWKj3x8opr89lmq14Z7T0mzOV8kub+cgsOU"
                 "/1bsKqrIqN1fMKKFhjKaetctdjYTfGzVQ0AJAzzbtg"
-                "0/Q1wdYNAnhSDafygEv6kNiquk0r0RyasUUevEXs2LY3vSgKsKseI8ZZlQEMtE9/k/iAG7JNcEbVg53YTurNTrPnXJOU88mf3TToX"
-                "14HpYsS1ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfolx45w0i8CdAUjjeAaYdhG9+NDHxop0UvNOqlGqYJexqPLuvX8iyUaYxNG"
+                "0/Q1wdYNAnhSDafygEv6kNiquk0r0RyasUUevEXs2LY3vSgKsKseI8ZZlQEMtE9/k"
+                "/iAG7JNcEbVg53YTurNTrPnXJOU88mf3TToX"
+                "14HpYsS1ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfolx45w0i8CdAUjjeAaYdhG9"
+                "+NDHxop0UvNOqlGqYJexqPLuvX8iyUaYxNG"
                 "zZxFgGI3GpKfmQP2JQWQ1E5JtY/n8iNLOKRMwqkuxSCKJxZJq4Sl/m"
                 "/Yv7TS1P5LNgAj8QLCypxsWrTAmq2HSpkeSk4JBtsYxX6uh"
                 "bGM/K1sEktKybVTHu22/7TmRqWTmOUy9wQvMjJb2IXdMGLG3hVntN"
@@ -175,7 +178,8 @@ JWK2 = {
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAL3MzqqEFMYjMA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVib"
                 "GljIEtleTAeFw0xMzExMTExOTA1MDJaFw0xOTExMTAxOTA1MDJaMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibG"
-                "ljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx7HNcD9ZxTFRaAgZ7+gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQ"
+                "ljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx7HNcD9ZxTFRaAgZ7"
+                "+gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQ"
                 "eSML7qZPlowb5BUakdLI70ayM4vN36++0ht8+oCHhl8YjGFQkU"
                 "+Iv2yahWHEP+1EK6eOEYu6INQP9Lk0HMk3QViLwshwb+KXVD02j"
                 "dmX2HNdYJdPyc0cCAwEAAaOBijCBhzAdBgNVHQ4EFgQULR0aj9AtiNMgqIY8ZyXZGsHcJ5gwWQYDVR0jBFIwUIAULR0aj9AtiNMgq"
@@ -261,14 +265,14 @@ def test_unknown_source():
 
 def test_ignore_unknown_types():
     kb = KeyBundle({
-            "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
-                   "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
-            "use": "sig",
-            "alg": "EdDSA",
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ"
-        })
+        "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
+               "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
+        "use": "sig",
+        "alg": "EdDSA",
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ"
+    })
 
     assert len(kb) == 0
 
@@ -529,13 +533,15 @@ def test_loads_1():
                 'kty': 'RSA',
                 'use': 'sig',
                 'e': 'AQAB',
-                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
+                "n":
+                    'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
                 'kid': "1"
             }, {
                 'kty': 'RSA',
                 'use': 'enc',
                 'e': 'AQAB',
-                "n": 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
+                "n":
+                    'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8',
                 'kid': "2"
             }
         ]
@@ -567,7 +573,8 @@ def test_dump_jwk():
 
 JWKS_DICT = {"keys": [
     {
-        "n": u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
+        "n":
+            u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
         "e": u"AQAB",
         "kty": "RSA",
         "kid": "5-VBFv40P8D4I-7SFz7hMugTbPs",
@@ -626,43 +633,38 @@ def test_jwks_url():
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]}
-    ]
-
+]
 
 KEYSPEC_2 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
-
+]
 
 KEYSPEC_3 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]},
     {"type": "EC", "crv": "P-521", "use": ["sig"]}
-    ]
-
+]
 
 KEYSPEC_4 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
-
+]
 
 KEYSPEC_5 = [
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
-
+]
 
 KEYSPEC_6 = [
-    {"type": "oct", "bytes": "24", "use": ["enc"], 'kid':'code'},
+    {"type": "oct", "bytes": "24", "use": ["enc"], 'kid': 'code'},
     {"type": "oct", "bytes": "24", "use": ["enc"], 'kid': 'token'},
     {"type": "oct", "bytes": "24", "use": ["enc"], 'kid': 'refresh_token'}
-    ]
+]
 
 
 def test_key_diff_none():
@@ -782,3 +784,42 @@ def test_build_key_bundle_sym():
     assert len(_kb.get('RSA')) == 0
     assert len(_kb.get('EC')) == 0
     assert len(_kb.get('OCT')) == 3
+
+
+def test_key_bundle_difference_none():
+    _kb0 = build_key_bundle(key_conf=KEYSPEC_6)
+    _kb1 = KeyBundle()
+    _kb1.extend(_kb0.keys())
+
+    assert _kb0.difference(_kb1) == []
+
+
+def test_key_bundle_difference():
+    _kb0 = build_key_bundle(key_conf=KEYSPEC_6)
+    _kb1 = build_key_bundle(key_conf=KEYSPEC_2)
+
+    assert _kb0.difference(_kb1) == _kb0.keys()
+    assert _kb1.difference(_kb0) == _kb1.keys()
+
+
+def test_unique_keys_1():
+    _kb0 = build_key_bundle(key_conf=KEYSPEC_6)
+    _kb1 = build_key_bundle(key_conf=KEYSPEC_6)
+
+    keys = _kb0.keys()
+    keys.extend(_kb1.keys())
+
+    # All of them
+    assert len(unique_keys(keys)) == 6
+
+
+def test_unique_keys_2():
+    _kb0 = build_key_bundle(key_conf=KEYSPEC_6)
+    _kb1 = KeyBundle()
+    _kb1.extend(_kb0.keys())
+
+    keys = _kb0.keys()
+    keys.extend(_kb1.keys())
+
+    # 3 of 6
+    assert len(unique_keys(keys)) == 3

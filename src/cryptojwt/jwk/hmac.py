@@ -135,6 +135,9 @@ class SYMKey(JWK):
         if set(self.__dict__.keys()) != set(other.__dict__.keys()):
             return False
 
+        if self.key != other.key:
+            return False
+
         for key in self.public_members:
             if getattr(other, key) != getattr(self, key):
                 return False

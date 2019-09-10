@@ -605,6 +605,18 @@ class KeyBundle(object):
     def __iter__(self):
         return self._keys.__iter__()
 
+    def difference(self, kb):
+        """
+        Return a set of keys that appears in this key bundle but not in the other.
+
+        :param kb: A KeyBundle instance
+        :return: A list of keys
+        """
+        if not isinstance(kb, KeyBundle):
+            return ValueError('Not a KeyBundle instance')
+
+        return [k for k in self._keys if k not in kb]
+
 
 def keybundle_from_local_file(filename, typ, usage):
     """
@@ -931,3 +943,20 @@ def key_rollover(kb):
 
     update_key_bundle(kb, diff)
     return kb
+
+
+def unique_keys(keys):
+    """
+    From a list of given keys, return the unique keys.
+
+    :param keys: List of keys
+    :return: List of unique keys
+    """
+
+    unique = []
+
+    for k in keys:
+        if k not in unique:
+            unique.append(k)
+
+    return unique
