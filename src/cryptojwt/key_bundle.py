@@ -509,6 +509,9 @@ class KeyBundle(object):
         """
         return len(self._keys)
 
+    def set(self, keys):
+        self._keys = keys
+
     def get_key_with_kid(self, kid):
         """
         Return the key that has a specific key ID (kid)
