@@ -88,14 +88,17 @@ def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = 
     return jwk
 
 
-def export_jwk(jwk: JWK, private: bool = False) -> bytes:
+def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False) -> bytes:
     """Export JWK as PEM/bin"""
 
     if jwk.kty == 'oct':
         return jwk.key
 
     if private:
-        passphrase = getpass('Private key passphrase: ')
+        if encrypt:
+            passphrase = getpass('Private key passphrase: ')
+        else:
+            passphrase = None
         if passphrase:
             enc = serialization.BestAvailableEncryption(passphrase.encode())
         else:
@@ -149,6 +152,10 @@ def main():
                         dest='private',
                         action='store_true',
                         help="Output private key")
+    parser.add_argument('--encrypt',
+                        dest='encrypt',
+                        action='store_true',
+                        help="Encrypt private key")
     parser.add_argument('--output',
                         dest='output',
                         metavar='filename',
@@ -160,7 +167,7 @@ def main():
 
     if f.endswith('.json'):
         jwk = jwk_from_file(f, args.private)
-        serialized = export_jwk(jwk, args.private)
+        serialized = export_jwk(jwk, private=args.private, encrypt=args.encrypt)
         output_bytes(data=serialized, binary=(jwk.kty == 'oct'), filename=args.output)
     elif f.endswith('.bin'):
         jwk = bin2jwk(filename=f, kid=args.kid)
