@@ -99,7 +99,7 @@ def export_jwk(jwk: JWK, private: bool = False) -> bytes:
         if passphrase:
             enc = serialization.BestAvailableEncryption(passphrase.encode())
         else:
-            enc = serialization.NoEncryption
+            enc = serialization.NoEncryption()
         serialized = jwk.priv_key.private_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PrivateFormat.PKCS8,
