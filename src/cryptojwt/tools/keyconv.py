@@ -25,7 +25,7 @@ def jwk_from_file(filename: str, private: bool = True) -> JWK:
     return key_from_jwk_dict(jwk_dict, private=private)
 
 
-def pem2rsa(filename: str, kid: str = None, private: bool = False, passphrase: str = None) -> JWK:
+def pem2rsa(filename: str, kid: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
     """Convert RSA key from PEM to JWK"""
     if private:
         key = import_private_rsa_key_from_file(filename, passphrase)
@@ -36,7 +36,7 @@ def pem2rsa(filename: str, kid: str = None, private: bool = False, passphrase: s
     return jwk
 
 
-def pem2ec(filename: str, kid: str = None, private: bool = False, passphrase: str = None) -> JWK:
+def pem2ec(filename: str, kid: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
     """Convert EC key from PEM to JWK"""
     if private:
         key = import_private_key_from_file(filename, passphrase)
@@ -54,14 +54,15 @@ def bin2jwk(filename: str, kid: str) -> bytes:
     return SYMKey(kid=kid, key=content)
 
 
-def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = False) -> JWK:
+def pem2jwk(filename: str, kid: Optional[str] = None, kty: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
     """Read PEM from filename and return JWK"""
     with open(filename, 'rt') as file:
         content = file.readlines()
     header = content[0]
 
     if private:
-        passphrase = getpass('Private key passphrase: ')
+        if passphrase is None:
+            passphrase = getpass('Private key passphrase: ')
         if len(passphrase) == 0:
             passphrase = None
     else:
@@ -72,6 +73,13 @@ def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = 
             jwk = pem2ec(filename, kid, private=False)
         elif kty is not None and kty == 'RSA':
             jwk = pem2rsa(filename, kid, private=False)
+        else:
+            raise ValueError("Unknown key type")
+    elif 'BEGIN PRIVATE KEY' in header:
+        if kty is not None and kty == 'EC':
+            jwk = pem2ec(filename, kid, private=True, passphrase=passphrase)
+        elif kty is not None and kty == 'RSA':
+            jwk = pem2rsa(filename, kid, private=True, passphrase=passphrase)
         else:
             raise ValueError("Unknown key type")
     elif 'BEGIN EC PRIVATE KEY' in header:
@@ -88,7 +96,7 @@ def pem2jwk(filename: str, kid: str, kty: Optional[str] = None, private: bool = 
     return jwk
 
 
-def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False) -> bytes:
+def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False, passphrase: Optional[str] = None) -> bytes:
     """Export JWK as PEM/bin"""
 
     if jwk.kty == 'oct':
@@ -96,7 +104,8 @@ def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False) -> bytes:
 
     if private:
         if encrypt:
-            passphrase = getpass('Private key passphrase: ')
+            if passphrase is None:
+                passphrase = getpass('Private key passphrase: ')
         else:
             passphrase = None
         if passphrase:
