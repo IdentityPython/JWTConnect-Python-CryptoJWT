@@ -1,3 +1,4 @@
+"""Implementation of a Key Bundle."""
 import json
 import logging
 import os
@@ -25,7 +26,7 @@ KEYLOADERR = "Failed to load %s key from '%s' (%s)"
 REMOTE_FAILED = "Remote key update from '{}' failed, HTTP status {}"
 MALFORMED = "Remote key update from {} failed, malformed JWKS."
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 # def raise_exception(excep, descr, error='service_error'):
 #     _err = json.dumps({'error': error, 'error_description': descr})
@@ -49,22 +50,25 @@ def harmonize_usage(use):
     """
     if isinstance(use, str):
         return [MAP[use]]
-    elif isinstance(use, list):
-        ul = list(MAP.keys())
-        return list(set([MAP[u] for u in use if u in ul]))
+
+    if isinstance(use, list):
+        _ul = list(MAP.keys())
+        _us = {MAP[u] for u in use if u in _ul}
+        return list(_us)
+
+    return None
 
 
 def rsa_init(spec):
     """
     Initiates a :py:class:`oidcmsg.keybundle.KeyBundle` instance
     containing newly minted RSA keys according to a spec.
-    
+
     Example of specification::
         {'size':2048, 'use': ['enc', 'sig'] }
-         
+
     Using the spec above 2 RSA keys would be minted, one for 
     encryption and one for signing.
-        
     :param spec:
     :return: KeyBundle
     """
@@ -74,16 +78,16 @@ def rsa_init(spec):
     except KeyError:
         size = 2048
 
-    kb = KeyBundle(keytype="RSA")
+    _kb = KeyBundle(keytype="RSA")
     if 'use' in spec:
         for use in harmonize_usage(spec["use"]):
             _key = new_rsa_key(use=use, key_size=size)
-            kb.append(_key)
+            _kb.append(_key)
     else:
         _key = new_rsa_key(key_size=size)
-        kb.append(_key)
+        _kb.append(_key)
 
-    return kb
+    return _kb
 
 
 def sym_init(spec):
@@ -106,16 +110,16 @@ def sym_init(spec):
     except KeyError:
         size = 24
 
-    kb = KeyBundle(keytype="OCT")
+    _kb = KeyBundle(keytype="OCT")
     if 'use' in spec:
         for use in harmonize_usage(spec["use"]):
             _key = new_sym_key(use=use, bytes=size)
-            kb.append(_key)
+            _kb.append(_key)
     else:
         _key = new_sym_key(bytes=size)
-        kb.append(_key)
+        _kb.append(_key)
 
-    return kb
+    return _kb
 
 
 def ec_init(spec):
@@ -128,19 +132,21 @@ def ec_init(spec):
     :return: A KeyBundle instance
     """
 
-    kb = KeyBundle(keytype="EC")
+    _kb = KeyBundle(keytype="EC")
     if 'use' in spec:
         for use in spec["use"]:
             eck = new_ec_key(crv=spec['crv'], use=use)
-            kb.append(eck)
+            _kb.append(eck)
     else:
         eck = new_ec_key(crv=spec['crv'])
-        kb.append(eck)
+        _kb.append(eck)
 
-    return kb
+    return _kb
 
 
-class KeyBundle(object):
+class KeyBundle:
+    """The Key Bundle"""
+
     def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
                  fileformat="jwks", keytype="RSA", keyusage=None, kid='',
                  httpc=None):
@@ -151,7 +157,7 @@ class KeyBundle(object):
         - A list of dictionaries provided at initialization
         - A file containing one of: JWKS, DER encoded key
         - A URL pointing to a webpages from which an JWKS can be downloaded
-                 
+
         :param keys: A dictionary or a list of dictionaries
             with the keys ["kty", "key", "alg", "use", "kid"]
         :param source: Where the key set can be fetch from
@@ -195,28 +201,33 @@ class KeyBundle(object):
             else:
                 self.do_keys(keys)
         else:
-            if source.startswith("file://"):
-                self.source = source[7:]
-            elif source.startswith("http://") or source.startswith("https://"):
-                self.source = source
-                self.remote = True
-            elif source == "":
-                return
-            else:
-                if fileformat.lower() in ['rsa', 'der', 'jwks']:
-                    if os.path.isfile(source):
-                        self.source = source
-                    else:
-                        raise ImportError('No such file')
-                else:
-                    raise ImportError('Unknown source')
+            self._set_source(source, fileformat)
 
-            if not self.remote:  # local file
-                if self.fileformat in ['jwks', "jwk"]:
-                    self.do_local_jwk(self.source)
-                elif self.fileformat == "der":  # Only valid for RSA keys
-                    self.do_local_der(self.source, self.keytype, self.keyusage,
-                                      kid)
+            if not self.remote and self.source:  # local file
+                self._do_local(kid)
+
+    def _set_source(self, source, fileformat):
+        if source.startswith("file://"):
+            self.source = source[7:]
+        elif source.startswith("http://") or source.startswith("https://"):
+            self.source = source
+            self.remote = True
+        elif source == "":
+            return
+        else:
+            if fileformat.lower() in ['rsa', 'der', 'jwks']:
+                if os.path.isfile(source):
+                    self.source = source
+                else:
+                    raise ImportError('No such file')
+            else:
+                raise ImportError('Unknown source')
+
+    def _do_local(self, kid):
+        if self.fileformat in ['jwks', "jwk"]:
+            self.do_local_jwk(self.source)
+        elif self.fileformat == "der":  # Only valid for RSA keys
+            self.do_local_der(self.source, self.keytype, self.keyusage, kid)
 
     def do_keys(self, keys):
         """
@@ -242,21 +253,21 @@ class KeyBundle(object):
                     except KeyError:
                         continue
                     except JWKException as err:
-                        logger.warning('While loading keys: {}'.format(err))
+                        LOGGER.warning('While loading keys: %s', err)
                     else:
                         if _key not in self._keys:
                             self._keys.append(_key)
                         flag = 1
                         break
             if not flag:
-                logger.warning(
-                    'While loading keys, UnknownKeyType: {}'.format(typ))
+                LOGGER.warning(
+                    'While loading keys, UnknownKeyType: %s', typ)
 
     def do_local_jwk(self, filename):
         """
         Load a JWKS from a local file
-         
-        :param filename: 
+
+        :param filename: Name of the file from which the JWKS should be loaded
         """
         _info = json.loads(open(filename).read())
         if 'keys' in _info:
@@ -269,15 +280,15 @@ class KeyBundle(object):
     def do_local_der(self, filename, keytype, keyusage=None, kid=''):
         """
         Load a DER encoded file amd create a key from it.
-         
-        :param filename: 
+
+        :param filename: Name of the file
         :param keytype: Presently only 'rsa' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
         """
         _bkey = import_private_rsa_key_from_file(filename)
 
         if keytype.lower() != 'rsa':
-            raise NotImplemented('No support for DER decoding of that key type')
+            raise NotImplementedError('No support for DER decoding of that key type')
 
         if not keyusage:
             keyusage = ["enc", "sig"]
@@ -295,9 +306,9 @@ class KeyBundle(object):
 
     def do_remote(self):
         """
-        Load a JWKS from a webpage
+        Load a JWKS from a webpage.
 
-        :return: True or False if load was successful        
+        :return: True or False if load was successful
         """
         if self.verify_ssl is not None:
             args = {"verify": self.verify_ssl}
@@ -305,31 +316,31 @@ class KeyBundle(object):
             args = {}
 
         try:
-            logging.debug('KeyBundle fetch keys from: {}'.format(self.source))
-            r = self.httpc('GET', self.source, **args)
+            LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
+            _http_resp = self.httpc('GET', self.source, **args)
         except Exception as err:
-            logger.error(err)
+            LOGGER.error(err)
             raise UpdateFailed(
                 REMOTE_FAILED.format(self.source, str(err)))
 
-        if r.status_code == 200:  # New content
+        if _http_resp.status_code == 200:  # New content
             self.time_out = time.time() + self.cache_time
 
-            self.imp_jwks = self._parse_remote_response(r)
+            self.imp_jwks = self._parse_remote_response(_http_resp)
             if not isinstance(self.imp_jwks,
                               dict) or "keys" not in self.imp_jwks:
                 raise UpdateFailed(MALFORMED.format(self.source))
 
-            logger.debug("Loaded JWKS: %s from %s" % (r.text, self.source))
+            LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
                 self.do_keys(self.imp_jwks["keys"])
             except KeyError:
-                logger.error("No 'keys' keyword in JWKS")
+                LOGGER.error("No 'keys' keyword in JWKS")
                 raise UpdateFailed(MALFORMED.format(self.source))
 
         else:
             raise UpdateFailed(
-                REMOTE_FAILED.format(self.source, r.status_code))
+                REMOTE_FAILED.format(self.source, _http_resp.status_code))
         self.last_updated = time.time()
         return True
 
@@ -345,12 +356,11 @@ class KeyBundle(object):
         # Check if the content type is the right one.
         try:
             if response.headers["Content-Type"] != 'application/json':
-                logger.warning('Wrong Content_type ({})'.format(
-                    response.headers["Content-Type"]))
+                LOGGER.warning('Wrong Content_type (%s)', response.headers["Content-Type"])
         except KeyError:
             pass
 
-        logger.debug("Loaded JWKS: %s from %s" % (response.text, self.source))
+        LOGGER.debug("Loaded JWKS: %s from %s", response.text, self.source)
         try:
             return json.loads(response.text)
         except ValueError:
@@ -358,7 +368,7 @@ class KeyBundle(object):
 
     def _uptodate(self):
         res = False
-        if self._keys is not []:
+        if not self._keys:
             if self.remote:  # verify that it's not to old
                 if time.time() > self.time_out:
                     if self.update():
@@ -370,10 +380,10 @@ class KeyBundle(object):
 
     def update(self):
         """
-        Reload the keys if necessary
-        This is a forced update, will happen even if cache time has not elapsed.
+        Reload the keys if necessary.
 
-        Replaced keys will be marked as inactive and not removed.        
+        This is a forced update, will happen even if cache time has not elapsed.
+        Replaced keys will be marked as inactive and not removed.
         """
         res = True  # An update was successful
         if self.source:
@@ -392,7 +402,7 @@ class KeyBundle(object):
                 else:
                     res = self.do_remote()
             except Exception as err:
-                logger.error('Key bundle update failed: {}'.format(err))
+                LOGGER.error('Key bundle update failed: %s', err)
                 self._keys = _keys  # restore
                 return False
 
@@ -408,7 +418,7 @@ class KeyBundle(object):
     def get(self, typ="", only_active=True):
         """
         Return a list of keys. Either all keys or only keys of a specific type
-        
+
         :param typ: Type of key (rsa, ec, oct, ..)
         :return: If typ is undefined all the keys as a dictionary
             otherwise the appropriate keys in a list
@@ -423,8 +433,8 @@ class KeyBundle(object):
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
-        else:
-            return _keys
+
+        return _keys
 
     def keys(self):
         """
@@ -437,6 +447,7 @@ class KeyBundle(object):
         return self._keys
 
     def active_keys(self):
+        """Return the set of active keys."""
         _res = []
         for k in self._keys:
             try:
@@ -474,8 +485,8 @@ class KeyBundle(object):
                 key = k.serialize(private)
             else:
                 key = k.serialize()
-                for k, v in key.items():
-                    key[k] = as_unicode(v)
+                for _attr, _val in key.items():
+                    key[_attr] = as_unicode(_val)
             keys.append(key)
         return json.dumps({"keys": keys})
 
@@ -488,6 +499,7 @@ class KeyBundle(object):
         self._keys.append(key)
 
     def extend(self, keys):
+        """Add a key to the list of keys."""
         self._keys.extend(keys)
 
     def remove(self, key):
@@ -503,20 +515,21 @@ class KeyBundle(object):
 
     def __len__(self):
         """
-        The number of keys
-        
+        The number of keys.
+
         :return: The number of keys
         """
         return len(self._keys)
 
     def set(self, keys):
+        """Set the keys to the set provided."""
         self._keys = keys
 
     def get_key_with_kid(self, kid):
         """
         Return the key that has a specific key ID (kid)
-        
-        :param kid: The Key ID 
+
+        :param kid: The Key ID
         :return: The key or None
         """
         for key in self._keys:
@@ -534,20 +547,20 @@ class KeyBundle(object):
 
     def kids(self):
         """
-        Return a list of key IDs. Note that this list may be shorter then
-        the list of keys. The reason might be that there are some keys with
-        no key ID.
-        
-        :return: A list of all the key IDs that exists in this bundle 
+        Return a list of key IDs.
+
+        Note that this list may be shorter then the list of keys.
+        The reason might be that there are some keys with no key ID.
+        :return: A list of all the key IDs that exists in this bundle
         """
         self._uptodate()
         return [key.kid for key in self._keys if key.kid != ""]
 
     def mark_as_inactive(self, kid):
         """
-        Mark a specific key as inactive based on the keys KeyID
-        
-        :param kid: The Key Identifier 
+        Mark a specific key as inactive based on the keys KeyID.
+
+        :param kid: The Key Identifier
         """
         k = self.get_key_with_kid(kid)
         k.inactive_since = time.time()
@@ -568,17 +581,14 @@ class KeyBundle(object):
             now = time.time()
 
         if not isinstance(after, float):
-            try:
-                after = float(after)
-            except TypeError:
-                raise
+            after = float(after)
 
         _kl = []
         for k in self._keys:
             if k.inactive_since and k.inactive_since + after < now:
                 continue
-            else:
-                _kl.append(k)
+
+            _kl.append(k)
 
         self._keys = _kl
 
@@ -591,41 +601,41 @@ class KeyBundle(object):
 
         :return: The copy
         """
-        kb = KeyBundle()
-        kb._keys = self._keys[:]
+        _bundle = KeyBundle()
+        _bundle.set(self._keys[:])
 
-        kb.cache_time = self.cache_time
-        kb.verify_ssl = self.verify_ssl
+        _bundle.cache_time = self.cache_time
+        _bundle.verify_ssl = self.verify_ssl
         if self.source:
-            kb.source = self.source
-            kb.fileformat = self.fileformat
-            kb.keytype = self.keytype
-            kb.keyusage = self.keyusage
-            kb.remote = self.remote
+            _bundle.source = self.source
+            _bundle.fileformat = self.fileformat
+            _bundle.keytype = self.keytype
+            _bundle.keyusage = self.keyusage
+            _bundle.remote = self.remote
 
-        return kb
+        return _bundle
 
     def __iter__(self):
         return self._keys.__iter__()
 
-    def difference(self, kb):
+    def difference(self, bundle):
         """
         Return a set of keys that appears in this key bundle but not in the other.
 
-        :param kb: A KeyBundle instance
+        :param bundle: A KeyBundle instance
         :return: A list of keys
         """
-        if not isinstance(kb, KeyBundle):
+        if not isinstance(bundle, KeyBundle):
             return ValueError('Not a KeyBundle instance')
 
-        return [k for k in self._keys if k not in kb]
+        return [k for k in self._keys if k not in bundle]
 
 
 def keybundle_from_local_file(filename, typ, usage):
     """
-    Create a KeyBundle based on the content in a local file
-    
-    :param filename: Name of the file 
+    Create a KeyBundle based on the content in a local file.
+
+    :param filename: Name of the file
     :param typ: Type of content
     :param usage: What the key should be used for
     :return: The created KeyBundle
@@ -633,13 +643,13 @@ def keybundle_from_local_file(filename, typ, usage):
     usage = harmonize_usage(usage)
 
     if typ.lower() == "jwks":
-        kb = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
+        _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
     elif typ.lower() == 'der':
-        kb = KeyBundle(source=filename, fileformat="der", keyusage=usage)
+        _bundle = KeyBundle(source=filename, fileformat="der", keyusage=usage)
     else:
         raise UnknownKeyType("Unsupported key type")
 
-    return kb
+    return _bundle
 
 
 def dump_jwks(kbl, target, private=False):
@@ -652,21 +662,34 @@ def dump_jwks(kbl, target, private=False):
     """
 
     keys = []
-    for kb in kbl:
-        keys.extend([k.serialize(private) for k in kb.keys() if
+    for _bundle in kbl:
+        keys.extend([k.serialize(private) for k in _bundle.keys() if
                      k.kty != 'oct' and not k.inactive_since])
     res = {"keys": keys}
 
     try:
-        f = open(target, 'w')
+        _fp = open(target, 'w')
     except IOError:
-        (head, tail) = os.path.split(target)
+        head, _ = os.path.split(target)
         os.makedirs(head)
-        f = open(target, 'w')
+        _fp = open(target, 'w')
 
     _txt = json.dumps(res)
-    f.write(_txt)
-    f.close()
+    _fp.write(_txt)
+    _fp.close()
+
+
+def _set_kid(spec, bundle, kid_template, kid):
+    if 'kid' in spec and len(bundle) == 1:
+        _keys = bundle.keys()
+        _keys[0].kid = spec['kid']
+    else:
+        for k in bundle.keys():
+            if kid_template:
+                k.kid = kid_template % kid
+                kid += 1
+            else:
+                k.add_kid()
 
 
 def build_key_bundle(key_conf, kid_template=""):
@@ -710,45 +733,34 @@ def build_key_bundle(key_conf, kid_template=""):
 
     kid = 0
 
-    tot_kb = KeyBundle()
+    complete_bundle = KeyBundle()
     for spec in key_conf:
         typ = spec["type"].upper()
 
         if typ == "RSA":
-            if "key" in spec:
+            if "key" in spec and spec["key"]:
                 error_to_catch = (OSError, IOError,
                                   DeSerializationNotPossible)
                 try:
-                    kb = KeyBundle(source="file://%s" % spec["key"],
-                                   fileformat="der",
-                                   keytype=typ, keyusage=spec["use"])
+                    _bundle = KeyBundle(source="file://%s" % spec["key"],
+                                        fileformat="der",
+                                        keytype=typ, keyusage=spec["use"])
                 except error_to_catch:
-                    kb = rsa_init(spec)
-                except Exception:
-                    raise
+                    _bundle = rsa_init(spec)
             else:
-                kb = rsa_init(spec)
+                _bundle = rsa_init(spec)
         elif typ == "EC":
-            kb = ec_init(spec)
+            _bundle = ec_init(spec)
         elif typ.upper() == "OCT":
-            kb = sym_init(spec)
+            _bundle = sym_init(spec)
         else:
             continue
 
-        if 'kid' in spec and len(kb) == 1:
-            ks = kb.keys()
-            ks[0].kid = spec['kid']
-        else:
-            for k in kb.keys():
-                if kid_template:
-                    k.kid = kid_template % kid
-                    kid += 1
-                else:
-                    k.add_kid()
+        _set_kid(spec, _bundle, kid_template, kid)
 
-        tot_kb.extend(kb.keys())
+        complete_bundle.extend(_bundle.keys())
 
-    return tot_kb
+    return complete_bundle
 
 
 def _cmp(kd1, kd2):
@@ -761,19 +773,15 @@ def _cmp(kd1, kd2):
     """
     if kd1 == kd2:
         return 0
-    elif kd1< kd2:
+
+    if kd1 < kd2:
         return -1
-    elif kd1 > kd2:
-        return 1
+
+    return 1
 
 
-def sort_func(kd1, kd2):
-    """
-    Compares 2 key descriptions
-    :param kd1: First key description
-    :param kd2: Second key description
-    :return: -1,0,1 depending on whether kd1 le,eq or gt then kd2
-    """
+def type_order(kd1, kd2):
+    """Order the key descriptions by type."""
     _l = _cmp(kd1['type'], kd2['type'])
     if _l:
         return _l
@@ -791,6 +799,10 @@ def sort_func(kd1, kd2):
     if _l:
         return _l
 
+    return None
+
+def kid_order(kd1, kd2):
+    """Order key descriptions by kid."""
     try:
         _kid1 = kd1['kid']
     except KeyError:
@@ -803,12 +815,29 @@ def sort_func(kd1, kd2):
 
     if _kid1 and _kid2:
         return _cmp(_kid1, _kid2)
-    elif _kid1:
+
+    if _kid1:
         return -1
-    elif _kid2:
+
+    if _kid2:
         return 1
 
     return 0
+
+
+def sort_func(kd1, kd2):
+    """
+    Compares 2 key descriptions
+    :param kd1: First key description
+    :param kd2: Second key description
+    :return: -1,0,1 depending on whether kd1 le,eq or gt then kd2
+    """
+
+    _c = type_order(kd1, kd2)
+    if _c is not None:
+        return _c
+
+    return kid_order(kd1, kd2)
 
 
 def order_key_defs(key_def):
@@ -822,14 +851,14 @@ def order_key_defs(key_def):
     """
     _int = []
     # First make sure all defs only reference one usage
-    for kd in key_def:
-        if len(kd['use']) > 1:
-            for _use in kd['use']:
-                _kd = kd.copy()
+    for _def in key_def:
+        if len(_def['use']) > 1:
+            for _use in _def['use']:
+                _kd = _def.copy()
                 _kd['use'] = _use
                 _int.append(_kd)
         else:
-            _int.append(kd)
+            _int.append(_def)
 
     _int.sort(key=cmp_to_key(sort_func))
 
@@ -857,20 +886,20 @@ def key_diff(key_bundle, key_defs):
 
     for key in keys:
         match = False
-        for kd in key_defs:
-            if key.use not in kd['use']:
+        for key_def in key_defs:
+            if key.use not in key_def['use']:
                 continue
 
-            if key.kty != kd['type']:
+            if key.kty != key_def['type']:
                 continue
 
             if key.kty == 'EC':
                 # special test only for EC keys
-                if key.crv != kd['crv']:
+                if key.crv != key_def['crv']:
                     continue
 
             try:
-                _kid = kd['kid']
+                _kid = key_def['kid']
             except KeyError:
                 pass
             else:
@@ -878,8 +907,8 @@ def key_diff(key_bundle, key_defs):
                     continue
 
             match = True
-            used.append(kd)
-            key_defs.remove(kd)
+            used.append(key_def)
+            key_defs.remove(key_def)
             break
 
         if not match:
@@ -922,30 +951,30 @@ def update_key_bundle(key_bundle, diff):
             k.inactive_since = _now
 
 
-def key_rollover(kb):
+def key_rollover(bundle):
     """
     A nifty function that lets you do a key rollover that encompasses creating
     a completely new set of keys. One new per every old one. With the same
     specifications as the old one.
     All the old ones are marked as inactive.
 
-    :param kb:
-    :return:
+    :param bundle: Old KeyBundle
+    :return: New KeyBundle
     """
     key_spec = []
-    for key in kb.get():
-        _spec = {'type': key.kty, 'use':[key.use]}
+    for key in bundle.get():
+        _spec = {'type': key.kty, 'use': [key.use]}
         if key.kty == 'EC':
             _spec['crv'] = key.crv
 
         key_spec.append(_spec)
 
-    diff = {'del': kb.get()}
+    diff = {'del': bundle.get()}
     _kb = build_key_bundle(key_spec)
     diff['add'] = _kb.keys()
 
-    update_key_bundle(kb, diff)
-    return kb
+    update_key_bundle(bundle, diff)
+    return bundle
 
 
 def unique_keys(keys):

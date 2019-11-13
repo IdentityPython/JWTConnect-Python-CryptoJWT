@@ -9,12 +9,15 @@ from getpass import getpass
 from typing import Optional
 
 from cryptography.hazmat.primitives import serialization
+
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk.ec import (ECKey, import_private_key_from_file,
-                              import_public_key_from_file)
+from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import import_private_key_from_file
+from cryptojwt.jwk.ec import import_public_key_from_file
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import (RSAKey, import_private_rsa_key_from_file,
-                               import_public_rsa_key_from_file)
+from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwx import key_from_jwk_dict
 
 
@@ -25,7 +28,8 @@ def jwk_from_file(filename: str, private: bool = True) -> JWK:
     return key_from_jwk_dict(jwk_dict, private=private)
 
 
-def pem2rsa(filename: str, kid: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
+def pem2rsa(filename: str, kid: Optional[str] = None, private: bool = False,
+            passphrase: Optional[str] = None) -> JWK:
     """Convert RSA key from PEM to JWK"""
     if private:
         key = import_private_rsa_key_from_file(filename, passphrase)
@@ -36,7 +40,8 @@ def pem2rsa(filename: str, kid: Optional[str] = None, private: bool = False, pas
     return jwk
 
 
-def pem2ec(filename: str, kid: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
+def pem2ec(filename: str, kid: Optional[str] = None, private: bool = False,
+           passphrase: Optional[str] = None) -> JWK:
     """Convert EC key from PEM to JWK"""
     if private:
         key = import_private_key_from_file(filename, passphrase)
@@ -47,14 +52,15 @@ def pem2ec(filename: str, kid: Optional[str] = None, private: bool = False, pass
     return jwk
 
 
-def bin2jwk(filename: str, kid: str) -> bytes:
+def bin2jwk(filename: str, kid: str) -> JWK:
     """Read raw key from filename and return JWK"""
     with open(filename, 'rb') as file:
         content = file.read()
     return SYMKey(kid=kid, key=content)
 
 
-def pem2jwk(filename: str, kid: Optional[str] = None, kty: Optional[str] = None, private: bool = False, passphrase: Optional[str] = None) -> JWK:
+def pem2jwk(filename: str, kid: Optional[str] = None, kty: Optional[str] = None,
+            private: bool = False, passphrase: Optional[str] = None) -> JWK:
     """Read PEM from filename and return JWK"""
     with open(filename, 'rt') as file:
         content = file.readlines()
@@ -96,11 +102,14 @@ def pem2jwk(filename: str, kid: Optional[str] = None, kty: Optional[str] = None,
     return jwk
 
 
-def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False, passphrase: Optional[str] = None) -> bytes:
+def export_jwk(jwk: JWK, private: bool = False, encrypt: bool = False,
+               passphrase: Optional[str] = None) -> bytes:
     """Export JWK as PEM/bin"""
 
-    if jwk.kty == 'oct':
+    if jwk.kty == 'oct':  # jwk is in fact a SYMKey
         return jwk.key
+
+    # All other key types have private and public keys
 
     if private:
         if encrypt:
@@ -144,6 +153,7 @@ def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = No
             print(hexlify(data).decode())
         else:
             print(data.decode())
+
 
 def main():
     """ Main function"""

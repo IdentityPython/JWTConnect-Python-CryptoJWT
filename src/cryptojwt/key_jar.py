@@ -688,9 +688,9 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
     if keyjar is None:
         keyjar = KeyJar()
 
-    tot_kb = build_key_bundle(key_conf, kid_template)
+    bundle = build_key_bundle(key_conf, kid_template)
 
-    keyjar.add_kb(owner, tot_kb)
+    keyjar.add_kb(owner, bundle)
 
     return keyjar
 

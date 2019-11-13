@@ -1,3 +1,4 @@
+"""A basic class on which to build the JWS and JWE classes."""
 import json
 import logging
 
@@ -5,23 +6,23 @@ import requests
 
 from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
-
+from .exception import HeaderError
 from .jwk.jwk import key_from_jwk_dict
+from .jwk.rsa import RSAKey
 from .jwk.rsa import import_rsa_key
 from .jwk.rsa import load_x509_cert
-from .jwk.rsa import RSAKey
-from .exception import HeaderError
-from .utils import b64d, as_bytes, as_unicode
+from .utils import as_bytes
+from .utils import as_unicode
+from .utils import b64d
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 __author__ = 'Roland Hedberg'
 
 
-class JWx(object):
-    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty",
-            "crit"]
-    """
+class JWx:
+    """A basic class with the commonalities between the JWS and JWE classes.
+
     :param alg: The signing algorithm
     :param jku: a URI that refers to a resource for a set of JSON-encoded
         public keys, one of which corresponds to the key used to digitally
@@ -45,6 +46,8 @@ class JWx(object):
     :param kwargs: Extra header parameters
     :return: A class instance
     """
+    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty",
+            "crit"]
 
     def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
         self.msg = msg
@@ -69,21 +72,7 @@ class JWx(object):
                     continue
 
                 if key == "jwk":
-                    # value MUST be a string
-                    if isinstance(_val, dict):
-                        _k = key_from_jwk_dict(_val)
-                        self._dict["jwk"] = _val
-                    elif isinstance(_val, str):
-                        # verify that it's a real JWK
-                        _val = json.loads(_val)
-                        _j = key_from_jwk_dict(_val)
-                        self._dict["jwk"] = _val
-                    elif isinstance(_val, JWK):
-                        self._dict['jwk'] = _val.to_dict()
-                    else:
-                        raise ValueError(
-                            'JWK must be a string a JSON object or a JWK '
-                            'instance')
+                    self._set_jwk(_val)
                     self._jwk = self._dict['jwk']
                 elif key == "x5c":
                     self._dict["x5c"] = _val
@@ -102,6 +91,20 @@ class JWx(object):
                 else:
                     self._dict[key] = _val
 
+    def _set_jwk(self, val):
+        if isinstance(val, dict):
+            _k = key_from_jwk_dict(val)
+            self._dict["jwk"] = val
+        elif isinstance(val, str):
+            # verify that it's a real JWK
+            _val = json.loads(val)
+            _j = key_from_jwk_dict(_val)
+            self._dict["jwk"] = _val
+        elif isinstance(val, JWK):
+            self._dict['jwk'] = val.to_dict()
+        else:
+            raise ValueError('JWK must be a string a JSON object or a JWK instance')
+
     def __contains__(self, item):
         return item in self._dict
 
@@ -118,9 +121,31 @@ class JWx(object):
             raise AttributeError(item)
 
     def keys(self):
+        """Return all keys."""
         return list(self._dict.keys())
 
+    def _set_header_jwk(self, header, **kwargs):
+        if "jwk" in self:
+            header["jwk"] = self["jwk"]
+        else:
+            try:
+                _jwk = kwargs['jwk']
+            except KeyError:
+                pass
+            else:
+                try:
+                    header["jwk"] = _jwk.serialize()  # JWK instance
+                except AttributeError:
+                    if isinstance(_jwk, dict):
+                        header['jwk'] = _jwk  # dictionary
+                    else:
+                        _d = json.loads(_jwk)  # JSON
+                        # Verify that it's a valid JWK
+                        _k = key_from_jwk_dict(_d)
+                        header['jwk'] = _d
+
     def headers(self, **kwargs):
+        """Return the JWE/JWS header."""
         _header = self._header.copy()
         for param in self.args:
             try:
@@ -132,28 +157,7 @@ class JWx(object):
                 except KeyError:
                     pass
 
-        if "jwk" in self:
-            _header["jwk"] = self["jwk"]
-        else:
-            try:
-                _jwk = kwargs['jwk']
-            except KeyError:
-                pass
-            else:
-                try:
-                    _header["jwk"] = _jwk.serialize()  # JWK instance
-                except AttributeError:
-                    if isinstance(_jwk, dict):
-                        _header['jwk'] = _jwk  # dictionary
-                    else:
-                        try:
-                            _d = json.loads(_jwk) # JSON
-                            # Verify that it's a valid JWK
-                            _k = key_from_jwk_dict(_d)
-                        except Exception:
-                            raise
-                        else:
-                            _header['jwk'] = _d
+        self._set_header_jwk(_header, **kwargs)
 
         if "kid" in self:
             if not isinstance(self["kid"], str):
@@ -170,7 +174,8 @@ class JWx(object):
         return _keys
 
     def alg2keytype(self, alg):
-        raise NotImplemented()
+        """Convert an algorithm identifier to a key type identifier."""
+        raise NotImplementedError()
 
     def pick_keys(self, keys, use="", alg=""):
         """
@@ -190,10 +195,10 @@ class JWx(object):
 
         _k = self.alg2keytype(alg)
         if _k is None:
-            logger.error("Unknown algorithm '%s'" % alg)
+            LOGGER.error("Unknown algorithm '%s'", alg)
             raise ValueError('Unknown cryptography algorithm')
 
-        logger.debug("Picking key by key type={0}".format(_k))
+        LOGGER.debug("Picking key by key type=%s", _k)
         _kty = [_k.lower(), _k.upper(), _k.lower().encode("utf-8"),
                 _k.upper().encode("utf-8")]
         _keys = [k for k in keys if k.kty in _kty]
@@ -205,14 +210,12 @@ class JWx(object):
             except (AttributeError, KeyError):
                 _kid = None
 
-        logger.debug("Picking key based on alg={0}, kid={1} and use={2}".format(
-            alg, _kid, use))
+        LOGGER.debug("Picking key based on alg=%s, kid=%s and use=%s", alg, _kid, use)
 
         pkey = []
         for _key in _keys:
-            logger.debug(
-                "Picked: kid:{}, use:{}, kty:{}".format(
-                    _key.kid, _key.use, _key.kty))
+            LOGGER.debug(
+                "Picked: kid:%s, use:%s, kty:%s", _key.kid, _key.use, _key.kty)
             if _kid:
                 if _kid != _key.kid:
                     continue
@@ -251,4 +254,5 @@ class JWx(object):
         return _msg
 
     def dump_header(self):
-        return dict([(x, self._dict[x]) for x in self.args if x in self._dict])
+        """Return all attributes with values."""
+        return {x: self._dict[x] for x in self.args if x in self._dict}

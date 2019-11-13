@@ -1,3 +1,4 @@
+"""Basic JSON Web Token implementation."""
 import logging
 import json
 import uuid
@@ -18,7 +19,7 @@ from .jws.utils import alg2keytype as jws_alg2keytype
 
 __author__ = 'Roland Hedberg'
 
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 
 
 def utc_time_sans_frac():
@@ -32,7 +33,7 @@ def utc_time_sans_frac():
 
 def pick_key(keys, use, alg='', key_type='', kid=''):
     """
-    Based on given criteria pick out the keys that fulfill them from a
+    Based on given set of criteria pick out the keys that fulfill them from a
     given set of keys.
 
     :param keys: List of keys. These are :py:class:`cryptojwt.jwk.JWK`
@@ -54,29 +55,25 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
         if key.use and key.use != use:
             continue
 
-        if key.kty == key_type:
-            if key.kid and kid:
-                if key.kid == kid:
-                    res.append(key)
-                else:
-                    continue
+        if key.kty != key_type:
+            continue
 
-            if key.alg == '':
-                if alg:
-                    if key_type == 'EC':
-                        if key.crv == 'P-{}'.format(alg[2:]):
-                            res.append(key)
-                        continue
-                res.append(key)
-            elif alg and key.alg == alg:
-                res.append(key)
-            else:
-                res.append(key)
+        if key.kid and kid and key.kid != kid:
+            continue
+
+        if key.alg == '' and alg:
+            if key_type == 'EC':
+                if key.crv != 'P-{}'.format(alg[2:]):
+                    continue
+        elif alg and key.alg != alg:
+            continue
+
+        res.append(key)
     return res
 
 
-class JWT(object):
-
+class JWT:
+    """The basic JSON Web Token class."""
     def __init__(self, key_jar=None, iss='', lifetime=0,
                  sign=True, sign_alg='RS256', encrypt=False,
                  enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
@@ -103,12 +100,19 @@ class JWT(object):
         self.allowed_enc_encs = allowed_enc_encs
 
     def receiver_keys(self, recv, use):
+        """
+        Get the receivers keys.
+        :param recv: The receiver identifier
+        :param use: What the keys should be usable for
+        :return: A list of keys.
+        """
         return self.key_jar.get(use, owner=recv)
 
     def receivers(self):
-        """
-        Return a dictionary
-        :return:
+        """Return a list of identifiers.
+
+        The list contains all the owners of keys that reside in this Key Jar.
+        :return: List of identifiers
         """
         return self.key_jar.owners
 
@@ -222,7 +226,7 @@ class JWT(object):
         if self.sign:
             if self.alg != 'none':
                 _key = self.pack_key(owner, kid)
-                _args['kid'] = _key.kid
+                # _args['kid'] = _key.kid
             else:
                 _key = None
 
@@ -234,8 +238,8 @@ class JWT(object):
         if _encrypt:
             if not self.sign:
                 return self._encrypt(_sjwt, recv, cty='json')
-            else:
-                return self._encrypt(_sjwt, recv)
+
+            return self._encrypt(_sjwt, recv)
         else:
             return _sjwt
 
@@ -365,4 +369,3 @@ class JWT(object):
             return _info
         else:
             return _info
-
