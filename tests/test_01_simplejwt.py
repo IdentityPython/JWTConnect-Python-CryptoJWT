@@ -1,5 +1,3 @@
-import pytest
-
 from cryptojwt.simple_jwt import SimpleJWT
 
 __author__ = 'roland'
@@ -60,4 +58,3 @@ def test_unpack_str():
     _jwt2 = SimpleJWT().unpack(jwt)
     assert _jwt2
     _ = _jwt2.payload()
-

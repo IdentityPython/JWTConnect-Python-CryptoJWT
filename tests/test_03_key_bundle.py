@@ -260,7 +260,7 @@ def test_rsa_init_under_spec():
 
 def test_unknown_source():
     with pytest.raises(ImportError):
-        kb = KeyBundle(source='foobar')
+        KeyBundle(source='foobar')
 
 
 def test_ignore_unknown_types():

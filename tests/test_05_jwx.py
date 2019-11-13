@@ -91,7 +91,7 @@ def test_headers_jku():
 def test_decode():
     jwx = JWx(cty='JWT')
     _msg = jwx._decode('eyJmb28iOiJiYXIifQ')
-    assert _msg == {'foo':'bar'}
+    assert _msg == {'foo': 'bar'}
 
 
 def test_extra_headers():

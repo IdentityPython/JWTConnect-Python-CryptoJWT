@@ -1,42 +1,40 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
+
 import base64
 import json
+import os.path
 import struct
-import pytest
-
 from collections import Counter
 
-import requests
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
-import os.path
-
-from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm
+from cryptojwt.exception import DeSerializationNotPossible
+from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
-from cryptojwt.jwk.hmac import new_sym_key
-
-from cryptojwt.utils import as_unicode, as_bytes
-from cryptojwt.utils import b64e
-from cryptojwt.utils import long2intarr
-from cryptojwt.utils import base64url_to_long
-from cryptojwt.utils import base64_to_long
 from cryptojwt.jwk import JWK
 from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import NIST2SEC
+from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.hmac import sha256_digest
+from cryptojwt.jwk.jwk import jwk_wrap
+from cryptojwt.jwk.jwk import key_from_jwk_dict
+from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
-from cryptojwt.jwk.rsa import load_x509_cert
 from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.jwk.jwk import jwk_wrap
-from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.ec import NIST2SEC
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.hmac import sha256_digest
-from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.utils import as_bytes
+from cryptojwt.utils import as_unicode
+from cryptojwt.utils import b64e
+from cryptojwt.utils import base64_to_long
+from cryptojwt.utils import base64url_to_long
+from cryptojwt.utils import long2intarr
 
 __author__ = 'Roland Hedberg'
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -49,7 +47,8 @@ def full_path(local_file):
 CERT = full_path("cert.pem")
 KEY = full_path("server.key")
 
-N = 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'
+N = 'wf-wiusGhA' \
+    '-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'
 E = 'AQAB'
 
 JWK_0 = {"keys": [
@@ -119,7 +118,8 @@ def test_import_rsa_key():
 
     assert _eq(djwk.keys(), ["kty", "e", "n", "p", "q", "d"])
     assert djwk[
-               "n"] == '5zbNbHIYIkGGJ3RGdRKkYmF4gOorv5eDuUKTVtuu3VvxrpOWvwnFV-NY0LgqkQSMMyVzodJE3SUuwQTUHPXXY5784vnkFqzPRx6bHgPxKz7XfwQjEBTafQTMmOeYI8wFIOIHY5i0RWR-gxDbh_D5TXuUqScOOqR47vSpIbUH-nc'
+               "n"] == '5zbNbHIYIkGGJ3RGdRKkYmF4gOorv5eDuUKTVtuu3VvxrpOWvwnFV' \
+                       '-NY0LgqkQSMMyVzodJE3SUuwQTUHPXXY5784vnkFqzPRx6bHgPxKz7XfwQjEBTafQTMmOeYI8wFIOIHY5i0RWR-gxDbh_D5TXuUqScOOqR47vSpIbUH-nc'
     assert djwk['e'] == 'AQAB'
 
 
@@ -149,8 +149,10 @@ def test_serialize_rsa_priv_key():
 
 ECKEY = {
     "crv": "P-521",
-    "x": u'AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk',
-    "y": u'ADSmRA43Z1DSNx_RvcLI87cdL07l6jQyyBXMoxVg_l2Th-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2',
+    "x":
+        u'AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk',
+    "y": u'ADSmRA43Z1DSNx_RvcLI87cdL07l6jQyyBXMoxVg_l2Th'
+         u'-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2',
     "d": u'AY5pb7A0UFiB3RELSD64fTLOSV_jazdF7fLYyuTw8lOfRhWg6Y6rUrPAxerEzgdRhajnu0ferB0d53vM9mE15j2C'
 }
 
@@ -372,7 +374,7 @@ def test_encryption_key():
     assert _v == 'xCo9VhtommCTGMWi-RyWB14GQqHAGC86vweU_Pi62X8'
 
     ek = sha256_digest(
-    'YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY')[:16]
+        'YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY')[:16]
     assert as_unicode(b64e(ek)) == 'yf_UUkAFZ8Pn_prxPPgu9w'
 
     sk = SYMKey(
@@ -433,14 +435,14 @@ def test_get_asym_key_all():
     # Now it can only be used for signing and signature verification
     assert rsakey.appropriate_for('sign')
     assert rsakey.appropriate_for('verify')
-    for usage in ['encrypt','decrypt']:
+    for usage in ['encrypt', 'decrypt']:
         assert rsakey.appropriate_for(usage) is None
 
     rsakey.use = 'enc'
     # Now it can only be used for encrypting and decrypting
     assert rsakey.appropriate_for('encrypt')
     assert rsakey.appropriate_for('decrypt')
-    for usage in ['sign','verify']:
+    for usage in ['sign', 'verify']:
         assert rsakey.appropriate_for(usage) is None
 
 
@@ -479,13 +481,6 @@ def test_get_hmac_key_for_encrypt_HS384():
 def test_get_hmac_key_for_encrypt_HS512():
     key = SYMKey(key='mekmitasdigoatfo', kid='xyzzy', use='enc')
     assert key.appropriate_for('encrypt', 'HS512')
-
-
-# def test_load_x509_cert(httpserver):
-#     _cert = open(CERT).read()
-#     httpserver.serve_content(_cert)
-#     key_spec = load_x509_cert(httpserver.url, requests.request, {})
-#     assert set(key_spec.keys()) == {'rsa'}
 
 
 def test_new_rsa_key():
@@ -573,6 +568,7 @@ def test_cmp_jwk():
 
     assert _j1 == _j2
 
+
 def test_appropriate():
     _j1 = JWK(use='sig', kid='1', alg='RS512')
 
@@ -595,7 +591,9 @@ def test_thumbprint_rsa():
     jwk = key_from_jwk_dict({
         "kty": "RSA",
         "e": "AQAB",
-        "n": "3xIyjRLL1LYi2FULhN6koVwtsaixgXa5TBOMcq2EMsk_Fq-tSXmxA8ATYcUnuSGX3PGJ5pHwIF42eesIzQV5ypYklF0sLAkmkXow_TMDX0qoc4rdfc2prq-mzPWwGcYoRsjDKiSUFOUSKB41zQ6sMY2k4BWZVo1bEL0CVpVct1DDhqSME6uUKex9T2AbwWNvwFacrwJaWyKixBhiPSwVBn7dUWDnJiM39_4Lnw6JnriXcli-aJlPuXm5F_qspXL4Pfn9nR5Z9j9Qf7NFif7nVRyg8cx7OYTbbsoIbMYYG-boVPLL7ebEBZVIUysqH_WkNJlkl5m7gAs5DB_KfMx18Q",
+        "n": "3xIyjRLL1LYi2FULhN6koVwtsaixgXa5TBOMcq2EMsk_Fq"
+             "-tSXmxA8ATYcUnuSGX3PGJ5pHwIF42eesIzQV5ypYklF0sLAkmkXow_TMDX0qoc4rdfc2prq"
+             "-mzPWwGcYoRsjDKiSUFOUSKB41zQ6sMY2k4BWZVo1bEL0CVpVct1DDhqSME6uUKex9T2AbwWNvwFacrwJaWyKixBhiPSwVBn7dUWDnJiM39_4Lnw6JnriXcli-aJlPuXm5F_qspXL4Pfn9nR5Z9j9Qf7NFif7nVRyg8cx7OYTbbsoIbMYYG-boVPLL7ebEBZVIUysqH_WkNJlkl5m7gAs5DB_KfMx18Q",
     })
     thumbprint = "Q1wZMrouq_iCnG7mr2y03Zxf7iE9mie-y_Mfh9-Cgk0"
     assert (jwk.thumbprint('SHA-256').decode()) == thumbprint

@@ -4,19 +4,19 @@ import shutil
 import time
 
 import pytest
+
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
-from cryptojwt.jws.jws import factory
 from cryptojwt.jws.jws import JWS
-
+from cryptojwt.jws.jws import factory
+from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_bundle import keybundle_from_local_file
 from cryptojwt.key_bundle import rsa_init
-from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_jar import KeyJar
 from cryptojwt.key_jar import build_keyjar
 from cryptojwt.key_jar import init_key_jar
 from cryptojwt.key_jar import key_summary
 from cryptojwt.key_jar import update_keyjar
-from cryptojwt.key_jar import KeyJar
 
 __author__ = 'Roland Hedberg'
 
@@ -38,28 +38,29 @@ JWK0 = {
             'n':
                 'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5'
                 'B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8'
-            }
-        ]
-    }
+        }
+    ]
+}
 
 JWK1 = {
     "keys": [
         {
             "n":
                 "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
-                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
+                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta"
+                "-NvS-aG_jN5cstVbCGWE20H0vF"
                 "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
                 "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
                 "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
             "e": "AQAB", "kty": "RSA", "kid": "rsa1"
-            },
+        },
         {
             "k":
                 "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
             "kty": "oct"
-            },
-        ]
-    }
+        },
+    ]
+}
 
 JWK2 = {
     "keys": [
@@ -95,16 +96,17 @@ JWK2 = {
                 "+lo13YLnsVrmQ16NCBYq2nQFNPuNJw6t3XUbwBHXpF46aLT1/eGf/7Xx6iy8y"
                 "PJX4DyrpFTutDz882RWofGEO5t4Cw+zZg70dJ/hH/ODYRMorfXEW"
                 "+8uKmXMKmX2wyxMKvfiPbTy5LmAU8Jvjs2tLg4rOBcXWLAIarZ"
-                ],
+            ],
             "x5t": "kriMPdmBvx68skT8-mPAB3BseeA"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/{tenantid}/v2.0/",
             "kid": "MnC_VZcATfM5pOYiJHMba9goEKY",
             "kty": "RSA",
             "n":
-                "vIqz-4-ER_vNWLON9yv8hIYV737JQ6rCl6XfzOC628seYUPf0TaGk91CFxefhzh23V9Tkq-RtwN1Vs_z57hO82kkzL-cQHZX3bMJ"
+                "vIqz-4-ER_vNWLON9yv8hIYV737JQ6rCl6XfzOC628seYUPf0TaGk91CFxefhzh23V9Tkq"
+                "-RtwN1Vs_z57hO82kkzL-cQHZX3bMJ"
                 "D-GEGOKXCEXURN7VMyZWMAuzQoW9vFb1k3cR1RW_EW_P"
                 "-C8bb2dCGXhBYqPfHyimvz2WarXhntPSbM5XyS5v5yCw5T_Vuwqqsio3"
                 "V8wooWGMpp61y12NhN8bNVDQAkDPNu2DT9DXB1g0CeFINp_KAS_qQ2Kq6TSvRHJqxRR68RezYtje9KAqwqx4jxlmVAQy0T3-T-IA"
@@ -113,22 +115,25 @@ JWK2 = {
             "x5c": [
                 "MIIC4jCCAcqgAwIBAgIQQNXrmzhLN4VGlUXDYCRT3zANBgkqhkiG9w0BAQsFADAtMSswKQYDVQQDEyJhY2NvdW50cy5hY2Nlc3Njb"
                 "250cm9sLndpbmRvd3MubmV0MB4XDTE0MTAyODAwMDAwMFoXDTE2MTAyNzAwMDAwMFowLTErMCkGA1UEAxMiYWNjb3VudHMuYWNjZX"
-                "NzY29udHJvbC53aW5kb3dzLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALyKs/uPhEf7zVizjfcr/ISGFe9+yUO"
+                "NzY29udHJvbC53aW5kb3dzLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALyKs"
+                "/uPhEf7zVizjfcr/ISGFe9+yUO"
                 "qwpel38zgutvLHmFD39E2hpPdQhcXn4c4dt1fU5KvkbcDdVbP8+e4TvNpJMy"
                 "/nEB2V92zCQ/hhBjilwhF1ETe1TMmVjALs0KFvbxW"
                 "9ZN3EdUVvxFvz/gvG29nQhl4QWKj3x8opr89lmq14Z7T0mzOV8kub+cgsOU"
                 "/1bsKqrIqN1fMKKFhjKaetctdjYTfGzVQ0AJAzzbtg"
-                "0/Q1wdYNAnhSDafygEv6kNiquk0r0RyasUUevEXs2LY3vSgKsKseI8ZZlQEMtE9/k/iAG7JNcEbVg53YTurNTrPnXJOU88mf3TToX"
-                "14HpYsS1ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfolx45w0i8CdAUjjeAaYdhG9+NDHxop0UvNOqlGqYJexqPLuvX8iyUaYxNG"
+                "0/Q1wdYNAnhSDafygEv6kNiquk0r0RyasUUevEXs2LY3vSgKsKseI8ZZlQEMtE9/k"
+                "/iAG7JNcEbVg53YTurNTrPnXJOU88mf3TToX"
+                "14HpYsS1ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfolx45w0i8CdAUjjeAaYdhG9"
+                "+NDHxop0UvNOqlGqYJexqPLuvX8iyUaYxNG"
                 "zZxFgGI3GpKfmQP2JQWQ1E5JtY/n8iNLOKRMwqkuxSCKJxZJq4Sl/m"
                 "/Yv7TS1P5LNgAj8QLCypxsWrTAmq2HSpkeSk4JBtsYxX6uh"
                 "bGM/K1sEktKybVTHu22/7TmRqWTmOUy9wQvMjJb2IXdMGLG3hVntN"
                 "/WWcs5w8vbt1i8Kk6o19W2MjZ95JaECKjBDYRlhG1KmSBtrs"
                 "KsCBQoBzwH/rXfksTO9JoUYLXiW0IppB7DhNH4PJ5hZI91R8rR0H3"
                 "/bKkLSuDaKLWSqMhozdhXsIIKvJQ=="
-                ],
+            ],
             "x5t": "MnC_VZcATfM5pOYiJHMba9goEKY"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -155,9 +160,9 @@ JWK2 = {
                 "RV2PPZ7iRgMF/Fyvqi96Gd8X53ds/FaiQpZjUUtcO3fk0hDRQPtCYMII5jq"
                 "+YAYjSybvF84saB7HGtucVRn2nMZc5cAC42QNYIlPM"
                 "qA=="
-                ],
+            ],
             "x5t": "GvnPApfWMdLRi8PDmisFn7bprKg"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -172,7 +177,8 @@ JWK2 = {
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAL3MzqqEFMYjMA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVib"
                 "GljIEtleTAeFw0xMzExMTExOTA1MDJaFw0xOTExMTAxOTA1MDJaMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibG"
-                "ljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx7HNcD9ZxTFRaAgZ7+gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQ"
+                "ljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx7HNcD9ZxTFRaAgZ7"
+                "+gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQ"
                 "eSML7qZPlowb5BUakdLI70ayM4vN36++0ht8+oCHhl8YjGFQkU"
                 "+Iv2yahWHEP+1EK6eOEYu6INQP9Lk0HMk3QViLwshwb+KXVD02j"
                 "dmX2HNdYJdPyc0cCAwEAAaOBijCBhzAdBgNVHQ4EFgQULR0aj9AtiNMgqIY8ZyXZGsHcJ5gwWQYDVR0jBFIwUIAULR0aj9AtiNMgq"
@@ -181,18 +187,18 @@ JWK2 = {
                 "IEte2MWN78sHvLLTWTAkiQSlGf1Zb0durw+OvlunQ2AKbK79Qv0Q+wwGuK"
                 "+oymWc3GSdP1wZqk9dhrQxb3FtdU2tMke01QTut6wr7"
                 "ig=="
-                ],
+            ],
             "x5t": "dEtpjbEvbhfgwUI-bdK5xAU_9UQ"
-            }
-        ]
-    }
+        }
+    ]
+}
 
 
 def test_build_keyjar():
     keys = [
         {"type": "RSA", "use": ["enc", "sig"]},
         {"type": "EC", "crv": "P-256", "use": ["sig"]},
-        ]
+    ]
 
     keyjar = build_keyjar(keys)
     jwks = keyjar.export_jwks()
@@ -212,7 +218,7 @@ def test_build_keyjar_usage():
         {"type": "EC", "crv": "P-256", "use": ["sig"]},
         {"type": "oct", "use": ["enc"]},
         {"type": "oct", "use": ["enc"]},
-        ]
+    ]
 
     keyjar = build_keyjar(keys)
     jwks_sig = keyjar.export_jwks(usage='sig')
@@ -226,7 +232,7 @@ def test_build_keyjar_missing(tmpdir):
         {
             "type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"),
             "use": ["enc", "sig"]
-            }]
+        }]
 
     key_jar = build_keyjar(keys)
 
@@ -340,7 +346,7 @@ class TestKeyJar(object):
                  '-INLY6jnKG_RpsvyvGNnwP9pMvcP1phKsWZ10ofuuhJGRp8IxQL9Rfz'
                  'T87OvF0RBSO1U73h09YP-corWDsnKIi6TbzRpN5YDw',
             'kid': 'abc'
-            }
+        }
 
     def test_no_use(self):
         kb = KeyBundle(JWK0["keys"])
@@ -380,7 +386,7 @@ def test_get_signing_key_use_undefined():
 KEYDEFS = [
     {"type": "RSA", "key": '', "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]}
-    ]
+]
 
 
 def test_remove_after():
@@ -421,19 +427,20 @@ JWK_UK = {
         {
             "n":
                 "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8"
-                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vF"
+                "mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta"
+                "-NvS-aG_jN5cstVbCGWE20H0vF"
                 "VrJKNx0Zf-u-aA-syM4uX7wdWgQ"
                 "-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1k"
                 "leiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
             "e": "AQAB", "kty": "RSA", "kid": "rsa1"
-            },
+        },
         {
             "k":
                 "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
             "kty": "buz"
-            },
-        ]
-    }
+        },
+    ]
+}
 
 
 def test_load_unknown_keytype():
@@ -445,8 +452,8 @@ def test_load_unknown_keytype():
 JWK_FP = {
     "keys": [
         {"e": "AQAB", "kty": "RSA", "kid": "rsa1"},
-        ]
-    }
+    ]
+}
 
 
 def test_load_missing_key_parameter():
@@ -466,7 +473,7 @@ JWKS_SPO = {
             "crv": "P-256",
             "x": "1XXUXq75gOPZ4bEj1o2Z5XKJWSs6LmL6fAOK3vyMzSc",
             "y": "ac1h_DwyuUxhkrD9oKMJ-b_KuiVvvSARIwT-XoEmDXs"
-            },
+        },
         {
             "kid":
                 "91pD1H81rXUvrfg9mkngIG-tXjnldykKUVbITDIU1SgJvq91b8clOcJuEHNAq61eIvg8owpEvWcWAtlbV2awyA",
@@ -476,7 +483,7 @@ JWKS_SPO = {
             "crv": "P-256",
             "x": "2DfQoLpZS2j3hHEcHDkzV8ISx-RdLt6Opy8YZYVm4AQ",
             "y": "ycvkFMBIzgsowiaf6500YlG4vaMSK4OF7WVtQpUbEE0"
-            },
+        },
         {
             "kid": "0sIEl3MUJiCxrqleEBBF-_bZq5uClE84xp-wpt8oOI"
                    "-WIeNxBjSR4ak_OTOmLdndB0EfDLtC7X1JrnfZILJkxA",
@@ -486,7 +493,7 @@ JWKS_SPO = {
             "n":
                 "yG9914Q1j63Os4jX5dBQbUfImGq4zsXJD4R59XNjGJlEt5ek6NoiDl0ucJO3_7_R9e5my2ONTSqZhtzFW6MImnIn8idWYzJzO2EhUPCHTvw_2oOGjeYTE2VltIyY_ogIxGwY66G0fVPRRH9tCxnkGOrIvmVgkhCCGkamqeXuWvx9MCHL_gJbZJVwogPSRN_SjA1gDlvsyCdA6__CkgAFcSt1sGgiZ_4cQheKexxf1-7l8R91ZYetz53drk2FS3SfuMZuwMM4KbXt6CifNhzh1Ye-5Tr_ZENXdAvuBRDzfy168xnk9m0JBtvul9GoVIqvCVECB4MPUb7zU6FTIcwRAw",
             "e": "AQAB"
-            },
+        },
         {
             "kid":
                 "zyDfdEU7pvH0xEROK156ik8G7vLO1MIL9TKyL631kSPtr9tnvs9XOIiq5jafK2hrGr2qqvJdejmoonlGqWWZRA",
@@ -496,7 +503,7 @@ JWKS_SPO = {
             "n":
                 "68be-nJp46VLj4Ci1V36IrVGYqkuBfYNyjQTZD_7yRYcERZebowOnwr3w0DoIQpl8iL2X8OXUo7rUW_LMzLxKx2hEmdJfUn4LL2QqA3KPgjYz8hZJQPG92O14w9IZ-8bdDUgXrg9216H09yq6ZvJrn5Nwvap3MXgECEzsZ6zQLRKdb_R96KFFgCiI3bEiZKvZJRA7hM2ePyTm15D9En_Wzzfn_JLMYgE_DlVpoKR1MsTinfACOlwwdO9U5Dm-5elapovILTyVTgjN75i-wsPU2TqzdHFKA-4hJNiWGrYPiihlAFbA2eUSXuEYFkX43ahoQNpeaf0mc17Jt5kp7pM2w",
             "e": "AQAB"
-            },
+        },
         {
             "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
                    "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
@@ -505,18 +512,19 @@ JWKS_SPO = {
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ"
-            },
+        },
         {
             "kid":
-                "bL33HthM3fWaYkY2_pDzUd7a65FV2R2LHAKCOsye8eNmAPDgRgpHWPYpWFVmeaujUUEXRyDLHN-Up4QH_sFcmw",
+                "bL33HthM3fWaYkY2_pDzUd7a65FV2R2LHAKCOsye8eNmAPDgRgpHWPYpWFVmeaujUUEXRyDLHN"
+                "-Up4QH_sFcmw",
             "use": "sig",
             "alg": "EdDSA",
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "CS01DGXDBPV9cFmd8tgFu3E7eHn1UcP7N1UCgd_JgZo"
-            }
-        ]
-    }
+        }
+    ]
+}
 
 
 def test_load_spomky_keys():
@@ -563,11 +571,11 @@ class TestVerifyJWTKeys(object):
             {"type": "RSA", "use": ["sig"]},
             {"type": "RSA", "use": ["sig"]},
             {"type": "RSA", "use": ["sig"]},
-            ]
+        ]
 
         skey = [
             {"type": "RSA", "use": ["sig"]},
-            ]
+        ]
 
         # Alice has multiple keys
         self.alice_keyjar = build_keyjar(mkey)
@@ -621,9 +629,6 @@ class TestVerifyJWTKeys(object):
         assert len(keys) == 3
 
     def test_no_kid_multiple_keys_no_kid_issuer_lim(self):
-        a_kids = [k.kid for k in
-                  self.alice_keyjar.get_verify_key(owner='Alice',
-                                                   key_type='RSA')]
         no_kid_issuer = {'Alice': []}
         _jwt = factory(self.sjwt_a)
         _jwt.jwt.headers['kid'] = ''
@@ -796,28 +801,28 @@ PRIVATE_FILE = '{}/private_jwks.json'.format(BASEDIR)
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]}
-    ]
+]
 KEYSPEC_2 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
+]
 KEYSPEC_3 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]},
     {"type": "EC", "crv": "P-521", "use": ["sig"]}
-    ]
+]
 KEYSPEC_4 = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
+]
 KEYSPEC_5 = [
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]}
-    ]
+]
 
 
 def test_init_key_jar():
@@ -903,7 +908,6 @@ def test_init_key_jar_update():
     assert len(_keyjar_5.get_signing_key('EC')) == 2
 
 
-
 OIDC_KEYS = {
     'private_path': "{}/priv/jwks.json".format(BASEDIR),
     'key_defs': KEYSPEC,
@@ -915,7 +919,7 @@ def test_init_key_jar_create_directories():
     # make sure the directories are gone
     for _dir in ['priv', 'public']:
         if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
-            shutil.rmtree("{}/{}".format(BASEDIR,_dir))
+            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
 
     _keyjar = init_key_jar(**OIDC_KEYS)
     assert len(_keyjar.get_signing_key('RSA')) == 1

@@ -1,14 +1,14 @@
 import json
-import pytest
 import sys
 
-from cryptojwt.key_bundle import KeyBundle
+import pytest
 
 from cryptojwt import utils
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.jws import JWS
+from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.utils import as_bytes
 from cryptojwt.utils import as_unicode
 
@@ -31,7 +31,7 @@ def modify_str(s):
     for i in range(len(s)):
         c = s[i]
         for j in range(8):
-            yield (s[:i] + chr(ord(c) ^ (1 << j)) + s[i+1:])
+            yield (s[:i] + chr(ord(c) ^ (1 << j)) + s[i + 1:])
 
     # Truncate string.
     for i in range(len(s)):
@@ -43,7 +43,7 @@ def modify_bytes(b):
     for i in range(len(b)):
         c = b[i]
         for j in range(8):
-            yield (b[:i] + bytes([c ^ (1 << j)]) + b[i+1:])
+            yield (b[:i] + bytes([c ^ (1 << j)]) + b[i + 1:])
 
     # Truncate string.
     for i in range(len(b)):
@@ -54,7 +54,7 @@ def modify_json_message(token):
     part = [as_bytes(p) for p in token.split('.')]
     _txt = utils.b64d(part[1])
     msg = json.loads(as_unicode(_txt))
-    for k,v in msg.items():
+    for k, v in msg.items():
         msg_copy = msg.copy()
         del msg_copy[k]
 
@@ -69,7 +69,7 @@ def modify_json_message(token):
                 part[1] = utils.b64e(as_bytes(json.dumps(msg_copy)))
                 yield b'.'.join([as_bytes(p) for p in part])
         elif isinstance(v, int):
-            _v = v+1
+            _v = v + 1
             msg_copy[k] = _v
             part[1] = utils.b64e(as_bytes(json.dumps(msg_copy)))
             yield b'.'.join([as_bytes(p) for p in part])
