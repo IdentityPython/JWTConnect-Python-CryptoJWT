@@ -1,6 +1,8 @@
 import logging
 import os
 
+from . import JWK
+from . import USE
 from .utils import sha256_digest
 from .utils import sha384_digest
 from .utils import sha512_digest
@@ -12,8 +14,6 @@ from ..utils import as_unicode
 from ..utils import b64d
 from ..utils import b64e
 
-from . import JWK, USE
-
 logger = logging.getLogger(__name__)
 
 ALG2KEYLEN = {
@@ -23,7 +23,7 @@ ALG2KEYLEN = {
     "HS256": 32,
     "HS384": 48,
     "HS512": 64
-    }
+}
 
 
 class SYMKey(JWK):

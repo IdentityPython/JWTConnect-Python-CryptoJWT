@@ -22,6 +22,8 @@ from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.hmac import sha256_digest
+from cryptojwt.jwk.jwk import dump_jwk
+from cryptojwt.jwk.jwk import import_jwk
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jwk.rsa import RSAKey
@@ -605,3 +607,15 @@ def test_mint_new_sym_key():
     assert key.use == 'sig'
     assert key.kid == 'one'
     assert len(key.key) == 24
+
+
+def test_dump_load():
+    _ckey = import_rsa_key_from_cert_file(CERT)
+    _key = jwk_wrap(_ckey, "sig", "kid1")
+    _filename = full_path("tmp_jwk.json")
+
+    dump_jwk(_filename, _key)
+    key = import_jwk(_filename)
+    assert isinstance(key, RSAKey)
+    assert key.kid == "kid1"
+    assert key.use == "sig"

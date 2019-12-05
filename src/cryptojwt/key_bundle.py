@@ -7,6 +7,7 @@ from functools import cmp_to_key
 
 import requests
 
+from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
 from .exception import DeSerializationNotPossible
 from .exception import JWKException
@@ -15,6 +16,8 @@ from .exception import UpdateFailed
 from .jwk.ec import ECKey
 from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
+from .jwk.jwk import dump_jwk
+from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
 from .jwk.rsa import import_private_rsa_key_from_file
 from .jwk.rsa import new_rsa_key
@@ -67,7 +70,7 @@ def rsa_init(spec):
     Example of specification::
         {'size':2048, 'use': ['enc', 'sig'] }
 
-    Using the spec above 2 RSA keys would be minted, one for 
+    Using the spec above 2 RSA keys would be minted, one for
     encryption and one for signing.
     :param spec:
     :return: KeyBundle
@@ -439,8 +442,8 @@ class KeyBundle:
     def keys(self):
         """
         Return all keys after having updated them
-        
-        :return: List of all keys 
+
+        :return: List of all keys
         """
         self._uptodate()
 
@@ -462,7 +465,7 @@ class KeyBundle:
     def remove_keys_by_type(self, typ):
         """
         Remove keys that are of a specific type.
-        
+
         :param typ: Type of key (rsa, ec, oct, ..)
         """
         _typs = [typ.lower(), typ.upper()]
@@ -474,7 +477,7 @@ class KeyBundle:
     def jwks(self, private=False):
         """
         Create a JWKS as a JSON document
-        
+
         :param private: Whether private key information should be included.
         :return: A JWKS JSON representation of the keys in this bundle
         """
@@ -493,8 +496,8 @@ class KeyBundle:
     def append(self, key):
         """
         Add a key to list of keys in this bundle
-        
-        :param key: Key to be added 
+
+        :param key: Key to be added
         """
         self._keys.append(key)
 
@@ -505,8 +508,8 @@ class KeyBundle:
     def remove(self, key):
         """
         Remove a specific key from this bundle
-        
-        :param key: The key that should be removed 
+
+        :param key: The key that should be removed
         """
         try:
             self._keys.remove(key)
@@ -700,15 +703,16 @@ def build_key_bundle(key_conf, kid_template=""):
     An example of such a specification::
 
         keys = [
-            {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
+            {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"], 'size': 2048},
             {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
-            {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"}
+            {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"},
+            {"type": "OCT", "bytes":}
         ]
 
     Keys in this specification are:
 
     type
-        The type of key. Presently only 'rsa' and 'ec' supported.
+        The type of key. Presently only 'rsa', 'ec' and 'oct' supported.
 
     key
         A name of a file where a key can be found. Only works with PEM encoded
@@ -800,6 +804,7 @@ def type_order(kd1, kd2):
         return _l
 
     return None
+
 
 def kid_order(kd1, kd2):
     """Order key descriptions by kid."""
@@ -992,3 +997,54 @@ def unique_keys(keys):
             unique.append(k)
 
     return unique
+
+
+DEFAULT_SYM_KEYSIZE = 32
+DEFAULT_RSA_KEYSIZE = 2048
+DEFAULT_RSA_EXP = 65537
+DEFAULT_EC_CURVE = 'P-256'
+
+
+def key_gen(type, kid='', **kwargs):
+    """
+    Create a key and return it as a JWK.
+
+    :param type: Key type (RSA, EC, OCT)
+    :param kid:
+    :param kwargs: key specific keyword arguments
+        RSA: size, exp
+        EC: crv
+        SYM: bytes
+    """
+    if type.upper() == 'RSA':
+        keysize = kwargs.get("size", DEFAULT_RSA_KEYSIZE)
+        public_exponent = kwargs.get("exp", DEFAULT_RSA_EXP)
+        _key = new_rsa_key(public_exponent=public_exponent, key_size=keysize, kid=kid)
+    elif type.upper() == 'EC':
+        crv = kwargs.get("crv", DEFAULT_EC_CURVE)
+        if crv not in NIST2SEC:
+            logging.error("Unknown curve: %s", crv)
+            raise ValueError("Unknown curve: {}".format(crv))
+        _key = new_ec_key(crv=crv, kid=kid)
+    elif type.upper() in ["SYM", "OCT"]:
+        keysize = kwargs.get("bytes", 24)
+        randomkey = os.urandom(keysize)
+        _key = SYMKey(key=randomkey, kid=kid)
+    else:
+        logging.error("Unknown key type: %s", type)
+        raise ValueError("Unknown key type: %s".format(type))
+
+    return _key
+
+
+def init_key(filename, type, kid="", **kwargs):
+    if os.path.isfile(filename):
+        _old_key = import_jwk(filename)
+
+        if _old_key.kty == type:
+            if not kid or _old_key.kid == kid:
+                return _old_key
+
+    _new_key = key_gen(type, kid, **kwargs)
+    dump_jwk(filename, _new_key)
+    return _new_key

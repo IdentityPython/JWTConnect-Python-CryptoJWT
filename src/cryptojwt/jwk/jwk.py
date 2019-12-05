@@ -1,23 +1,23 @@
 import copy
+import json
+import os
 
 from cryptography.hazmat import backends
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
 
-from ..exception import MissingValue
-from ..exception import WrongKeyType
-from ..exception import UnknownKeyType
-from ..exception import UnsupportedAlgorithm
-from ..utils import base64url_to_long, b64d, as_bytes
-
 from .ec import ECKey
 from .ec import NIST2SEC
-from .rsa import RSAKey
 from .hmac import SYMKey
-
+from .rsa import RSAKey
+from ..exception import MissingValue
+from ..exception import UnknownKeyType
+from ..exception import UnsupportedAlgorithm
+from ..exception import WrongKeyType
+from ..utils import base64url_to_long
 
 EC_PUBLIC_REQUIRED = frozenset(['crv', 'x', 'y'])
 EC_PUBLIC = EC_PUBLIC_REQUIRED
@@ -173,3 +173,18 @@ def jwk_wrap(key, use="", kid=""):
 
     kspec.serialize()
     return kspec
+
+
+def dump_jwk(filename, key):
+    """Writes a RSAKey, ECKey or SYMKey instance as a JWK to a file."""
+    with open(filename, 'w') as fp:
+        fp.write(json.dumps(key.to_dict()))
+
+
+def import_jwk(filename):
+    """Reads a JWK from a file and converts it into the appropriate key class instance."""
+    if os.path.isfile(filename):
+        with open(filename) as jwk_file:
+            jwk_dict = json.loads(jwk_file.read())
+            return key_from_jwk_dict(jwk_dict)
+    return None

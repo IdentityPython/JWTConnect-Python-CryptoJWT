@@ -39,7 +39,7 @@ class KeyJar(object):
                  remove_after=3600, httpc=None):
         """
         KeyJar init function
-        
+
         :param ca_certs: CA certificates, to be used for HTTPS
         :param verify_ssl: Attempting SSL certificate verification
         :return: Keyjar instance
@@ -58,11 +58,11 @@ class KeyJar(object):
 
     def add_url(self, issuer, url, **kwargs):
         """
-        Add a set of keys by url. This method will create a 
+        Add a set of keys by url. This method will create a
         :py:class:`oidcmsg.key_bundle.KeyBundle` instance with the
         url as source specification. If no file format is given it's assumed
         that what's on the other side is a JWKS.
-        
+
         :param issuer: Who issued the keys
         :param url: Where can the key/-s be found
         :param kwargs: extra parameters for instantiating KeyBundle
@@ -86,13 +86,13 @@ class KeyJar(object):
 
     def add_symmetric(self, issuer, key, usage=None):
         """
-        Add a symmetric key. This is done by wrapping it in a key bundle 
+        Add a symmetric key. This is done by wrapping it in a key bundle
         cloak since KeyJar does not handle keys directly but only through
         key bundles.
-        
+
         :param issuer: Owner of the key
-        :param key: The key 
-        :param usage: What the key can be used for signing/signature 
+        :param key: The key
+        :param usage: What the key can be used for signing/signature
             verification (sig) and/or encryption/decryption (enc)
         """
         if issuer not in self.issuer_keys:
@@ -111,7 +111,7 @@ class KeyJar(object):
     def add_kb(self, issuer, kb):
         """
         Add a key bundle and bind it to an identifier
-        
+
         :param issuer: Owner of the keys in the key bundle
         :param kb: A :py:class:`oidcmsg.key_bundle.KeyBundle` instance
         """
@@ -124,7 +124,7 @@ class KeyJar(object):
         """
         Bind one or a list of key bundles to a special identifier.
         Will overwrite whatever was there before !!
-        
+
         :param issuer: The owner of the keys in the key bundle/-s
         :param val: A single or a list of KeyBundle instance
         """
@@ -140,7 +140,7 @@ class KeyJar(object):
     def items(self):
         """
         Get all owner ID's and their key bundles
-        
+
         :return: list of 2-tuples (Owner ID., list of KeyBundles)
         """
         return self.issuer_keys.items()
@@ -375,9 +375,9 @@ class KeyJar(object):
 
     def export_jwks(self, private=False, issuer="", usage=None):
         """
-        Produces a dictionary that later can be easily mapped into a 
+        Produces a dictionary that later can be easily mapped into a
         JSON string representing a JWKS.
-        
+
         :param private: Whether it should be the private keys or the public
         :param issuer: The entity ID.
         :return: A dictionary with one key: 'keys'
@@ -650,17 +650,18 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
     an existing KeyJar based on a key specification.
 
     An example of such a specification::
-    
+
         keys = [
             {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
             {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
             {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"}
+            {"type": "OCT", "bytes": 32, "use":["sig"]}
         ]
 
     Keys in this specification are:
 
     type
-        The type of key. Presently only 'rsa' and 'ec' supported.
+        The type of key. Presently only 'rsa', 'oct' and 'ec' supported.
 
     key
         A name of a file where a key can be found. Only works with PEM encoded

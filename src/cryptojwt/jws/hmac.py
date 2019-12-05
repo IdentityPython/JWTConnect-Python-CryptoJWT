@@ -1,11 +1,8 @@
-import sys
-
+from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
-from cryptography.hazmat.backends import default_backend
 
 from . import Signer
-
 from ..exception import Unsupported
 
 
@@ -50,5 +47,3 @@ class HMACSigner(Signer):
             return True
         except:
             return False
-
-

@@ -15,7 +15,9 @@ from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_bundle import build_key_bundle
 from cryptojwt.key_bundle import dump_jwks
+from cryptojwt.key_bundle import init_key
 from cryptojwt.key_bundle import key_diff
+from cryptojwt.key_bundle import key_gen
 from cryptojwt.key_bundle import key_rollover
 from cryptojwt.key_bundle import keybundle_from_local_file
 from cryptojwt.key_bundle import rsa_init
@@ -823,3 +825,40 @@ def test_unique_keys_2():
 
     # 3 of 6
     assert len(unique_keys(keys)) == 3
+
+
+def test_key_gen_rsa():
+    _jwk = key_gen("RSA", "kid1")
+    assert _jwk
+    assert _jwk.kty == "RSA"
+    assert _jwk.kid == 'kid1'
+
+    assert isinstance(_jwk, RSAKey)
+
+
+def test_init_key():
+    spec = {
+        "type": "RSA",
+        "kid": "one"
+    }
+
+    filename = full_path("tmp_jwk.json")
+    if os.path.isfile(filename):
+        os.unlink(filename)
+
+    _key = init_key(filename, **spec)
+    assert _key.kty == "RSA"
+    assert _key.kid == 'one'
+
+    assert os.path.isfile(filename)
+
+    # Should not lead to any change
+    _jwk2 = init_key(filename, **spec)
+    assert _key == _jwk2
+
+    _jwk3 = init_key(filename, "RSA", "two")
+    assert _key != _jwk3
+
+    # Now _jwk3 is stored in the file
+    _jwk4 = init_key(filename, "RSA")
+    assert _jwk4 == _jwk3
