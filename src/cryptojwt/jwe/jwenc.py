@@ -1,8 +1,8 @@
 import logging
 
-from . import SUPPORTED
 from ..simple_jwt import SimpleJWT
 from ..utils import b64encode_item
+from . import SUPPORTED
 
 logger = logging.getLogger(__name__)
 

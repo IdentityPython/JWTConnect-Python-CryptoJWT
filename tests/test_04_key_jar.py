@@ -4,7 +4,6 @@ import shutil
 import time
 
 import pytest
-
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import JWS

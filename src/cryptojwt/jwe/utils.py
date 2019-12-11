@@ -1,6 +1,5 @@
 import os
 import struct
-
 from math import ceil
 
 from cryptography.hazmat.backends import default_backend
@@ -10,7 +9,6 @@ from cryptography.hazmat.primitives.hashes import SHA384
 from cryptography.hazmat.primitives.hashes import SHA512
 
 from ..utils import b64e
-
 
 LENMET = {
     32: (16, SHA256),
@@ -37,8 +35,8 @@ def get_keys_seclen_dgst(key, iv):
     return ka, ke, seclen, hash_method
 
 
-def int2big_endian(n):
-    return [ord(c) for c in struct.pack('>I', n)]
+# def int2big_endian(n):
+#     return [ord(c) for c in struct.pack('>I', n)]
 
 
 # def party_value(pv):
@@ -119,4 +117,3 @@ def concat_sha256(secret, dk_len, other_info):
         digest.update(other_info)
         dkm += digest.finalize()
     return dkm[:dk_bytes]
-

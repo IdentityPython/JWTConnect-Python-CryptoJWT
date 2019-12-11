@@ -9,7 +9,6 @@ from getpass import getpass
 from typing import Optional
 
 from cryptography.hazmat.primitives import serialization
-
 from cryptojwt.jwk import JWK
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import import_private_key_from_file

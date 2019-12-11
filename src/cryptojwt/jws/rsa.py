@@ -1,10 +1,9 @@
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from .utils import parse_rsa_algorithm
-from . import Signer
-
 from ..exception import BadSignature
+from . import Signer
+from .utils import parse_rsa_algorithm
 
 
 class RSASigner(Signer):

@@ -3,8 +3,10 @@ import json
 import re
 import struct
 from binascii import unhexlify
+from typing import List
 
 from cryptojwt.exception import BadSyntax
+
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -23,7 +25,7 @@ def intarr2str(arr):
 
 
 def long2intarr(long_int):
-    _bytes = []
+    _bytes: List[int] = []
     while long_int:
         long_int, r = divmod(long_int, 256)
         _bytes.insert(0, r)
@@ -38,7 +40,7 @@ def long_to_base64(n, mlen=0):
             bys = [0] * _len + bys
     data = struct.pack('%sB' % len(bys), *bys)
     if not len(data):
-        data = '\x00'
+        data = b'\x00'
     s = base64.urlsafe_b64encode(data).rstrip(b'=')
     return s.decode("ascii")
 

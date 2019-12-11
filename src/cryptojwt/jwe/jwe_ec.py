@@ -2,22 +2,20 @@ import struct
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
+from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 
+from ..jwk.ec import NIST2SEC
+from ..jwk.ec import ECKey
+from ..utils import as_bytes
+from ..utils import as_unicode
+from ..utils import b64d
+from ..utils import b64e
 from . import KEY_LEN
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 from .utils import concat_sha256
 from .utils import get_random_bytes
-
-from ..jwk.ec import NIST2SEC
-from ..jwk.ec import ECKey
-
-from ..utils import b64d
-from ..utils import b64e
-from ..utils import as_unicode
-from ..utils import as_bytes
 
 
 def ecdh_derive_key(key, epk, apu, apv, alg, dk_len):

@@ -7,11 +7,11 @@ import json
 import os
 import sys
 
-from cryptojwt.jwk.ec import new_ec_key, NIST2SEC
+from cryptojwt.jwk.ec import NIST2SEC
+from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.utils import b64e
-
 
 DEFAULT_SYM_KEYSIZE = 32
 DEFAULT_RSA_KEYSIZE = 2048

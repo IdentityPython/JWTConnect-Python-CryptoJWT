@@ -9,15 +9,15 @@ from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
 
-from .ec import ECKey
-from .ec import NIST2SEC
-from .hmac import SYMKey
-from .rsa import RSAKey
 from ..exception import MissingValue
 from ..exception import UnknownKeyType
 from ..exception import UnsupportedAlgorithm
 from ..exception import WrongKeyType
 from ..utils import base64url_to_long
+from .ec import NIST2SEC
+from .ec import ECKey
+from .hmac import SYMKey
+from .rsa import RSAKey
 
 EC_PUBLIC_REQUIRED = frozenset(['crv', 'x', 'y'])
 EC_PUBLIC = EC_PUBLIC_REQUIRED

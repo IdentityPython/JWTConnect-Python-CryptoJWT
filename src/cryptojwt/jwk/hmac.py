@@ -1,11 +1,6 @@
 import logging
 import os
 
-from . import JWK
-from . import USE
-from .utils import sha256_digest
-from .utils import sha384_digest
-from .utils import sha512_digest
 from ..exception import JWKException
 from ..exception import UnsupportedAlgorithm
 from ..exception import WrongUsage
@@ -13,6 +8,11 @@ from ..utils import as_bytes
 from ..utils import as_unicode
 from ..utils import b64d
 from ..utils import b64e
+from . import JWK
+from . import USE
+from .utils import sha256_digest
+from .utils import sha384_digest
+from .utils import sha512_digest
 
 logger = logging.getLogger(__name__)
 

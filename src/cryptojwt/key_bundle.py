@@ -6,9 +6,9 @@ import time
 from functools import cmp_to_key
 
 import requests
-
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
+
 from .exception import DeSerializationNotPossible
 from .exception import JWKException
 from .exception import UnknownKeyType
@@ -1005,7 +1005,7 @@ DEFAULT_RSA_EXP = 65537
 DEFAULT_EC_CURVE = 'P-256'
 
 
-def key_gen(type, kid='', **kwargs):
+def key_gen(type, **kwargs):
     """
     Create a key and return it as a JWK.
 
@@ -1016,20 +1016,23 @@ def key_gen(type, kid='', **kwargs):
         EC: crv
         SYM: bytes
     """
+    # common args are use, key_ops and alg
+    kargs = {k: v for k, v in kwargs.items() if k in ["use", "key_ops", "alg", "kid"]}
+
     if type.upper() == 'RSA':
         keysize = kwargs.get("size", DEFAULT_RSA_KEYSIZE)
         public_exponent = kwargs.get("exp", DEFAULT_RSA_EXP)
-        _key = new_rsa_key(public_exponent=public_exponent, key_size=keysize, kid=kid)
+        _key = new_rsa_key(public_exponent=public_exponent, key_size=keysize, **kargs)
     elif type.upper() == 'EC':
         crv = kwargs.get("crv", DEFAULT_EC_CURVE)
         if crv not in NIST2SEC:
             logging.error("Unknown curve: %s", crv)
             raise ValueError("Unknown curve: {}".format(crv))
-        _key = new_ec_key(crv=crv, kid=kid)
+        _key = new_ec_key(crv=crv, **kargs)
     elif type.upper() in ["SYM", "OCT"]:
         keysize = kwargs.get("bytes", 24)
         randomkey = os.urandom(keysize)
-        _key = SYMKey(key=randomkey, kid=kid)
+        _key = SYMKey(key=randomkey, **kargs)
     else:
         logging.error("Unknown key type: %s", type)
         raise ValueError("Unknown key type: %s".format(type))
@@ -1045,6 +1048,6 @@ def init_key(filename, type, kid="", **kwargs):
             if not kid or _old_key.kid == kid:
                 return _old_key
 
-    _new_key = key_gen(type, kid, **kwargs)
+    _new_key = key_gen(type, kid=kid, **kwargs)
     dump_jwk(filename, _new_key)
     return _new_key

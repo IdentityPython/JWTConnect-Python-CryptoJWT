@@ -1,11 +1,11 @@
 import json
+from typing import List
 
-from .utils import DIGEST_HASH
 from ..exception import UnsupportedAlgorithm
 from ..utils import as_unicode
 from ..utils import b64e
 from ..utils import base64url_to_long
-
+from .utils import DIGEST_HASH
 
 USE = {
     'sign': 'sig',
@@ -23,13 +23,13 @@ class JWK(object):
     specified in RFC 7518 (https://tools.ietf.org/html/rfc7518).
 
     """
-    members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u"]
-    longs = []
-    public_members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u"]
+    members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
+    longs: List[str] = []
+    public_members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
     required = ['kty']
 
     def __init__(self, kty="", alg="", use="", kid="", x5c=None,
-                 x5t="", x5u="",**kwargs):
+                 x5t="", x5u="", key_ops=None, **kwargs):
 
         self.extra_args = kwargs
 
@@ -62,6 +62,19 @@ class JWK(object):
         else:
             self.kid = as_unicode(kid)
 
+        if key_ops:
+            self.key_ops: List[str] = []
+            for ops in key_ops:
+                if isinstance(ops, str):
+                    self.key_ops.append(ops)
+                else:
+                    self.key_ops.append(as_unicode(key_ops))
+        else:
+            self.key_ops = []
+
+        if self.use and self.key_ops:
+            raise ValueError("Not allowed to specify use and key_ops")
+
         self.x5c = x5c or []
         self.x5t = x5t
         self.x5u = x5u
@@ -85,13 +98,11 @@ class JWK(object):
 
         :return: Dictionary
         """
-        res = {"kty": self.kty}
-        if self.use:
-            res["use"] = self.use
-        if self.kid:
-            res["kid"] = self.kid
-        if self.alg:
-            res["alg"] = self.alg
+        res = {}
+        for param in ["kty", "use", "kid", "alg", "key_ops"]:
+            _val = getattr(self, param)
+            if _val:
+                res[param] = _val
         return res
 
     def __str__(self):
@@ -217,6 +228,7 @@ class JWK(object):
 
         :return: True/False
         """
-        return self.use == USE[usage]
-
-
+        if self.use:
+            return self.use == USE[usage]
+        elif self.key_ops:
+            return usage in self.key_ops

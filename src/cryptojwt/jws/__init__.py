@@ -8,4 +8,3 @@ class Signer(object):
     def verify(self, msg, sig, key):
         """Return True if ``sig`` is a valid signature for ``msg``."""
         raise NotImplementedError()
-

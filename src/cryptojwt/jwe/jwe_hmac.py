@@ -5,13 +5,13 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 
-from .jwekey import JWEKey
-from .jwenc import JWEnc
-
 from ..exception import MissingKey
 from ..exception import WrongNumberOfParts
 from ..jwk.hmac import SYMKey
-from ..utils import intarr2str, as_bytes
+from ..utils import as_bytes
+from ..utils import intarr2str
+from .jwekey import JWEKey
+from .jwenc import JWEnc
 
 logger = logging.getLogger(__name__)
 

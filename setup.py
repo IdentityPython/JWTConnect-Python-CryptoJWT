@@ -26,6 +26,8 @@ with open('src/cryptojwt/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
+tests_requires = ['responses', 'pytest']
+
 setup(
     name="cryptojwt",
     version=version,
@@ -41,10 +43,16 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6"
+        "Programming Language :: Python :: 3.7"
     ],
     install_requires=["cryptography", "requests"],
     tests_require=['pytest'],
     zip_safe=False,
+    extras_require={
+        'testing': tests_requires,
+        'docs': ['Sphinx', 'sphinx-autobuild', 'alabaster'],
+        'quality': ['isort'],
+    },
     scripts=glob.glob('script/*.py'),
     entry_points={
          "console_scripts": [

@@ -6,10 +6,9 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils
 
-from . import Signer
-
-from ..exception import Unsupported
 from ..exception import BadSignature
+from ..exception import Unsupported
+from . import Signer
 
 logger = logging.getLogger(__name__)
 

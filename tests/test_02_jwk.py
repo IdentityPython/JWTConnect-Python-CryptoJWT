@@ -12,13 +12,12 @@ import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
-
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import NIST2SEC
+from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.hmac import sha256_digest
@@ -535,7 +534,7 @@ def test_jwk_conversion():
     _j = JWK(use=b'sig', kid=b'1', alg=b'RS512')
     assert _j.use == 'sig'
     args = _j.common()
-    assert set(args.keys()) == {'kty', 'use', 'kid', 'alg'}
+    assert set(args.keys()) == {'use', 'kid', 'alg'}
 
 
 def test_str():
@@ -619,3 +618,24 @@ def test_dump_load():
     assert isinstance(key, RSAKey)
     assert key.kid == "kid1"
     assert key.use == "sig"
+
+
+def test_key_ops():
+    sk = SYMKey(
+        key='df34db91c16613deba460752522d28f6ebc8a73d0d9185836270c26b',
+        alg = "HS256",
+        key_ops=["sign", "verify"]
+    )
+
+    _jwk = sk.serialize(private=True)
+    assert set(_jwk.keys()) == {"kty", "alg", "key_ops", "k"}
+
+
+def test_key_ops_and_use():
+    with pytest.raises(ValueError):
+        SYMKey(
+            key='df34db91c16613deba460752522d28f6ebc8a73d0d9185836270c26b',
+            alg = "HS256",
+            key_ops=["sign", "verify"],
+            use = "sig"
+        )

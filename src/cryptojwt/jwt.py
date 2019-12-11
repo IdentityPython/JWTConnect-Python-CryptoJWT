@@ -1,21 +1,20 @@
 """Basic JSON Web Token implementation."""
-import logging
 import json
+import logging
 import uuid
 from datetime import datetime
 from json import JSONDecodeError
 
-
 from .exception import HeaderError
 from .exception import VerificationError
-from .utils import as_unicode
-from .jwe.utils import alg2keytype as jwe_alg2keytype
-from .jwe.jwe import factory as jwe_factory
 from .jwe.jwe import JWE
+from .jwe.jwe import factory as jwe_factory
+from .jwe.utils import alg2keytype as jwe_alg2keytype
+from .jws.exception import NoSuitableSigningKeys
 from .jws.jws import JWS
 from .jws.jws import factory as jws_factory
-from .jws.exception import NoSuitableSigningKeys
 from .jws.utils import alg2keytype as jws_alg2keytype
+from .utils import as_unicode
 
 __author__ = 'Roland Hedberg'
 

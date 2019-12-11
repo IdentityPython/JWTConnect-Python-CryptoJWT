@@ -2,6 +2,7 @@ import json
 import logging
 
 from cryptojwt.exception import HeaderError
+
 from .utils import as_unicode
 from .utils import b64d
 from .utils import b64encode_item

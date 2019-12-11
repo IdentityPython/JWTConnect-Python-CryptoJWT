@@ -89,7 +89,6 @@ ENV/
 .ropeproject
 /.project
 /.pydevproject
-.isort.cfg
 .isort.cfg~
 draft/eval.py
 draft/idfed.xml

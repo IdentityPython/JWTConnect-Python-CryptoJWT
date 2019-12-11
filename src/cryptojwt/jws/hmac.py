@@ -2,8 +2,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
-from . import Signer
 from ..exception import Unsupported
+from . import Signer
 
 
 class HMACSigner(Signer):

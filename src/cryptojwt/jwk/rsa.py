@@ -3,20 +3,17 @@ import hashlib
 import logging
 
 from cryptography import x509
-
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
+from ..exception import DeSerializationNotPossible
+from ..exception import JWKESTException
+from ..exception import SerializationNotPossible
+from ..exception import UnsupportedKeyType
 from ..utils import b64e
 from ..utils import deser
 from ..utils import long_to_base64
-
-from ..exception import DeSerializationNotPossible
-from ..exception import UnsupportedKeyType
-from ..exception import JWKESTException
-from ..exception import SerializationNotPossible
-
 from . import JWK
 from .asym import AsymmetricKey
 
@@ -514,14 +511,13 @@ class RSAKey(AsymmetricKey):
             return cmp_private_numbers(pn1, pn2)
 
 
-def new_rsa_key(key_size=2048, kid='', use='', public_exponent=65537):
+def new_rsa_key(key_size=2048, kid='', public_exponent=65537, **kwargs):
     """
     Creates a new RSA key pair and wraps it in a
     :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
 
     :param key_size: The size of the key
     :param kid: The key ID
-    :param use: What the is supposed to be used for. 2 choices 'sig'/'enc'
     :param public_exponent: The value of the public exponent.
     :return: A :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
     """
@@ -530,7 +526,7 @@ def new_rsa_key(key_size=2048, kid='', use='', public_exponent=65537):
                                     key_size=key_size,
                                     backend=default_backend())
 
-    _rk = RSAKey(priv_key=_key, use=use, kid=kid)
+    _rk = RSAKey(priv_key=_key, kid=kid, **kwargs)
     if not kid:
         _rk.add_kid()
 

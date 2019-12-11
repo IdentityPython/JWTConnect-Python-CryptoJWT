@@ -1,5 +1,5 @@
+from ..jwx import JWx
 from . import KEY_LEN_BYTES
-
 from .aes import AES_CBCEncrypter
 from .aes import AES_GCMEncrypter
 from .exception import DecryptionFailed
@@ -7,8 +7,6 @@ from .exception import NotSupportedAlgorithm
 from .utils import alg2keytype
 from .utils import get_random_bytes
 from .utils import split_ctx_and_tag
-
-from ..jwx import JWx
 
 
 class JWEKey(JWx):

@@ -1,14 +1,13 @@
-import zlib
 import logging
+import zlib
 
+from ..utils import as_bytes
 from . import SUPPORTED
-from .exception import ParameterError
 from .exception import NotSupportedAlgorithm
+from .exception import ParameterError
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 from .rsa import RSAEncrypter
-
-from ..utils import as_bytes
 
 logger = logging.getLogger(__name__)
 

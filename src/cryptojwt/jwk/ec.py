@@ -2,12 +2,12 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from .asym import AsymmetricKey
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
+from .asym import AsymmetricKey
 
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
@@ -305,11 +305,11 @@ def cmp_keys(a, b, key_type):
     return False
 
 
-def new_ec_key(crv, kid='', use=''):
+def new_ec_key(crv, kid='', **kwargs):
     _key = ec.generate_private_key(curve=NIST2SEC[crv],
                                    backend=default_backend())
 
-    _rk = ECKey(priv_key=_key, use=use, kid=kid)
+    _rk = ECKey(priv_key=_key, kid=kid, **kwargs)
     if not kid:
         _rk.add_kid()
 

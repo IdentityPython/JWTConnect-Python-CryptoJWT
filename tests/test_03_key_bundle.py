@@ -6,7 +6,6 @@ import time
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
-
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import RSAKey
@@ -483,7 +482,7 @@ def test_update_2():
     assert len(kb) == 1
 
     # Added one more key
-    ec_key = new_ec_key(crv='P-256')
+    ec_key = new_ec_key(crv='P-256', key_ops=["sign"])
     _jwks = {'keys': [rsa_key.serialize(), ec_key.serialize()]}
 
     with open(fname, 'w') as fp:
@@ -504,7 +503,7 @@ def test_update_mark_inactive():
     assert len(kb) == 1
 
     # new set of keys
-    rsa_key = new_rsa_key()
+    rsa_key = new_rsa_key(alg="RS256")
     ec_key = new_ec_key(crv='P-256')
     _jwks = {'keys': [rsa_key.serialize(), ec_key.serialize()]}
 
@@ -828,7 +827,7 @@ def test_unique_keys_2():
 
 
 def test_key_gen_rsa():
-    _jwk = key_gen("RSA", "kid1")
+    _jwk = key_gen("RSA", kid="kid1")
     assert _jwk
     assert _jwk.kty == "RSA"
     assert _jwk.kid == 'kid1'

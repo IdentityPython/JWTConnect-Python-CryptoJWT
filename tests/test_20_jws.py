@@ -2,7 +2,7 @@ import json
 import sys
 
 import pytest
-
+import test_vector
 from cryptojwt import utils
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwk.jwk import key_from_jwk_dict
@@ -14,7 +14,6 @@ from cryptojwt.utils import as_unicode
 
 sys.path.insert(0, '. ')
 
-import test_vector
 
 
 def modify_header(token, **kwargs):

@@ -1,8 +1,10 @@
 import os
 
-from cryptojwt.jwt import JWT, pick_key
+from cryptojwt.jwt import JWT
+from cryptojwt.jwt import pick_key
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import KeyJar, init_key_jar
+from cryptojwt.key_jar import KeyJar
+from cryptojwt.key_jar import init_key_jar
 
 __author__ = 'Roland Hedberg'
 
@@ -193,4 +195,3 @@ def test_pick_key():
 
     _k = pick_key(keys, 'enc', "ECDH-ES")
     assert len(_k) == 0
-

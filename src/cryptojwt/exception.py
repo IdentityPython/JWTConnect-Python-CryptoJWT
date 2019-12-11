@@ -105,4 +105,3 @@ class WrongUsage(JWKESTException):
 
 class HTTPException(JWKESTException):
     pass
-
