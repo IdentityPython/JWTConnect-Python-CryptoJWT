@@ -6,7 +6,7 @@ JSON Web Encryption (JWE)
 JSON Web Encryption (JWE) represents encrypted content using JSON-based data
 structures.
 
-It's assumed that you know all you need to know about key handling if not
+It is assumed that you know all you need to know about key handling if not
 please spend some time reading keyhandling_ .
 
 When it comes to JWE there are basically 2 things you want to be able to do:
@@ -17,7 +17,7 @@ Encrypting a document
 ---------------------
 
 This is the high level way of doing things.
-There are few steps you have to go through. Let us start with an example and then break it into its parts::
+There are a few steps you have to go through. Let us start with an example and then break it into its parts::
 
     >>> from cryptojwt.jwk.rsa import RSAKey
     >>> from cryptojwt.jwe.jwe import JWE
@@ -31,9 +31,9 @@ There are few steps you have to go through. Let us start with an example and the
 
 The steps:
 
-    1. You need an encryption key. The key *MUST* be instances of
+    1. You need an encryption key. The key *MUST* be an instance of
        :py:class:`cryptojwt.jwk.JWK`.
-    2. You need the information that are to be signed. It must be in the form of a string.
+    2. You need the information that is to be signed. It must be in the form of a string.
     3. You initiate the encryptor, provide it with the message and other
        needed information.
     4. And then you encrypt as described in RFC7516_ .

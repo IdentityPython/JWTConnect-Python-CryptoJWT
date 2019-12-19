@@ -56,7 +56,7 @@ mechanism. You can use this to acquire a byte array of the appropriate length
 When you have a key in a file on your hard drive
 ................................................
 
-If you already has a key, like if you have a PEM encoded private RSA key in
+If you already have a key, like if you have a PEM encoded private RSA key in
 a file on your machine you can load it this way::
 
     >>> from cryptojwt.jwk.rsa import RSAKey
@@ -96,7 +96,7 @@ Exporting keys
 ..............
 
 When it comes to exporting keys, a :py:class:`cryptojwt.jwk.JWK` instance
-only know how to serialize into the format described in JWK_.
+only knows how to serialize into the format described in JWK_.
 
     >>> from cryptojwt.jwk.rsa import new_rsa_key
     >>> rsa_key = new_rsa_key()
@@ -234,12 +234,12 @@ keys in the key bundle::
     >>> len(_keys)
     2
 
-It turns out the key bundle now contains 2 keys. Both the keys that are in the
+It turns out the key bundle now contains 2 keys; both the keys that are in the
 file.
 
 If the change is that one key is removed then something else happens.
-Assume we add one key and remove one of the ones that was there before.
-The file now contain 2 keys, and you might expect the key bundle to do the
+Assume we add one key and remove one of the keys that was there before.
+The file now contains 2 keys, and you might expect the key bundle to do the
 same::
 
     >>> _keys = kb.keys()
@@ -278,7 +278,7 @@ Creating a key jar with your own newly minted keys you would do:
 **Note** also that different RSA keys are minted for signing and for encryption.
 
 You can also use :py:func:`cryptojwt.keyjar.init_key_jar` which will
-load keys from disc if they are there and if not mint new.::
+load keys from disk if they are there and if not mint new.::
 
     >>> from cryptojwt.key_jar import build_keyjar
     >>> import os
@@ -318,8 +318,8 @@ The last line can also be expressed as::
 
     >>> keyjar[''] = kb
 
-**Note** both variants adds a key bundle to the list of key bundles that
-belongs to '', it does not overwrite anything that was already there.
+**Note** both variants add a key bundle to the list of key bundles that
+belong to '', it does not overwrite anything that was already there.
 
 Adding a JWKS is such a common thing that there is a simpler way to do it::
 
@@ -346,7 +346,7 @@ When dealing with signed and/or encrypted JSON Web Tokens
 :py:class:`cryptojwt.key_jar.KeyJar` has these nice methods.
 
     get_jwt_verify_keys
-        :py:func:`cryptojwt.key_jar.KeyJar.get_jwt_verify_keys` takes an
+        :py:func:`cryptojwt.key_jar.KeyJar.get_jwt_verify_keys` takes a
         signed JWT as input and returns a set of keys that
         can be used to verify the signature. The set you get back is a best
         estimate and might not contain **the** key. How good the estimate is
