@@ -34,7 +34,7 @@ def ecdh_derive_key(key, epk, apu, apv, alg, dk_len):
     shared_key = key.exchange(ec.ECDH(), epk)
     # Derive the key
     # AlgorithmID || PartyUInfo || PartyVInfo || SuppPubInfo
-    otherInfo = bytes(alg) + \
+    otherInfo = struct.pack("!I", len(alg)) + bytes(alg) + \
                 struct.pack("!I", len(apu)) + apu + \
                 struct.pack("!I", len(apv)) + apv + \
                 struct.pack("!I", dk_len)
