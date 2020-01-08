@@ -72,6 +72,8 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
 
 
 class JWT:
+    jwt_parameters = ["iss", "sub", "aud", "exp", "nbf", "iat", "jti"]
+
     """The basic JSON Web Token class."""
     def __init__(self, key_jar=None, iss='', lifetime=0,
                  sign=True, sign_alg='RS256', encrypt=False,
@@ -368,3 +370,19 @@ class JWT:
             return _info
         else:
             return _info
+
+
+def remove_jwt_parameters(arg):
+    """
+    :param arg: A dictionary like object
+
+    :return: The incoming arg with Jason Web Token parameters removed
+    """
+
+    for param in JWT.jwt_parameters:
+        try:
+            del arg[param]
+        except KeyError:
+            pass
+
+    return arg
