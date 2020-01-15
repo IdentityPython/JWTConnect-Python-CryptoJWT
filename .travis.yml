@@ -1,25 +1,30 @@
-language: python
-
 sudo: false
 
+language: python
 python:
-  - "3.7"
-  - "3.6"
-  - "3.5"
+  - 3.6
+  - 3.7
+  - pypy3
+
+addons:
+  apt:
+    packages:
+      -
 
 install:
+  - pip install codecov
   - pip install tox
+  - pip install tox-travis
+
+script:
+  - codecov --version
+  - tox
+
+after_success:
+  - codecov
 
 env:
    - TOXENV=quality
-
-matrix:
-  include:
-    - python: 3.7
-      env: TOXENV=py37
-
-script:
-  - tox -e $TOXENV
 
 notifications:
   email: false
