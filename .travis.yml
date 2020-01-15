@@ -23,8 +23,5 @@ script:
 after_success:
   - codecov
 
-env:
-   - TOXENV=quality
-
 notifications:
   email: false
