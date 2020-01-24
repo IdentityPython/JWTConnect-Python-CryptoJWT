@@ -116,9 +116,8 @@ class ECKey(AsymmetricKey):
     # required attributes
     required = ['kty', 'crv', 'x', 'y']
 
-    def __init__(self, kty="EC", alg="", use="", kid="", key=None,
-                 crv="", x="", y="", d="", **kwargs):
-        AsymmetricKey.__init__(self, kty, alg, use, kid, key, **kwargs)
+    def __init__(self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs):
+        AsymmetricKey.__init__(self, kty, alg, use, kid, **kwargs)
         self.crv = crv
         self.x = x
         self.y = y
