@@ -7,7 +7,6 @@ from typing import List
 
 from cryptojwt.exception import BadSyntax
 
-
 # ---------------------------------------------------------------------------
 # Helper functions
 
