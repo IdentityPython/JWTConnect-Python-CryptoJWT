@@ -177,6 +177,10 @@ def jwk_wrap(key, use="", kid=""):
 
 def dump_jwk(filename, key):
     """Writes a RSAKey, ECKey or SYMKey instance as a JWK to a file."""
+    head, tail = os.path.split(filename)
+    if head and not os.path.isdir(head):
+        os.makedirs(head)
+
     with open(filename, 'w') as fp:
         fp.write(json.dumps(key.to_dict()))
 
