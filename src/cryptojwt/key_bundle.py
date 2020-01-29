@@ -152,7 +152,7 @@ class KeyBundle:
 
     def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
                  fileformat="jwks", keytype="RSA", keyusage=None, kid='',
-                 httpc=None):
+                 httpc=None, httpc_params=None):
         """
         Contains a set of keys that have a common origin.
         The sources can be serveral:
@@ -171,6 +171,8 @@ class KeyBundle:
         :param keyusage: What the key loaded from file should be used for.
             Only applicable for DER files
         :param httpc: A HTTP client function
+        :param httpc_params: Additional parameters to pass to the HTTP client
+            function
         """
 
         self._keys = []
@@ -193,6 +195,7 @@ class KeyBundle:
         else:
             self.httpc = requests.request
             self.verify_ssl = verify_ssl
+        self.httpc_params = httpc_params or {}
 
         if keys:
             self.source = None
@@ -314,13 +317,11 @@ class KeyBundle:
         :return: True or False if load was successful
         """
         if self.verify_ssl is not None:
-            args = {"verify": self.verify_ssl}
-        else:
-            args = {}
+            self.httpc_params["verify"] = self.verify_ssl
 
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
-            _http_resp = self.httpc('GET', self.source, **args)
+            _http_resp = self.httpc('GET', self.source, **self.httpc_params)
         except Exception as err:
             LOGGER.error(err)
             raise UpdateFailed(

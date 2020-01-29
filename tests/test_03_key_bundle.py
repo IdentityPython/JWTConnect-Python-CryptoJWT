@@ -5,6 +5,8 @@ import shutil
 import time
 
 import pytest
+import requests
+import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
@@ -469,6 +471,31 @@ def test_local_jwk_copy():
 #     assert len(kb.keys())
 #     assert len(kb.get('rsa')) == 1
 #     assert len(kb.get('oct')) == 1
+
+
+@pytest.fixture()
+def mocked_jwks_response():
+    with responses.RequestsMock() as rsps:
+        yield rsps
+
+
+def test_httpc_params_1():
+    source = 'https://login.salesforce.com/id/keys'  # From test_jwks_url()
+    # Mock response
+    responses.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
+    httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+    kb = KeyBundle(source=source, httpc=requests.request,
+                   httpc_params=httpc_params)
+    assert kb.do_remote()
+
+
+def test_httpc_params_2():
+    httpc_params = {'timeout': 0}
+    kb = KeyBundle(source='https://login.salesforce.com/id/keys',
+                   httpc=requests.request, httpc_params=httpc_params)
+    # Will always fail to fetch the JWKS because the timeout cannot be set
+    # to 0s
+    assert not kb.update()
 
 
 def test_update_2():
