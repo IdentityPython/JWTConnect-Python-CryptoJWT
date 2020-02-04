@@ -1,18 +1,22 @@
+import base64
+import hashlib
 import json
+import ssl
 from typing import List
 
+from .utils import DIGEST_HASH
 from ..exception import UnsupportedAlgorithm
+from ..utils import as_bytes
 from ..utils import as_unicode
 from ..utils import b64e
 from ..utils import base64url_to_long
-from .utils import DIGEST_HASH
 
 USE = {
     'sign': 'sig',
     'decrypt': 'enc',
     'encrypt': 'enc',
     'verify': 'sig'
-    }
+}
 
 
 class JWK(object):
@@ -46,7 +50,7 @@ class JWK(object):
             # The list comes from https://tools.ietf.org/html/rfc7518#page-6
             # Should map against SIGNER_ALGS in cryptojwt.jws.jws
             if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
-                           "RS512", "ES256", "ES384","ES512", "PS256",
+                           "RS512", "ES256", "ES384", "ES512", "PS256",
                            "PS384", "PS512", "none"]:
                 raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
 
@@ -232,3 +236,57 @@ class JWK(object):
             return self.use == USE[usage]
         elif self.key_ops:
             return usage in self.key_ops
+
+
+def pems_to_x5c(cert_chain):
+    """
+    Takes a list of PEM formated certificates and transforms them into a x5c attribute
+    values as described in RFC 7517.
+
+    :param cert_pem: List of PKIX certificates
+    :return: List of strings
+    """
+
+    return [as_unicode(v) for v in
+            [base64.b64encode(d) for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]]]
+
+
+def x5c_to_pems(x5c):
+    """
+    Takes a x5c value from a JWK and converts it into a list of PEM formated certificates.
+
+    :param x5c: List of strings
+    :return:
+    """
+
+    return [ssl.DER_cert_to_PEM_cert(d) for d in
+            [base64.b64decode(x) for x in [as_bytes(y) for y in x5c]]]
+
+
+def x5c_to_ders(x5c):
+    """
+    Takes a x5c value from a JWK and converts it into a list of PEM formated certificates.
+
+    :param x5c: List of strings
+    :return:
+    """
+
+    return [base64.b64decode(x) for x in [as_bytes(y) for y in x5c]]
+
+
+def certificate_fingerprint(der, hash="sha256"):
+    """
+
+    :param der: DER encoded certificate
+    :return:
+    """
+    if hash == "sha256":
+        fp = hashlib.sha256(as_bytes(der)).hexdigest()
+    elif hash == "sha1":
+        fp = hashlib.sha1(as_bytes(der)).hexdigest()
+    elif hash == "md5":
+        fp = hashlib.md5(as_bytes(der)).hexdigest()
+    else:
+        raise UnsupportedAlgorithm(hash)
+
+    return ':'.join([fp[i:i + 2] for i in range(0, len(fp), 2)]).upper()
