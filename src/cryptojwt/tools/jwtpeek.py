@@ -47,7 +47,7 @@ echo json.web.token | ./jwtpeek.py
 """
 
 
-def main(jwt, keys, quiet):
+def process(jwt, keys, quiet):
     _jw = jwe.factory(jwt)
     if _jw:
         if not quiet:
@@ -81,7 +81,7 @@ def main(jwt, keys, quiet):
                         highlight(json_str, JsonLexer(), TerminalFormatter())))
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', dest="rsa_file",
                         help="File containing a RSA key")
@@ -134,4 +134,4 @@ if __name__ == "__main__":
 
     message = message.strip()
     message = message.strip('"')
-    main(message, keys, args.quiet)
+    process(message, keys, args.quiet)
