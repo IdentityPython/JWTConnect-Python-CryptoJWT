@@ -36,21 +36,29 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
-                 remove_after=3600, httpc=None):
+                 remove_after=3600, httpc=None, httpc_params=None):
         """
         KeyJar init function
 
         :param ca_certs: CA certificates, to be used for HTTPS
         :param verify_ssl: Attempting SSL certificate verification
+        :param keybundle_cls: The KeyBundle class
+        :param remove_after: How long keys marked as inactive will remain in the key Jar.
+        :param httpc: A HTTP client to use. Default is Requests request.
+        :param httpc_params: HTTP request parameters
         :return: Keyjar instance
         """
         self.spec2key = {}
         self.issuer_keys = {}
         self.ca_certs = ca_certs
-        self.verify_ssl = verify_ssl
         self.keybundle_cls = keybundle_cls
         self.remove_after = remove_after
         self.httpc = httpc or request
+        self.httpc_params = httpc_params or {}
+        # Now part of httpc_params
+        # self.verify_ssl = verify_ssl
+        if not self.httpc_params: # backward compatibility
+            self.httpc_params["verify"] = verify_ssl
 
     def __repr__(self):
         issuers = list(self.issuer_keys.keys())
@@ -73,11 +81,13 @@ class KeyJar(object):
             raise KeyError("No url given")
 
         if "/localhost:" in url or "/localhost/" in url:
-            kb = self.keybundle_cls(source=url, verify_ssl=False,
-                                    httpc=self.httpc, **kwargs)
+            _params = self.httpc_params.copy()
+            _params['verify'] = False
+            kb = self.keybundle_cls(source=url, httpc=self.httpc,
+                                    httpc_params=_params, **kwargs)
         else:
-            kb = self.keybundle_cls(source=url, verify_ssl=self.verify_ssl,
-                                    httpc=self.httpc, **kwargs)
+            kb = self.keybundle_cls(source=url, httpc=self.httpc,
+                                    httpc_params=self.httpc_params, **kwargs)
 
         kb.update()
         self.add_kb(issuer, kb)
@@ -104,9 +114,7 @@ class KeyJar(object):
         else:
             for use in usage:
                 self.issuer_keys[issuer].append(
-                    self.keybundle_cls([{"kty": "oct",
-                                         "key": key,
-                                         "use": use}]))
+                    self.keybundle_cls([{"kty": "oct", "key": key, "use": use}]))
 
     def add_kb(self, issuer, kb):
         """
@@ -412,10 +420,10 @@ class KeyJar(object):
         else:
             try:
                 self.issuer_keys[issuer].append(
-                    self.keybundle_cls(_keys, verify_ssl=self.verify_ssl))
+                    self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params))
             except KeyError:
                 self.issuer_keys[issuer] = [self.keybundle_cls(
-                    _keys, verify_ssl=self.verify_ssl)]
+                    _keys, httpc=self.httpc, httpc_params=self.httpc_params)]
 
     def import_jwks_as_json(self, jwks, issuer):
         """
@@ -458,7 +466,7 @@ class KeyJar(object):
         Outdated keys are keys that has been marked as inactive at a time that
         is longer ago then some set number of seconds (when). If when=0 the
         the base time is set to now.
-        The number of seconds a carried in the remove_after parameter in the
+        The number of seconds are carried in the remove_after parameter in the
         key jar.
 
         :param when: To facilitate testing
@@ -485,8 +493,7 @@ class KeyJar(object):
             issuer, key_summary(self, issuer)))
 
         if kid:
-            for _key in self.get(key_use=use, owner=issuer, kid=kid,
-                                 key_type=key_type):
+            for _key in self.get(key_use=use, owner=issuer, kid=kid, key_type=key_type):
                 if _key and _key not in keys:
                     keys.append(_key)
             return keys
@@ -637,7 +644,8 @@ class KeyJar(object):
         for issuer in self.owners():
             kj[issuer] = [kb.copy() for kb in self[issuer]]
 
-        kj.verify_ssl = self.verify_ssl
+        kj.httpc_params = self.httpc_params
+        kj.httpc = self.httpc
         return kj
 
 

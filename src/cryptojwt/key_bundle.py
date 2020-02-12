@@ -186,15 +186,12 @@ class KeyBundle:
         self.keyusage = keyusage
         self.imp_jwks = None
         self.last_updated = 0
+
         if httpc:
             self.httpc = httpc
-            if httpc == requests.request:
-                self.verify_ssl = verify_ssl
-            else:
-                self.verify_ssl = None
         else:
             self.httpc = requests.request
-            self.verify_ssl = verify_ssl
+
         self.httpc_params = httpc_params or {}
 
         if keys:
@@ -316,8 +313,8 @@ class KeyBundle:
 
         :return: True or False if load was successful
         """
-        if self.verify_ssl is not None:
-            self.httpc_params["verify"] = self.verify_ssl
+        # if self.verify_ssl is not None:
+        #     self.httpc_params["verify"] = self.verify_ssl
 
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
@@ -609,7 +606,7 @@ class KeyBundle:
         _bundle.set(self._keys[:])
 
         _bundle.cache_time = self.cache_time
-        _bundle.verify_ssl = self.verify_ssl
+        _bundle.httpc_params = self.httpc_params.copy()
         if self.source:
             _bundle.source = self.source
             _bundle.fileformat = self.fileformat
