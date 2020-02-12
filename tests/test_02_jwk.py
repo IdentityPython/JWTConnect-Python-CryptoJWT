@@ -16,6 +16,8 @@ from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 from cryptojwt.jwk import JWK
+from cryptojwt.jwk import pem_hash
+from cryptojwt.jwk import pems_to_x5c
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
@@ -639,3 +641,17 @@ def test_key_ops_and_use():
             key_ops=["sign", "verify"],
             use = "sig"
         )
+
+
+def test_pem_to_x5c():
+    with open(full_path("cert.pem")) as fp:
+        cert_chain = fp.read()
+
+    x5c = pems_to_x5c([cert_chain])
+    assert len(x5c) == 1
+    assert x5c[0] == 'MIIB2jCCAUOgAwIBAgIBATANBgkqhkiG9w0BAQUFADA0MRgwFgYDVQQDEw9UaGUgY29kZSB0ZXN0ZXIxGDAWBgNVBAoTD1VtZWEgVW5pdmVyc2l0eTAeFw0xMjEwMDQwMDIzMDNaFw0xMzEwMDQwMDIzMDNaMDIxCzAJBgNVBAYTAlNFMSMwIQYDVQQDExpPcGVuSUQgQ29ubmVjdCBUZXN0IFNlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwf+wiusGhA+gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB/87ds3dy3Rfym/GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQCsTntG4dfW5kO/Qle6uBhIhZU+3IreIPmbwzpXoCbcgjRa01z6WiBLwDC1RLAL7ucaF/EVlUq4e0cNXKt4ESGNc1xHISOMLetwvS1SN5tKWA9HNua/SaqRtiShxLUjPjmrtpUgotLNDRvUYnTdTT1vhZar7TSPr1yObirjvz/qLw=='
+
+
+def test_pem_hash():
+    _hash = pem_hash(full_path("cert.pem"))
+    assert _hash

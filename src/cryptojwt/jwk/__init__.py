@@ -290,3 +290,11 @@ def certificate_fingerprint(der, hash="sha256"):
         raise UnsupportedAlgorithm(hash)
 
     return ':'.join([fp[i:i + 2] for i in range(0, len(fp), 2)]).upper()
+
+
+def pem_hash(pem_file):
+    with open(pem_file, "r") as fp:
+        pem = fp.read()
+
+    der = ssl.PEM_cert_to_DER_cert(pem)
+    return hashlib.sha1(as_bytes(der)).hexdigest()
