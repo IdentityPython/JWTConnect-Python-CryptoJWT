@@ -9,6 +9,7 @@ import requests
 import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptojwt.jwk.ec import new_ec_key
+from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
@@ -39,6 +40,7 @@ def full_path(local_file):
 
 RSAKEY = os.path.join(BASE_PATH, "cert.key")
 RSA0 = os.path.join(BASE_PATH, "rsa.key")
+EC0 = os.path.join(BASE_PATH, 'ec.key')
 CERT = full_path("cert.pem")
 
 JWK0 = {"keys": [
@@ -319,7 +321,7 @@ def test_get_all():
 
 def test_keybundle_from_local_der():
     kb = keybundle_from_local_file(
-        "{}".format(os.path.join(BASE_PATH, 'rsa.key')),
+        "{}".format(RSA0),
         "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')
@@ -327,9 +329,19 @@ def test_keybundle_from_local_der():
     assert isinstance(keys[0], RSAKey)
 
 
+def test_ec_keybundle_from_local_der():
+    kb = keybundle_from_local_file(
+        "{}".format(EC0),
+        "der", ['enc'], keytype='EC')
+    assert len(kb) == 1
+    keys = kb.get('ec')
+    assert len(keys) == 1
+    assert isinstance(keys[0], ECKey)
+
+
 def test_keybundle_from_local_der_update():
     kb = keybundle_from_local_file(
-        "file://{}".format(os.path.join(BASE_PATH, 'rsa.key')),
+        "file://{}".format(RSA0),
         "der", ['enc'])
     assert len(kb) == 1
     keys = kb.get('rsa')

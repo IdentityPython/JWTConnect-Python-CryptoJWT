@@ -14,6 +14,7 @@ from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UpdateFailed
 from .jwk.ec import ECKey
+from .jwk.ec import import_private_key_from_file
 from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
@@ -134,14 +135,15 @@ def ec_init(spec):
 
     :return: A KeyBundle instance
     """
+    curve = spec.get("crv", "P-256")
 
     _kb = KeyBundle(keytype="EC")
     if 'use' in spec:
         for use in spec["use"]:
-            eck = new_ec_key(crv=spec['crv'], use=use)
+            eck = new_ec_key(crv=curve, use=use)
             _kb.append(eck)
     else:
-        eck = new_ec_key(crv=spec['crv'])
+        eck = new_ec_key(crv=curve)
         _kb.append(eck)
 
     return _kb
@@ -167,7 +169,7 @@ class KeyBundle:
         :param verify_ssl: Verify the SSL cert used by the server
         :param fileformat: For a local file either "jwks" or "der"
         :param keytype: Iff local file and 'der' format what kind of key it is.
-            presently only 'rsa' is supported.
+            presently 'rsa' and 'ec' are supported.
         :param keyusage: What the key loaded from file should be used for.
             Only applicable for DER files
         :param httpc: A HTTP client function
@@ -229,7 +231,7 @@ class KeyBundle:
     def _do_local(self, kid):
         if self.fileformat in ['jwks', "jwk"]:
             self.do_local_jwk(self.source)
-        elif self.fileformat == "der":  # Only valid for RSA keys
+        elif self.fileformat == "der":
             self.do_local_der(self.source, self.keytype, self.keyusage, kid)
 
     def do_keys(self, keys):
@@ -285,12 +287,16 @@ class KeyBundle:
         Load a DER encoded file amd create a key from it.
 
         :param filename: Name of the file
-        :param keytype: Presently only 'rsa' supported
+        :param keytype: Presently 'rsa' and 'ec' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
         """
-        _bkey = import_private_rsa_key_from_file(filename)
-
-        if keytype.lower() != 'rsa':
+        if keytype.lower() == 'rsa':
+            _bkey = import_private_rsa_key_from_file(filename)
+            _key = RSAKey().load_key(_bkey)
+        elif keytype.lower() == 'ec':
+            _bkey = import_private_key_from_file(filename)
+            _key = ECKey().load_key(_bkey)
+        else:
             raise NotImplementedError('No support for DER decoding of that key type')
 
         if not keyusage:
@@ -299,7 +305,6 @@ class KeyBundle:
             keyusage = harmonize_usage(keyusage)
 
         for use in keyusage:
-            _key = RSAKey().load_key(_bkey)
             _key.use = use
             if kid:
                 _key.kid = kid
@@ -632,21 +637,25 @@ class KeyBundle:
         return [k for k in self._keys if k not in bundle]
 
 
-def keybundle_from_local_file(filename, typ, usage):
+def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     """
     Create a KeyBundle based on the content in a local file.
 
     :param filename: Name of the file
     :param typ: Type of content
     :param usage: What the key should be used for
+    :param keytype: Type of key, e.g. "RSA", "EC". Only used with typ='der'
     :return: The created KeyBundle
     """
     usage = harmonize_usage(usage)
 
     if typ.lower() == "jwks":
         _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
-    elif typ.lower() == 'der':
-        _bundle = KeyBundle(source=filename, fileformat="der", keyusage=usage)
+    elif typ.lower() == "der":
+        _bundle = KeyBundle(source=filename,
+                            fileformat="der",
+                            keyusage=usage,
+                            keytype=keytype)
     else:
         raise UnknownKeyType("Unsupported key type")
 
@@ -713,8 +722,8 @@ def build_key_bundle(key_conf, kid_template=""):
         The type of key. Presently only 'rsa', 'ec' and 'oct' supported.
 
     key
-        A name of a file where a key can be found. Only works with PEM encoded
-        RSA keys
+        A name of a file where a key can be found. Works with PEM encoded
+        RSA and EC private keys.
 
     use
         What the key should be used for
@@ -752,7 +761,17 @@ def build_key_bundle(key_conf, kid_template=""):
             else:
                 _bundle = rsa_init(spec)
         elif typ == "EC":
-            _bundle = ec_init(spec)
+            if "key" in spec and spec["key"]:
+                error_to_catch = (OSError, IOError,
+                                  DeSerializationNotPossible)
+                try:
+                    _bundle = KeyBundle(source="file://%s" % spec["key"],
+                                        fileformat="der",
+                                        keytype=typ, keyusage=spec["use"])
+                except error_to_catch:
+                    _bundle = ec_init(spec)
+            else:
+                _bundle = ec_init(spec)
         elif typ.upper() == "OCT":
             _bundle = sym_init(spec)
         else:
