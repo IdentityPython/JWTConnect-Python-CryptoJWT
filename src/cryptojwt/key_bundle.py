@@ -135,14 +135,15 @@ def ec_init(spec):
 
     :return: A KeyBundle instance
     """
+    curve = spec.get("crv", "P-256")
 
     _kb = KeyBundle(keytype="EC")
     if 'use' in spec:
         for use in spec["use"]:
-            eck = new_ec_key(crv=spec['crv'], use=use)
+            eck = new_ec_key(crv=curve, use=use)
             _kb.append(eck)
     else:
-        eck = new_ec_key(crv=spec['crv'])
+        eck = new_ec_key(crv=curve)
         _kb.append(eck)
 
     return _kb
