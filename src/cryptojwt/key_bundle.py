@@ -636,21 +636,25 @@ class KeyBundle:
         return [k for k in self._keys if k not in bundle]
 
 
-def keybundle_from_local_file(filename, typ, usage):
+def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     """
     Create a KeyBundle based on the content in a local file.
 
     :param filename: Name of the file
     :param typ: Type of content
     :param usage: What the key should be used for
+    :param keytype: Type of key, e.g. "RSA", "EC". Only used with typ='der'
     :return: The created KeyBundle
     """
     usage = harmonize_usage(usage)
 
     if typ.lower() == "jwks":
         _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
-    elif typ.lower() == 'der':
-        _bundle = KeyBundle(source=filename, fileformat="der", keyusage=usage)
+    elif typ.lower() == "der":
+        _bundle = KeyBundle(source=filename,
+                            fileformat="der",
+                            keyusage=usage,
+                            keytype=keytype)
     else:
         raise UnknownKeyType("Unsupported key type")
 
