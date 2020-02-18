@@ -23,6 +23,7 @@ BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "test_keys"))
 RSAKEY = os.path.join(BASE_PATH, "cert.key")
 RSA0 = os.path.join(BASE_PATH, "rsa.key")
+EC0 = os.path.join(BASE_PATH, "ec.key")
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -230,6 +231,42 @@ def test_build_keyjar_missing(tmpdir):
     keys = [
         {
             "type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"]
+        }]
+
+    key_jar = build_keyjar(keys)
+
+    assert len(key_jar[""]) == 1
+
+
+def test_build_RSA_keyjar_from_file(tmpdir):
+    keys = [
+        {
+            "type": "RSA", "key": RSA0,
+            "use": ["enc", "sig"]
+        }]
+
+    key_jar = build_keyjar(keys)
+
+    assert len(key_jar[""]) == 1
+
+
+def test_build_EC_keyjar_missing(tmpdir):
+    keys = [
+        {
+            "type": "EC", "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"]
+        }]
+
+    key_jar = build_keyjar(keys)
+
+    assert len(key_jar[""]) == 1
+
+
+def test_build_EC_keyjar_from_file(tmpdir):
+    keys = [
+        {
+            "type": "EC", "key": EC0,
             "use": ["enc", "sig"]
         }]
 
