@@ -672,8 +672,8 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
         The type of key. Presently only 'rsa', 'oct' and 'ec' supported.
 
     key
-        A name of a file where a key can be found. Only works with PEM encoded
-        RSA keys
+        A name of a file where a key can be found. Works with PEM encoded
+        RSA and EC private keys.
 
     use
         What the key should be used for
