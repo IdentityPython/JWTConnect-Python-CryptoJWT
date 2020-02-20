@@ -838,7 +838,7 @@ def init_key_jar(public_path='', private_path='', key_defs='', owner='',
                         update_key_bundle(_kb, _diff)
                         _kj.issuer_keys[owner] = [_kb]
                         jwks = _kj.export_jwks(issuer=owner)
-                        fp = open(private_path, 'w')
+                        fp = open(public_path, 'w')
                         fp.write(json.dumps(jwks))
                         fp.close()
         else:
