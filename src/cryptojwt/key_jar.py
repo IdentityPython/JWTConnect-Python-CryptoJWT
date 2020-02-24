@@ -579,36 +579,18 @@ class KeyJar(object):
         :return: list of usable keys
         """
 
-        try:
-            allow_missing_kid = kwargs['allow_missing_kid']
-        except KeyError:
-            allow_missing_kid = False
+        allow_missing_kid = kwargs.get('allow_missing_kid', False)
 
-        try:
+        _key_type = ''
+        if jwt.headers.get('alg'):
             _key_type = jws_alg2keytype(jwt.headers['alg'])
-        except KeyError:
-            _key_type = ''
 
-        try:
-            _kid = jwt.headers['kid']
-        except KeyError:
-            logger.info('Missing kid')
-            _kid = ''
-
-        try:
-            nki = kwargs['no_kid_issuer']
-        except KeyError:
-            nki = {}
+        _kid = jwt.headers.get('kid', "")
+        nki = kwargs.get('no_kid_issuer', {})
 
         _payload = jwt.payload()
 
-        try:
-            _iss = _payload['iss']
-        except KeyError:
-            try:
-                _iss = kwargs['iss']
-            except KeyError:
-                _iss = ''
+        _iss = _payload.get('iss') or kwargs.get('iss') or ""
 
         if _iss:
             # First extend the key jar iff allowed
