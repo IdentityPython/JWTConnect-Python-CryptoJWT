@@ -171,6 +171,9 @@ def jwk_wrap(key, use="", kid=""):
     else:
         raise Exception("Unknown key type:key=" + str(type(key)))
 
+    if not kspec.kid:
+        kspec.add_kid()
+
     kspec.serialize()
     return kspec
 

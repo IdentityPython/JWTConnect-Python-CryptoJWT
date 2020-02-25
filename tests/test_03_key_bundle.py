@@ -219,7 +219,7 @@ def test_with_2_sym_key():
     assert len(kb) == 2
 
     assert kb.get_key_with_kid('kid') is None
-    assert kb.kids() == []
+    assert len(kb.kids()) == 2
 
 
 def test_remove_sym():
@@ -326,7 +326,9 @@ def test_keybundle_from_local_der():
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
-    assert isinstance(keys[0], RSAKey)
+    _key = keys[0]
+    assert isinstance(_key, RSAKey)
+    assert _key.kid
 
 
 def test_ec_keybundle_from_local_der():
@@ -336,7 +338,9 @@ def test_ec_keybundle_from_local_der():
     assert len(kb) == 1
     keys = kb.get('ec')
     assert len(keys) == 1
-    assert isinstance(keys[0], ECKey)
+    _key = keys[0]
+    assert _key.kid
+    assert isinstance(_key, ECKey)
 
 
 def test_keybundle_from_local_der_update():
@@ -346,7 +350,9 @@ def test_keybundle_from_local_der_update():
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
-    assert isinstance(keys[0], RSAKey)
+    _key = keys[0]
+    assert _key.kid
+    assert isinstance(_key, RSAKey)
 
     kb.update()
 
@@ -354,7 +360,9 @@ def test_keybundle_from_local_der_update():
     assert len(kb) == 1
     keys = kb.get('rsa')
     assert len(keys) == 1
-    assert isinstance(keys[0], RSAKey)
+    _key = keys[0]
+    assert _key.kid
+    assert isinstance(_key, RSAKey)
 
 
 def test_creat_jwks_sym():
@@ -363,7 +371,7 @@ def test_creat_jwks_sym():
     _jwks = kb.jwks()
     _loc = json.loads(_jwks)
     assert list(_loc.keys()) == ["keys"]
-    assert set(_loc['keys'][0].keys()) == {'kty', 'use', 'k'}
+    assert set(_loc['keys'][0].keys()) == {'kty', 'use', 'k', 'kid'}
 
 
 def test_keybundle_from_local_jwks_file():

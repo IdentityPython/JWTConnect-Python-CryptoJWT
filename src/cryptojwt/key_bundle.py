@@ -261,6 +261,8 @@ class KeyBundle:
                         LOGGER.warning('While loading keys: %s', err)
                     else:
                         if _key not in self._keys:
+                            if not _key.kid:
+                                _key.add_kid()
                             self._keys.append(_key)
                         flag = 1
                         break
@@ -308,6 +310,8 @@ class KeyBundle:
             _key.use = use
             if kid:
                 _key.kid = kid
+            if not _key.kid:
+                _key.add_kid()
             self._keys.append(_key)
 
         self.last_updated = time.time()

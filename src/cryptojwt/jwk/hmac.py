@@ -146,4 +146,7 @@ class SYMKey(JWK):
 
 
 def new_sym_key(use='', bytes=24, kid=''):
-    return SYMKey(use=use, kid=kid, key=as_unicode(os.urandom(bytes)))
+    _key = SYMKey(use=use, kid=kid, key=as_unicode(os.urandom(bytes)))
+    if not _key.kid:
+        _key.add_kid()
+    return _key

@@ -527,7 +527,7 @@ def new_rsa_key(key_size=2048, kid='', public_exponent=65537, **kwargs):
                                     backend=default_backend())
 
     _rk = RSAKey(priv_key=_key, kid=kid, **kwargs)
-    if not kid:
+    if not _rk.kid:
         _rk.add_kid()
 
     return _rk

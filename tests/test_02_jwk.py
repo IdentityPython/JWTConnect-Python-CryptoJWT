@@ -111,7 +111,7 @@ def test_kspec():
 def test_dumps():
     _ckey = import_rsa_key_from_cert_file(CERT)
     jwk = jwk_wrap(_ckey).serialize()
-    assert _eq(list(jwk.keys()), ["kty", "e", "n"])
+    assert _eq(list(jwk.keys()), ["kty", "e", "n", 'kid'])
 
 
 def test_import_rsa_key():
@@ -119,7 +119,7 @@ def test_import_rsa_key():
     assert isinstance(_ckey, rsa.RSAPrivateKey)
     djwk = jwk_wrap(_ckey).to_dict()
 
-    assert _eq(djwk.keys(), ["kty", "e", "n", "p", "q", "d"])
+    assert _eq(djwk.keys(), ["kty", "e", "n", "p", "q", "d", "kid"])
     assert djwk[
                "n"] == '5zbNbHIYIkGGJ3RGdRKkYmF4gOorv5eDuUKTVtuu3VvxrpOWvwnFV' \
                        '-NY0LgqkQSMMyVzodJE3SUuwQTUHPXXY5784vnkFqzPRx6bHgPxKz7XfwQjEBTafQTMmOeYI8wFIOIHY5i0RWR-gxDbh_D5TXuUqScOOqR47vSpIbUH-nc'
