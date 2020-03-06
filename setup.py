@@ -55,10 +55,10 @@ setup(
     },
     scripts=glob.glob('script/*.py'),
     entry_points={
-         "console_scripts": [
-             "jwkgen = cryptojwt.tools.keygen:main",
-             "jwkconv = cryptojwt.tools.keyconv:main",
-             "jwtpeek = cryptojwt.tools.jwtpeek:main",
-         ]
-     }
+        "console_scripts": [
+            "jwkgen = cryptojwt.tools.keygen:main",
+            "jwkconv = cryptojwt.tools.keyconv:main",
+            "jwtpeek = cryptojwt.tools.jwtpeek:main",
+        ]
+    }
 )
