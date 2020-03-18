@@ -38,7 +38,7 @@ The steps:
        needed information.
     4. And then you encrypt as described in RFC7516_ .
 
-There is a lower level way of doing the same it will look like this::
+There is a lower level way of doing the same, it will look like this::
 
     >>> from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
     >>> from cryptojwt.jwe.jwe_rsa import JWE_RSA
@@ -61,14 +61,14 @@ Decrypting using the encrypted message above.
     >>> from cryptojwt.jwe.jwe import factory
     >>> from cryptojwt.jwk.rsa import RSAKey
 
-    >>> _decryptor = factory(jwt, alg="RSA1_5", enc="A128CBC-HS256")
+    >>> _decryptor = factory(jwe, alg="RSA1_5", enc="A128CBC-HS256")
     >>> _dkey = RSAKey(priv_key=priv_key)
     >>> msg = _decryptor.decrypt(jwe, [_dkey])
 
 or if you know what you're doing::
 
     >>> _decryptor = JWE_RSA()
-    >>> msg = _decryptor.decrypt(jwt, priv_key)
+    >>> msg = _decryptor.decrypt(jwe, priv_key)
 
 
 
