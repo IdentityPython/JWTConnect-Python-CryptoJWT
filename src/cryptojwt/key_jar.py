@@ -630,6 +630,14 @@ class KeyJar(object):
         kj.httpc = self.httpc
         return kj
 
+    def __len__(self):
+        keys = 0
+        for iss in list(self.owners()):
+            for kb in self.issuer_keys[iss]:
+                if len(kb):
+                    keys += len(kb)
+        return keys
+
 
 # =============================================================================
 
