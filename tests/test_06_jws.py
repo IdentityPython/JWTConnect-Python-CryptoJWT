@@ -524,6 +524,9 @@ def test_signer_protected_headers():
     _rj = JWS(alg='ES256')
     info = _rj.verify_compact(_jwt, [_pub_key])
     assert info == payload
+    # Protected by default
+    protected['alg'] = "ES256"
+    assert _rj.protected_headers() == protected
 
 
 def test_verify_protected_headers():
@@ -579,10 +582,10 @@ def test_verify_json():
     vkeys = [ECKey().load_key(eck.public_key())]
     _jws = JWS()
     assert _jws.verify_json(_jwt, keys=vkeys)
-    # alg is always protected by default
     _protected = _jws.protected_headers()
     assert set(_protected.keys()) == {'foo', 'alg'}
     assert _protected['foo'] == protected_headers["foo"]
+    # alg is always protected by default
     assert _protected['alg'] == "ES256"
 
 

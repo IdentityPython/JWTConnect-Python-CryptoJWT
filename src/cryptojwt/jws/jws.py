@@ -245,6 +245,7 @@ class JWS(JWx):
                     "Verified message using key with kid=%s" % key.kid)
                 self.msg = jwt.payload()
                 self.key = key
+                self._protected_headers = jwt.headers.copy()
                 return {'msg': self.msg, 'key': key}
 
         raise BadSignature()
