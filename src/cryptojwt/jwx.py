@@ -3,9 +3,9 @@ import json
 import logging
 
 import requests
+
 from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
-
 from .exception import HeaderError
 from .jwk.jwk import key_from_jwk_dict
 from .jwk.rsa import RSAKey

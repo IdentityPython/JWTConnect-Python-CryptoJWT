@@ -199,7 +199,7 @@ class JWT:
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
         :param kwargs: Extra keyword arguments
-        :return: A signed or signed and encrypted JsonWebtoken
+        :return: A signed or signed and encrypted Json Web Token
         """
         _args = {}
         if payload is not None:

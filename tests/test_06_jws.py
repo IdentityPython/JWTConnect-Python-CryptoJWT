@@ -6,6 +6,7 @@ import os.path
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+
 from cryptojwt.exception import BadSignature
 from cryptojwt.exception import UnknownAlgorithm
 from cryptojwt.exception import WrongNumberOfParts
@@ -17,8 +18,8 @@ from cryptojwt.jws.exception import FormatError
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.exception import SignerAlgError
 from cryptojwt.jws.jws import JWS
-from cryptojwt.jws.jws import SIGNER_ALGS
 from cryptojwt.jws.jws import JWSig
+from cryptojwt.jws.jws import SIGNER_ALGS
 from cryptojwt.jws.jws import factory
 from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash
@@ -40,16 +41,16 @@ PRIV_KEY = full_path("server.key")
 
 JWK_a = {
     "keys": [{
-                 'alg': 'RSA',
-                 'use': 'foo',
-                 'e': 'AQAB',
-                 'n': (
-                     'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtV'
-                     'zeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B'
-                     '0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6J'
-                     'tu82nB5k8')
-                 }]
-    }
+        'alg': 'RSA',
+        'use': 'foo',
+        'e': 'AQAB',
+        'n': (
+            'wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtV'
+            'zeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B'
+            '0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6J'
+            'tu82nB5k8')
+    }]
+}
 
 # 64*8 = 256 bits
 HMAC_KEY = [3, 35, 53, 75, 43, 15, 165, 188, 131, 126, 6, 101, 119, 123, 166,
@@ -66,13 +67,13 @@ JWKS_a = {
                  '-nrmbSpfn8Rz3y3oXLydvUqj8869PkcEzoJIY5Xf7xDN1Co_qyT9qge'
                  '-3C6DEwGVHXOwRoXRGQ_h50Vsh60MB5MIuDN188EeZnQ30dtCTBB9KDTSEA2DunplhwLCq4xphnMNUaeHdEk',
             'kid': 'rsa1'
-            },
+        },
         {
             "k":
                 b"YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
             "kty": "oct",
-            }]
-    }
+        }]
+}
 
 JWKS_b = {
     "keys": [
@@ -83,13 +84,13 @@ JWKS_b = {
             "kty": "RSA",
             "kid": "rsa1",
             "use": "sig"
-            },
+        },
         {
             "k":
                 b"YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
             "kty": "oct",
             "use": "sig"
-            },
+        },
         {
             "kty": "EC",
             "kid": "ec1",
@@ -97,9 +98,9 @@ JWKS_b = {
             "x": "q0WbWhflRbxyQZKFuQvh2nZvg98ak-twRoO5uo2L7Po",
             "y": "GOd2jL_6wa0cfnyA0SmEhok9fkYEnAHFKLLM79BZ8_E",
             "crv": "P-256"
-            }
-        ]
-    }
+        }
+    ]
+}
 
 JWK_b = {
     "keys": [
@@ -113,22 +114,24 @@ JWK_b = {
             "use": "sig",
             "x5c": [
                 "MIIDPjCCAiqgAwIBAgIQsRiM0jheFZhKk49YD0SK1TAJBgUrDgMCHQUAMC0xKzApBgNVBAMTImFjY291bnRzLmFjY2Vzc2NvbnRyb2wud2luZG93cy5uZXQwHhcNMTQwMTAxMDcwMDAwWhcNMTYwMTAxMDcwMDAwWjAtMSswKQYDVQQDEyJhY2NvdW50cy5hY2Nlc3Njb250cm9sLndpbmRvd3MubmV0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkSCWg6q9iYxvJE2NIhSyOiKvqoWCO2GFipgH0sTSAs5FalHQosk9ZNTztX0ywS/AHsBeQPqYygfYVJL6/EgzVuwRk5txr9e3n1uml94fLyq/AXbwo9yAduf4dCHTP8CWR1dnDR+Qnz/4PYlWVEuuHHONOw/blbfdMjhY+C/BYM2E3pRxbohBb3x//CfueV7ddz2LYiH3wjz0QS/7kjPiNCsXcNyKQEOTkbHFi3mu0u13SQwNddhcynd/GTgWN8A+6SN1r4hzpjFKFLbZnBt77ACSiYx+IHK4Mp+NaVEi5wQtSsjQtI++XsokxRDqYLwus1I1SihgbV/STTg5enufuwIDAQABo2IwYDBeBgNVHQEEVzBVgBDLebM6bK3BjWGqIBrBNFeNoS8wLTErMCkGA1UEAxMiYWNjb3VudHMuYWNjZXNzY29udHJvbC53aW5kb3dzLm5ldIIQsRiM0jheFZhKk49YD0SK1TAJBgUrDgMCHQUAA4IBAQCJ4JApryF77EKC4zF5bUaBLQHQ1PNtA1uMDbdNVGKCmSf8M65b8h0NwlIjGGGy/unK8P6jWFdm5IlZ0YPTOgzcRZguXDPj7ajyvlVEQ2K2ICvTYiRQqrOhEhZMSSZsTKXFVwNfW6ADDkN3bvVOVbtpty+nBY5UqnI7xbcoHLZ4wYD251uj5+lo13YLnsVrmQ16NCBYq2nQFNPuNJw6t3XUbwBHXpF46aLT1/eGf/7Xx6iy8yPJX4DyrpFTutDz882RWofGEO5t4Cw+zZg70dJ/hH/ODYRMorfXEW+8uKmXMKmX2wyxMKvfiPbTy5LmAU8Jvjs2tLg4rOBcXWLAIarZ"
-                ],
+            ],
             "x5t": "kriMPdmBvx68skT8-mPAB3BseeA"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/{tenantid}/v2.0/",
             "kid": "MnC_VZcATfM5pOYiJHMba9goEKY",
             "kty": "RSA",
             "n":
-                "vIqz-4-ER_vNWLON9yv8hIYV737JQ6rCl6XfzOC628seYUPf0TaGk91CFxefhzh23V9Tkq-RtwN1Vs_z57hO82kkzL-cQHZX3bMJD-GEGOKXCEXURN7VMyZWMAuzQoW9vFb1k3cR1RW_EW_P-C8bb2dCGXhBYqPfHyimvz2WarXhntPSbM5XyS5v5yCw5T_Vuwqqsio3V8wooWGMpp61y12NhN8bNVDQAkDPNu2DT9DXB1g0CeFINp_KAS_qQ2Kq6TSvRHJqxRR68RezYtje9KAqwqx4jxlmVAQy0T3-T-IAbsk1wRtWDndhO6s1Os-dck5TzyZ_dNOhfXgelixLUQ",
+                "vIqz-4-ER_vNWLON9yv8hIYV737JQ6rCl6XfzOC628seYUPf0TaGk91CFxefhzh23V9Tkq"
+                "-RtwN1Vs_z57hO82kkzL-cQHZX3bMJD-GEGOKXCEXURN7VMyZWMAuzQoW9vFb1k3cR1RW_EW_P"
+                "-C8bb2dCGXhBYqPfHyimvz2WarXhntPSbM5XyS5v5yCw5T_Vuwqqsio3V8wooWGMpp61y12NhN8bNVDQAkDPNu2DT9DXB1g0CeFINp_KAS_qQ2Kq6TSvRHJqxRR68RezYtje9KAqwqx4jxlmVAQy0T3-T-IAbsk1wRtWDndhO6s1Os-dck5TzyZ_dNOhfXgelixLUQ",
             "use": "sig",
             "x5c": [
                 "MIIC4jCCAcqgAwIBAgIQQNXrmzhLN4VGlUXDYCRT3zANBgkqhkiG9w0BAQsFADAtMSswKQYDVQQDEyJhY2NvdW50cy5hY2Nlc3Njb250cm9sLndpbmRvd3MubmV0MB4XDTE0MTAyODAwMDAwMFoXDTE2MTAyNzAwMDAwMFowLTErMCkGA1UEAxMiYWNjb3VudHMuYWNjZXNzY29udHJvbC53aW5kb3dzLm5ldDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALyKs/uPhEf7zVizjfcr/ISGFe9+yUOqwpel38zgutvLHmFD39E2hpPdQhcXn4c4dt1fU5KvkbcDdVbP8+e4TvNpJMy/nEB2V92zCQ/hhBjilwhF1ETe1TMmVjALs0KFvbxW9ZN3EdUVvxFvz/gvG29nQhl4QWKj3x8opr89lmq14Z7T0mzOV8kub+cgsOU/1bsKqrIqN1fMKKFhjKaetctdjYTfGzVQ0AJAzzbtg0/Q1wdYNAnhSDafygEv6kNiquk0r0RyasUUevEXs2LY3vSgKsKseI8ZZlQEMtE9/k/iAG7JNcEbVg53YTurNTrPnXJOU88mf3TToX14HpYsS1ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAfolx45w0i8CdAUjjeAaYdhG9+NDHxop0UvNOqlGqYJexqPLuvX8iyUaYxNGzZxFgGI3GpKfmQP2JQWQ1E5JtY/n8iNLOKRMwqkuxSCKJxZJq4Sl/m/Yv7TS1P5LNgAj8QLCypxsWrTAmq2HSpkeSk4JBtsYxX6uhbGM/K1sEktKybVTHu22/7TmRqWTmOUy9wQvMjJb2IXdMGLG3hVntN/WWcs5w8vbt1i8Kk6o19W2MjZ95JaECKjBDYRlhG1KmSBtrsKsCBQoBzwH/rXfksTO9JoUYLXiW0IppB7DhNH4PJ5hZI91R8rR0H3/bKkLSuDaKLWSqMhozdhXsIIKvJQ=="
-                ],
+            ],
             "x5t": "MnC_VZcATfM5pOYiJHMba9goEKY"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -142,9 +145,9 @@ JWK_b = {
             "use": "sig",
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAKVzMH2FfC12MA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleTAeFw0xMzExMTExODMzMDhaFw0xNjExMTAxODMzMDhaMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA5ymq/xwmst1nstPr8YFOTyD1J5N4idYmrph7AyAv95RbWXfDRqy8CMRG7sJq+UWOKVOA4MVrd/NdV+ejj1DE5MPSiG+mZK/5iqRCDFvPYqOyRj539xaTlARNY4jeXZ0N6irZYKqSfYACjkkKxbLKcijSu1pJ48thXOTED0oNa6UCAwEAAaOBijCBhzAdBgNVHQ4EFgQURCN+4cb0pvkykJCUmpjyfUfnRMowWQYDVR0jBFIwUIAURCN+4cb0pvkykJCUmpjyfUfnRMqhLaQrMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleYIJAKVzMH2FfC12MAsGA1UdDwQEAwIBxjANBgkqhkiG9w0BAQUFAAOBgQB8v8G5/vUl8k7xVuTmMTDA878AcBKBrJ/Hp6RShmdqEGVI7SFR7IlBN1//NwD0n+IqzmnRV2PPZ7iRgMF/Fyvqi96Gd8X53ds/FaiQpZjUUtcO3fk0hDRQPtCYMII5jq+YAYjSybvF84saB7HGtucVRn2nMZc5cAC42QNYIlPMqA=="
-                ],
+            ],
             "x5t": "GvnPApfWMdLRi8PDmisFn7bprKg"
-            },
+        },
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
@@ -156,11 +159,11 @@ JWK_b = {
             "use": "sig",
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAL3MzqqEFMYjMA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleTAeFw0xMzExMTExOTA1MDJaFw0xOTExMTAxOTA1MDJaMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleTCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAx7HNcD9ZxTFRaAgZ7+gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQeSML7qZPlowb5BUakdLI70ayM4vN36++0ht8+oCHhl8YjGFQkU+Iv2yahWHEP+1EK6eOEYu6INQP9Lk0HMk3QViLwshwb+KXVD02jdmX2HNdYJdPyc0cCAwEAAaOBijCBhzAdBgNVHQ4EFgQULR0aj9AtiNMgqIY8ZyXZGsHcJ5gwWQYDVR0jBFIwUIAULR0aj9AtiNMgqIY8ZyXZGsHcJ5ihLaQrMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVibGljIEtleYIJAL3MzqqEFMYjMAsGA1UdDwQEAwIBxjANBgkqhkiG9w0BAQUFAAOBgQBshrsF9yls4ArxOKqXdQPDgHrbynZL8m1iinLI4TeSfmTCDevXVBJrQ6SgDkihl3aCj74IEte2MWN78sHvLLTWTAkiQSlGf1Zb0durw+OvlunQ2AKbK79Qv0Q+wwGuK+oymWc3GSdP1wZqk9dhrQxb3FtdU2tMke01QTut6wr7ig=="
-                ],
+            ],
             "x5t": "dEtpjbEvbhfgwUI-bdK5xAU_9UQ"
-            }
-        ]
-    }
+        }
+    ]
+}
 
 SIGJWKS = KeyBundle(JWKS_b)
 
@@ -174,7 +177,7 @@ def test_1():
         "iss": "joe",
         "exp": 1300819380,
         "http://example.com/is_root": True
-        }
+    }
 
     _jws = JWS(claimset, cty="JWT", alg='none')
     _jwt = _jws.sign_compact()
@@ -372,7 +375,7 @@ def test_jws_mm():
     (ec.SECP256R1, "ES256"),
     (ec.SECP384R1, "ES384"),
     (ec.SECP521R1, "ES512"),
-    ])
+])
 def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"
     eck = ec.generate_private_key(ec_func(), default_backend())
@@ -492,8 +495,8 @@ def test_sign_2():
                 "kid": "af22448d-4c7b-464d-b63a-f5bd90f6d7d1",
                 "n": "o9g8DpUwBW6B1qmcm-TfEh4rNX7n1t38jdo4Gkl_cI3q"
                      "--7n0Blg0kN88LHZvyZjUB2NhBdFYNxMP8ucy0dOXvWGWzaPmGnq3DM__lN8P4WjD1cCTAVEYKawNBAmGKqrFj1SgpPNsSqiqK-ALM1w6mZ-QGimjOgwCyJy3l9lzZh5D8tKnS2t1pZgE0X5P7lZQWHYpHPqp4jKhETzrCpPGfv0Rl6nmmjp7NlRYBkWKf_HEKE333J6M039m2FbKgxrBg3zmYYpmHuMzVgxxb8LSiv5aqyeyJjxM-YDUAgNQBfKNhONqXyu9DqtSprNkw6sqmuxK0QUVrNYl3b03PgS5Q"
-                }]
-        }
+            }]
+    }
 
     keys = KeyBundle(keyset)
     jws = JWS("payload", alg="RS512")
@@ -538,8 +541,8 @@ def test_verify_protected_headers():
             header=dict(alg=u"ES256", jwk=_key.serialize()),
             protected=protectedHeader,
             signature=sig,
-            )
-        ])
+        )
+    ])
 
     # _pub_key = ECKey().load_key(eck.public_key())
     _jws = JWS()
@@ -574,7 +577,13 @@ def test_verify_json():
         keys=[key])
 
     vkeys = [ECKey().load_key(eck.public_key())]
-    assert JWS().verify_json(_jwt, keys=vkeys)
+    _jws = JWS()
+    assert _jws.verify_json(_jwt, keys=vkeys)
+    # alg is always protected by default
+    _protected = _jws.protected_headers()
+    assert set(_protected.keys()) == {'foo', 'alg'}
+    assert _protected['foo'] == protected_headers["foo"]
+    assert _protected['alg'] == "ES256"
 
 
 def test_sign_json_dont_include_empty_unprotected_headers():
@@ -631,7 +640,9 @@ def test_verify_json_flattened_syntax():
         keys=[key], flatten=True)
 
     vkeys = [ECKey().load_key(key.public_key())]
-    assert JWS().verify_json(_jwt, keys=vkeys)
+    _jws = JWS()
+    assert _jws.verify_json(_jwt, keys=vkeys)
+    assert _jws.protected_headers() == {'alg': "ES256", 'foo': 'bar'}
 
 
 def test_sign_json_dont_flatten_if_multiple_signatures():

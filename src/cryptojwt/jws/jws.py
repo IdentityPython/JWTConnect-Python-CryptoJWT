@@ -3,7 +3,14 @@ import json
 import logging
 
 from cryptojwt.jws.exception import JWSException
-
+from .dsa import ECDSASigner
+from .exception import FormatError
+from .exception import NoSuitableSigningKeys
+from .exception import SignerAlgError
+from .hmac import HMACSigner
+from .pss import PSSSigner
+from .rsa import RSASigner
+from .utils import alg2keytype
 from ..exception import BadSignature
 from ..exception import UnknownAlgorithm
 from ..exception import WrongNumberOfParts
@@ -13,22 +20,12 @@ from ..simple_jwt import SimpleJWT
 from ..utils import b64d_enc_dec
 from ..utils import b64e_enc_dec
 from ..utils import b64encode_item
-from .dsa import ECDSASigner
-from .exception import FormatError
-from .exception import NoSuitableSigningKeys
-from .exception import SignerAlgError
-from .hmac import HMACSigner
-from .pss import PSSSigner
-from .rsa import RSASigner
-from .utils import alg2keytype
 
 try:
     from builtins import str
     from builtins import object
 except ImportError:
     pass
-
-
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +49,7 @@ SIGNER_ALGS = {
     'PS512': PSSSigner('SHA512'),
 
     'none': None
-    }
+}
 
 
 class JWSig(SimpleJWT):
@@ -77,6 +74,7 @@ class JWS(JWx):
         JWx.__init__(self, msg, with_digest, httpc, **kwargs)
         if 'alg' not in self:
             self['alg'] = "RS256"
+        self._protected_headers = {}
 
     def alg_keys(self, keys, use, protected=None):
         _alg = self._pick_alg(keys)
@@ -197,7 +195,7 @@ class JWS(JWx):
 
         if "alg" in self and self['alg'] and _alg:
             if isinstance(self['alg'], list):
-                if _alg not in self["alg"] :
+                if _alg not in self["alg"]:
                     raise SignerAlgError(
                         "Wrong signing algorithm, expected {} got {}".format(
                             self['alg'], _alg))
@@ -327,7 +325,8 @@ class JWS(JWx):
                     signature[key] = _jwss[key]
             _signs = [signature]
 
-        _claim = last_exception = None
+        _claim = None
+        _all_protected = {}
         for _sign in _signs:
             protected_headers = _sign.get("protected", "")
             token = b".".join([protected_headers.encode(), _payload.encode(),
@@ -335,8 +334,10 @@ class JWS(JWx):
 
             unprotected_headers = _sign.get("header", {})
             all_headers = unprotected_headers.copy()
-            all_headers.update(
-                json.loads(b64d_enc_dec(protected_headers) or {}))
+            if protected_headers:
+                _protected = json.loads(b64d_enc_dec(protected_headers))
+                _all_protected.update(_protected)
+                all_headers.update(_protected)
             self.__init__(**all_headers)
 
             try:
@@ -344,8 +345,7 @@ class JWS(JWx):
             except NoSuitableSigningKeys:
                 if at_least_one is True:
                     logger.warning(
-                        'Could not verify signature with headers: {}'.format(
-                            all_headers))
+                        'Could not verify signature with headers: {}'.format(all_headers))
                     continue
                 else:
                     raise
@@ -361,6 +361,7 @@ class JWS(JWx):
         if not _claim:
             raise NoSuitableSigningKeys('None')
 
+        self._protected_headers = _all_protected
         return _claim
 
     def is_jws(self, jws):
@@ -393,7 +394,7 @@ class JWS(JWx):
         flattened_json_ser_keys = {"payload", "signature"}
         if not json_ser_keys.issubset(
                 json_jws.keys()) and not flattened_json_ser_keys.issubset(
-                json_jws.keys()):
+            json_jws.keys()):
             return False
         return True
 
@@ -454,6 +455,9 @@ class JWS(JWx):
             return self.jwt.verify_header('alg', alg)
         except KeyError:
             return False
+
+    def protected_headers(self):
+        return self._protected_headers.copy()
 
 
 def factory(token, alg=''):
