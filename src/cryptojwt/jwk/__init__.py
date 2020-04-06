@@ -47,13 +47,24 @@ class JWK(object):
             if not isinstance(alg, str):
                 alg = as_unicode(alg)
 
-            # The list comes from https://tools.ietf.org/html/rfc7518#page-6
-            # Should map against SIGNER_ALGS in cryptojwt.jws.jws
-            if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
-                           "RS512", "ES256", "ES384", "ES512", "PS256",
-                           "PS384", "PS512", "none"]:
-                raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
-
+            if use == 'enc':
+                if alg not in ["RSA1_5", "RSA-OAEP", "RSA-OAEP-256", "A128KW", "A192KW", "A256KW",
+                               "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
+                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
+            elif use == 'sig':
+                # The list comes from https://tools.ietf.org/html/rfc7518#page-6
+                # Should map against SIGNER_ALGS in cryptojwt.jws.jws
+                if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
+                               "RS512", "ES256", "ES384", "ES512", "PS256",
+                               "PS384", "PS512", "none"]:
+                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
+            else:  # potentially used both for encryption and signing
+                if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
+                               "RS512", "ES256", "ES384", "ES512", "PS256",
+                               "PS384", "PS512", "none", "RSA1_5", "RSA-OAEP", "RSA-OAEP-256",
+                               "A128KW", "A192KW", "A256KW", "ECDH-ES", "ECDH-ES+A128KW",
+                               "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
+                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
         self.alg = alg
 
         if isinstance(use, str):

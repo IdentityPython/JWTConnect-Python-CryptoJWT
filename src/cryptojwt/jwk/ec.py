@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
+from ..exception import UnsupportedECurve
 from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
@@ -38,8 +39,12 @@ def ec_construct_public(num):
     :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
         instance.
     """
-    ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
-                                         NIST2SEC[as_unicode(num['crv'])]())
+    try:
+        _sec_crv = NIST2SEC[as_unicode(num['crv'])]
+    except KeyError:
+        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num['crv']))
+
+    ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'], _sec_crv())
     return ecpn.public_key(default_backend())
 
 

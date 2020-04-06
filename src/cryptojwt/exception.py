@@ -105,3 +105,7 @@ class WrongUsage(JWKESTException):
 
 class HTTPException(JWKESTException):
     pass
+
+
+class UnsupportedECurve(Unsupported):
+    pass
