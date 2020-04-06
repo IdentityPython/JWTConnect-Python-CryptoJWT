@@ -430,18 +430,18 @@ def test_outdated():
 
 
 def test_dump_jwks():
-    kb1 = rsa_init(
-        {'use': ['enc', 'sig'], 'size': 1024, 'name': 'rsa', 'path': 'keys'})
     a = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     b = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb2 = KeyBundle([a, b])
+
+    kb1 = rsa_init({'use': ['enc', 'sig'], 'size': 1024, 'name': 'rsa', 'path': 'keys'})
     dump_jwks([kb1, kb2], 'jwks_combo')
 
     # Now read it
 
     nkb = KeyBundle(source='file://jwks_combo', fileformat='jwks')
 
-    assert len(nkb) == 2
+    assert len(nkb) == 4
     # both RSA keys
     assert len(nkb.get('rsa')) == 2
 
@@ -656,10 +656,8 @@ def test_keys():
 
 EXPECTED = [
     b'iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA',
-    b'kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI',
-    b'8w34j9PLyCVC7VOZZb1tFVf0MOa2KZoy87lICMeD5w8',
-    b'nKzalL5pJOtVAdCtBAU8giNRNimE-XbylWZ4vq6ZlF8',
-    b'akXzyGlXg8yLhsCczKb_r8VERLx7-iZBUMIVgg2K7p4'
+    b'akXzyGlXg8yLhsCczKb_r8VERLx7-iZBUMIVgg2K7p4',
+    b'Rdy8n5h0fo2q9USHJ6HQKnNZFynN1pWN_X6Bc_Tx-lE'
 ]
 
 

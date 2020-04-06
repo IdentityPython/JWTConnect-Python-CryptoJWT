@@ -12,6 +12,8 @@ from cryptojwt.jwk.hmac import new_sym_key
 from .exception import DeSerializationNotPossible
 from .exception import JWKException
 from .exception import UnknownKeyType
+from .exception import UnsupportedAlgorithm
+from .exception import UnsupportedECurve
 from .exception import UpdateFailed
 from .jwk.ec import ECKey
 from .jwk.ec import import_private_key_from_file
@@ -36,11 +38,11 @@ LOGGER = logging.getLogger(__name__)
 #     _err = json.dumps({'error': error, 'error_description': descr})
 #     raise excep(_err, 'application/json')
 
-
+# Make sure the keys are all uppercase
 K2C = {
     "RSA": RSAKey,
     "EC": ECKey,
-    "oct": SYMKey,
+    "OCT": SYMKey,
 }
 
 MAP = {'dec': 'enc', 'enc': 'enc', 'ver': 'sig', 'sig': 'sig'}
@@ -242,7 +244,8 @@ class KeyBundle:
         :return:
         """
         for inst in keys:
-            typ = inst["kty"]
+            inst['kty'] = inst["kty"].upper()
+            _typ = inst['kty']
             try:
                 _usage = harmonize_usage(inst['use'])
             except KeyError:
@@ -250,25 +253,30 @@ class KeyBundle:
             else:
                 del inst['use']
 
-            flag = 0
+            _error = ''
             for _use in _usage:
-                for _typ in [typ, typ.lower(), typ.upper()]:
-                    try:
-                        _key = K2C[_typ](use=_use, **inst)
-                    except KeyError:
-                        continue
-                    except JWKException as err:
-                        LOGGER.warning('While loading keys: %s', err)
-                    else:
-                        if _key not in self._keys:
-                            if not _key.kid:
-                                _key.add_kid()
-                            self._keys.append(_key)
-                        flag = 1
-                        break
-            if not flag:
-                LOGGER.warning(
-                    'While loading keys, UnknownKeyType: %s', typ)
+                try:
+                    _key = K2C[_typ](use=_use, **inst)
+                except KeyError:
+                    _error = 'UnknownKeyType: {}'.format(_typ)
+                    continue
+                except (UnsupportedECurve, UnsupportedAlgorithm) as err:
+                    _error = str(err)
+                    break
+                except JWKException as err:
+                    LOGGER.warning('While loading keys: %s', err)
+                    _error = str(err)
+                else:
+                    if _key not in self._keys:
+                        if not _key.kid:
+                            _key.add_kid()
+                        self._keys.append(_key)
+                    _error = ''
+                    break
+            if _error:
+                LOGGER.warning('While loading keys, %s', _error)
+
+        self.last_updated = time.time()
 
     def do_local_jwk(self, filename):
         """
@@ -282,8 +290,6 @@ class KeyBundle:
         else:
             self.do_keys([_info])
 
-        self.last_updated = time.time()
-
     def do_local_der(self, filename, keytype, keyusage=None, kid=''):
         """
         Load a DER encoded file amd create a key from it.
@@ -292,29 +298,25 @@ class KeyBundle:
         :param keytype: Presently 'rsa' and 'ec' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
         """
-        if keytype.lower() == 'rsa':
-            _bkey = import_private_rsa_key_from_file(filename)
-            _key = RSAKey().load_key(_bkey)
-        elif keytype.lower() == 'ec':
-            _bkey = import_private_key_from_file(filename)
-            _key = ECKey().load_key(_bkey)
+        key_args = {}
+        _kty = keytype.lower()
+        if _kty in ['rsa', 'ec']:
+            key_args["kty"] = _kty
+            _key = import_private_rsa_key_from_file(filename)
+            key_args["priv_key"] = _key
+            key_args["pub_key"] = _key.public_key()
         else:
-            raise NotImplementedError('No support for DER decoding of that key type')
+            raise NotImplementedError('No support for DER decoding of key type {}'.format(_kty))
 
         if not keyusage:
-            keyusage = ["enc", "sig"]
+            key_args["use"] = ["enc", "sig"]
         else:
-            keyusage = harmonize_usage(keyusage)
+            key_args["use"] = harmonize_usage(keyusage)
 
-        for use in keyusage:
-            _key.use = use
-            if kid:
-                _key.kid = kid
-            if not _key.kid:
-                _key.add_kid()
-            self._keys.append(_key)
+        if kid:
+            key_args['kid'] = kid
 
-        self.last_updated = time.time()
+        self.do_keys([key_args])
 
     def do_remote(self):
         """

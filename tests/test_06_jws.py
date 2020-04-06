@@ -225,7 +225,7 @@ def test_hmac_512():
 
 def test_hmac_from_keyrep():
     payload = "Please take a moment to register today"
-    symkeys = [k for k in SIGJWKS if k.kty == "oct"]
+    symkeys = [k for k in SIGJWKS if k.kty == "OCT"]
     _jws = JWS(payload, alg="HS512")
     _jwt = _jws.sign_compact(symkeys)
 
