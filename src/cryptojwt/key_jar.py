@@ -653,7 +653,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, owner=''):
             {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"]},
             {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
             {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"}
-            {"type": "OCT", "bytes": 32, "use":["sig"]}
+            {"type": "oct", "bytes": 32, "use":["sig"]}
         ]
 
     Keys in this specification are:

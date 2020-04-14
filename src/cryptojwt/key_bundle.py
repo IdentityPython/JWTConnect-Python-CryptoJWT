@@ -42,7 +42,7 @@ LOGGER = logging.getLogger(__name__)
 K2C = {
     "RSA": RSAKey,
     "EC": ECKey,
-    "OCT": SYMKey,
+    "oct": SYMKey,
 }
 
 MAP = {'dec': 'enc', 'enc': 'enc', 'ver': 'sig', 'sig': 'sig'}
@@ -116,7 +116,7 @@ def sym_init(spec):
     except KeyError:
         size = 24
 
-    _kb = KeyBundle(keytype="OCT")
+    _kb = KeyBundle(keytype="oct")
     if 'use' in spec:
         for use in harmonize_usage(spec["use"]):
             _key = new_sym_key(use=use, bytes=size)
@@ -244,7 +244,14 @@ class KeyBundle:
         :return:
         """
         for inst in keys:
-            inst['kty'] = inst["kty"].upper()
+            if inst["kty"].lower() in K2C:
+                inst["kty"] = inst["kty"].lower()
+            elif inst["kty"].upper() in K2C:
+                inst["kty"] = inst["kty"].upper()
+            else:
+                LOGGER.warning('While loading keys, unknown key type: %s', inst['kty'])
+                continue
+
             _typ = inst['kty']
             try:
                 _usage = harmonize_usage(inst['use'])
@@ -668,19 +675,24 @@ def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     return _bundle
 
 
-def dump_jwks(kbl, target, private=False):
+def dump_jwks(kbl, target, private=False, symmetric_too=False):
     """
-    Write a JWK to a file. Will ignore symmetric keys !!
+    Write a JWK to a file.
 
     :param kbl: List of KeyBundles
     :param target: Name of the file to which everything should be written
     :param private: Should also the private parts be exported
+    :param symmetric_too: Include symmetric keys or not
     """
 
     keys = []
     for _bundle in kbl:
-        keys.extend([k.serialize(private) for k in _bundle.keys() if
-                     k.kty != 'oct' and not k.inactive_since])
+        if symmetric_too:
+            keys.extend([k.serialize(private) for k in _bundle.keys() if not k.inactive_since])
+        else:
+            keys.extend([k.serialize(private) for k in _bundle.keys() if
+                         k.kty != 'oct' and not k.inactive_since])
+
     res = {"keys": keys}
 
     try:
@@ -719,7 +731,7 @@ def build_key_bundle(key_conf, kid_template=""):
             {"type": "RSA", "key": "cp_keys/key.pem", "use": ["enc", "sig"], 'size': 2048},
             {"type": "EC", "crv": "P-256", "use": ["sig"], "kid": "ec.1"},
             {"type": "EC", "crv": "P-256", "use": ["enc"], "kid": "ec.2"},
-            {"type": "OCT", "bytes":}
+            {"type": "oct", "bytes":}
         ]
 
     Keys in this specification are:
@@ -778,7 +790,7 @@ def build_key_bundle(key_conf, kid_template=""):
                     _bundle = ec_init(spec)
             else:
                 _bundle = ec_init(spec)
-        elif typ.upper() == "OCT":
+        elif typ.lower() == "oct":
             _bundle = sym_init(spec)
         else:
             continue
@@ -1052,7 +1064,7 @@ def key_gen(type, **kwargs):
             logging.error("Unknown curve: %s", crv)
             raise ValueError("Unknown curve: {}".format(crv))
         _key = new_ec_key(crv=crv, **kargs)
-    elif type.upper() in ["SYM", "OCT"]:
+    elif type.lower() in ["sym", "oct"]:
         keysize = kwargs.get("bytes", 24)
         randomkey = os.urandom(keysize)
         _key = SYMKey(key=randomkey, **kargs)
