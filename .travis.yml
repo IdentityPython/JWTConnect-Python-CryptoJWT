@@ -1,39 +1,31 @@
 sudo: false
-
 language: python
 python:
-  - 3.6
-  - 3.7
-  - 3.8
-  - pypy3
-
+- 3.6
+- 3.7
+- 3.8
+- pypy3
 addons:
   apt:
     packages:
-      -
-
+    - 
 install:
-  - pip install codecov
-  - pip install tox
-  - pip install tox-travis
-
+- pip install codecov
+- pip install tox
+- pip install tox-travis
 script:
-  - codecov --version
-  - tox
-
+- codecov --version
+- tox
 after_success:
-  - codecov
-
+- codecov
 notifications:
   email: false
-
 deploy:
   provider: pypi
   on:
     tags: true
-  distributions: "bdist_wheel"
+  distributions: bdist_wheel
   skip_existing: true
-  user: "__token__"
+  user: __token__
   password:
-    secure: XXX
-
+    secure: CCG5bVM31/Ee/WiBRMA6fNmpLUt0+Vn+J2iuz4zH8NvKygKyz5wzJXko1jCyB3hnI0D4ur/IYR+zEIxTKUHwls6eCwY1itZWlcYPVHcNNoHRr2Uvoj+rphhVzGXTVWk9DQ4CM16BmwfHEH3OF/x7cFkCo+i0htnVnEqA3Fu5fW14n69JOta4D45IuxJRLSaPHlvY8lt1HN6bIERxdeQjlQzOKvAi7yeDnE2Tajf2ZEekOvAjxJANulN0d8IcSsvAg2QmW0xB7nMeOEbwrWF0HOJXqrl4m9hvQ8bH9d7/nhuz6bwzAwgmt5CcP7qNzWMnc5+lhzBJFm3ZUxBt6LkrJFRY56KwGdlxsPWrhQjNS/06AhYtj5E94xcrsUbrL8tazF0oKLS90DfimuFQdbcq0sOclSUOMA1SzPxzSviu6uBHxRjbeFtfa4Y0od95uG7Uf1VFC2TCYCKcvIoryhgA1p+xhHZqXW6tlENnFAqHS200+PQfbCkY7kJF0RpKxPOOioRbBmvistlUBzgY55ij9U1kmALVEXlXsAoZAixD1RoujY/QBbI50wlg84B+Ucjun5aHg0j5t5A2HqEPg7Dn3cUFCWZ1hj7VCX1+pwKdYTo4SsbZCwmuVN8vg66Sf7wv+BV2o6MGNQaq97eN8+cy2lK0A8kbKhV4tIyvPJd0iss=
