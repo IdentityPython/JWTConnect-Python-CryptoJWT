@@ -6,9 +6,9 @@ import time
 from functools import cmp_to_key
 
 import requests
+
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
-
 from .exception import DeSerializationNotPossible
 from .exception import JWKException
 from .exception import UnknownKeyType
@@ -16,7 +16,6 @@ from .exception import UnsupportedAlgorithm
 from .exception import UnsupportedECurve
 from .exception import UpdateFailed
 from .jwk.ec import ECKey
-from .jwk.ec import import_private_key_from_file
 from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
@@ -648,6 +647,44 @@ class KeyBundle:
             return ValueError('Not a KeyBundle instance')
 
         return [k for k in self._keys if k not in bundle]
+
+    def dump(self):
+        _keys = []
+        for _k in self._keys:
+            _ser = _k.to_dict()
+            if _k.inactive_since:
+                _ser['inactive_since'] = _k.inactive_since
+            _keys.append(_ser)
+
+        res = {
+            "keys": _keys,
+            "fileformat": self.fileformat,
+            "last_updated": self.last_updated,
+            "httpc_params": self.httpc_params,
+            "remote": self.remote,
+            "imp_jwks": self.imp_jwks,
+            "time_out": self.time_out,
+            "cache_time": self.cache_time
+        }
+
+        if self.source:
+            res['source'] = self.source
+
+        return res
+
+    def load(self, spec):
+        _keys = spec.get("keys", [])
+        if _keys:
+            self.do_keys(_keys)
+        self.source = spec.get("source", None)
+        self.fileformat = spec.get("fileformat", "jwks")
+        self.last_updated = spec.get("last_updated", 0)
+        self.remote = spec.get("remote", False)
+        self.imp_jwks = spec.get('imp_jwks', None)
+        self.time_out = spec.get('time_out', 0)
+        self.cache_time = spec.get('cache_time', 0)
+        self.httpc_params = spec.get('httpc_params', {})
+        return self
 
 
 def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):

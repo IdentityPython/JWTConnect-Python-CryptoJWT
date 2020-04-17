@@ -140,6 +140,10 @@ class SYMKey(JWK):
 
         for key in self.public_members:
             if getattr(other, key) != getattr(self, key):
+                if key == 'kid':
+                    # if one has a value and the other not then assume they are the same
+                    if getattr(self, key) == '' or getattr(other, key) == '':
+                        return True
                 return False
 
         return True

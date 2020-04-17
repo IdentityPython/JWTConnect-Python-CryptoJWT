@@ -8,8 +8,9 @@ import pytest
 import requests
 import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptojwt.jwk.ec import new_ec_key
+
 from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
@@ -448,7 +449,7 @@ def test_dump_jwks():
     assert len(nkb.get('rsa')) == 2
 
     # Will dump symmetric keys
-    dump_jwks([kb1, kb2], 'jwks_combo',symmetric_too=True)
+    dump_jwks([kb1, kb2], 'jwks_combo', symmetric_too=True)
 
     # Now read it
     nkb = KeyBundle(source='file://jwks_combo', fileformat='jwks')
@@ -920,3 +921,48 @@ def test_init_key():
     # Now _jwk3 is stored in the file
     _jwk4 = init_key(filename, "RSA")
     assert _jwk4 == _jwk3
+
+
+def test_export_inactive():
+    desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
+    kb = KeyBundle([desc])
+    assert len(kb.keys()) == 1
+    for k in kb.keys():
+        kb.mark_as_inactive(k.kid)
+    desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
+    kb.do_keys([desc])
+    res = kb.dump()
+    assert set(res.keys()) == {'cache_time',
+                               'fileformat',
+                               'httpc_params',
+                               'imp_jwks',
+                               'keys',
+                               'last_updated',
+                               'remote',
+                               'time_out'}
+
+    kb2 = KeyBundle().load(res)
+    assert len(kb2.keys()) == 2
+    assert len(kb2.active_keys()) == 1
+
+
+def test_remote():
+    source = 'https://example.com/keys.json'
+    # Mock response
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
+        httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(source=source, httpc=requests.request,
+                       httpc_params=httpc_params)
+        kb.do_remote()
+
+    exp = kb.dump()
+    kb2 = KeyBundle().load(exp)
+    assert kb2.source == source
+    assert len(kb2.keys()) == 3
+    assert len(kb2.get("rsa")) == 1
+    assert len(kb2.get("oct")) == 1
+    assert len(kb2.get("ec")) == 1
+    assert kb2.httpc_params == {'timeout': (2, 2)}
+    assert kb2.imp_jwks
+    assert kb2.last_updated

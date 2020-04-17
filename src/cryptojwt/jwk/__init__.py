@@ -93,7 +93,7 @@ class JWK(object):
         self.x5c = x5c or []
         self.x5t = x5t
         self.x5u = x5u
-        self.inactive_since = 0
+        self.inactive_since = kwargs.get("inactive_since", 0)
 
     def to_dict(self):
         """

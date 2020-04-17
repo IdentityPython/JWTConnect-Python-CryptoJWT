@@ -4,6 +4,7 @@ import shutil
 import time
 
 import pytest
+
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import JWS
@@ -960,3 +961,17 @@ def test_init_key_jar_create_directories():
     _keyjar = init_key_jar(**OIDC_KEYS)
     assert len(_keyjar.get_signing_key('RSA')) == 1
     assert len(_keyjar.get_signing_key('EC')) == 1
+
+
+def test_dump():
+    kj = KeyJar()
+    kj['Alice'] = [KeyBundle(JWK0['keys'])]
+    kj['Bob'] = [KeyBundle(JWK1['keys'])]
+    kj['C'] = [KeyBundle(JWK2['keys'])]
+
+    res = kj.dump()
+
+    nkj = KeyJar().load(res)
+    assert set(nkj.owners()) == {'Alice', 'Bob', 'C'}
+    assert nkj.get_signing_key('rsa', 'Alice', kid="abc")
+    assert nkj.get_signing_key('rsa', 'C', kid='MnC_VZcATfM5pOYiJHMba9goEKY')

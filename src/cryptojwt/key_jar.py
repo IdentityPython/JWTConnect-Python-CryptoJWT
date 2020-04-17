@@ -638,6 +638,30 @@ class KeyJar(object):
                     keys += len(kb)
         return keys
 
+    def dump(self):
+        """
+        Returns the key jar content as dictionary
+
+        :return: A dictionary
+        """
+
+        info = {}
+        for iss in list(self.owners()):
+            info[iss] = []
+            for kb in self.issuer_keys[iss]:
+                info[iss].append(kb.dump())
+        return info
+
+    def load(self, info):
+        """
+
+        :param info: A dictionary with the information
+        :return:
+        """
+        for iss, kbs in info.items():
+            self.issuer_keys[iss] = [KeyBundle().load(val) for val in kbs]
+        return self
+
 
 # =============================================================================
 

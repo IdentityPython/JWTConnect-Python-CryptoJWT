@@ -14,6 +14,7 @@ from ..exception import UnsupportedKeyType
 from ..utils import b64e
 from ..utils import deser
 from ..utils import long_to_base64
+from ..utils import as_unicode
 from . import JWK
 from .asym import AsymmetricKey
 
@@ -424,7 +425,7 @@ class RSAKey(AsymmetricKey):
                 if item:
                     res[param] = item
         if self.x5c:
-            res['x5c'] = [x.decode('utf-8') for x in self.x5c]
+            res['x5c'] = [as_unicode(x) for x in self.x5c]
 
         return res
 
