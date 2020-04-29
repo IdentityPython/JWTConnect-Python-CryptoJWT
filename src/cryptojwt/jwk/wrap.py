@@ -2,9 +2,9 @@
 
 import json
 
+from .. import JWE
 from . import JWK
-from ..jwe.jwe import JWE
-from ..jwx import key_from_jwk_dict
+from .jwk import key_from_jwk_dict
 
 __author__ = 'jschlyter'
 
