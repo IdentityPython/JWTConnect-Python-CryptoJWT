@@ -80,7 +80,7 @@ class JWT:
                  enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
                  iss2msg_cls=None, skew=15,
                  allowed_sign_algs=None, allowed_enc_algs=None,
-                 allowed_enc_encs=None):
+                 allowed_enc_encs=None, zip=''):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
         self.lifetime = lifetime  # default life time of the signature
@@ -99,6 +99,7 @@ class JWT:
         self.allowed_sign_algs = allowed_sign_algs
         self.allowed_enc_algs = allowed_enc_algs
         self.allowed_enc_encs = allowed_enc_encs
+        self.zip = zip
 
     def receiver_keys(self, recv, use):
         """
@@ -107,7 +108,7 @@ class JWT:
         :param use: What the keys should be usable for
         :return: A list of keys.
         """
-        return self.key_jar.get(use, owner=recv)
+        return self.key_jar.get(use, issuer_id=recv)
 
     def receivers(self):
         """Return a list of identifiers.
@@ -117,20 +118,22 @@ class JWT:
         """
         return self.key_jar.owners
 
-    def my_keys(self, owner_id='', use='sig'):
-        _k = self.key_jar.get(use, owner=owner_id)
-        if owner_id != '':
+    def my_keys(self, issuer_id='', use='sig'):
+        _k = self.key_jar.get(use, issuer_id=issuer_id)
+        if issuer_id != '':
             try:
-                _k.extend(self.key_jar.get(use, owner=''))
+                _k.extend(self.key_jar.get(use, issuer_id=''))
             except KeyError:
                 pass
         return _k
 
-    def _encrypt(self, payload, recv, cty='JWT'):
+    def _encrypt(self, payload, recv, cty='JWT', zip=''):
         kwargs = {"alg": self.enc_alg, "enc": self.enc_enc}
 
         if cty:
             kwargs["cty"] = cty
+        if zip:
+            kwargs['zip'] = zip
 
         # use the clients public key for encryption
         _jwe = JWE(payload, **kwargs)
@@ -173,15 +176,15 @@ class JWT:
 
         return argv
 
-    def pack_key(self, owner_id='', kid=''):
+    def pack_key(self, issuer_id='', kid=''):
         """
         Find a key to be used for signing the Json Web Token
 
-        :param owner_id: Owner of the keys to chose from
+        :param issuer_id: Owner of the keys to chose from
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.my_keys(owner_id, 'sig'), 'sig', alg=self.alg,
+        keys = pick_key(self.my_keys(issuer_id, 'sig'), 'sig', alg=self.alg,
                         kid=kid)
 
         if not keys:
@@ -189,12 +192,12 @@ class JWT:
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid='', owner='', recv='', aud=None, **kwargs):
+    def pack(self, payload=None, kid='', issuer_id='', recv='', aud=None, **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
-        :param owner: The owner of the the keys that are to be used for signing
+        :param issuer_id: The owner of the the keys that are to be used for signing
         :param recv: The intended immediate receiver
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
@@ -221,12 +224,12 @@ class JWT:
 
             _args['jti'] = _jti
 
-        if not owner and self.iss:
-            owner = self.iss
+        if not issuer_id and self.iss:
+            issuer_id = self.iss
 
         if self.sign:
             if self.alg != 'none':
-                _key = self.pack_key(owner, kid)
+                _key = self.pack_key(issuer_id, kid)
                 # _args['kid'] = _key.kid
             else:
                 _key = None
@@ -238,9 +241,9 @@ class JWT:
 
         if _encrypt:
             if not self.sign:
-                return self._encrypt(_sjwt, recv, cty='json')
+                return self._encrypt(_sjwt, recv, cty='json', zip=self.zip)
 
-            return self._encrypt(_sjwt, recv)
+            return self._encrypt(_sjwt, recv, zip=self.zip)
         else:
             return _sjwt
 

@@ -4,6 +4,7 @@ import shutil
 import time
 
 import pytest
+from abstorage.storages.absqlalchemy import AbstractStorageSQLAlchemy
 
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
@@ -15,10 +16,9 @@ from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_jar import KeyJar
 from cryptojwt.key_jar import build_keyjar
 from cryptojwt.key_jar import init_key_jar
+from cryptojwt.key_jar import rotate_keys
 
 __author__ = 'Roland Hedberg'
-
-from cryptojwt.key_jar import rotate_keys
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "test_keys"))
@@ -31,6 +31,41 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 def full_path(local_file):
     return os.path.join(BASEDIR, local_file)
 
+
+ABS_STORAGE_SQLALCHEMY = dict(
+    driver='sqlalchemy',
+    url='sqlite:///:memory:',
+    params=dict(table='Thing'),
+    handler=AbstractStorageSQLAlchemy
+)
+
+STORAGE_CONFIG = {
+    # 'KeyIssuer': {
+    #     'name': '',
+    #     'class': 'abstorage.type.list.ASList',
+    #     'kwargs': {
+    #         'io_class': 'cryptojwt.serialize.io.KeyBundleIO',
+    #         'storage_config': ABS_STORAGE_SQLALCHEMY
+    #     }
+    # },
+    # 'KeyBundle': {
+    #     'name': '',
+    #     'class': 'abstorage.type.list.ASList',
+    #     'kwargs': {
+    #         'io_class': 'cryptojwt.serialize.item.JWK',
+    #         'storage_config': ABS_STORAGE_SQLALCHEMY
+    #     }
+    # },
+    'KeyJar': {
+        'name': '',
+        'class': 'abstorage.type.list.ASList',
+        'kwargs': {
+            'io_class': 'cryptojwt.serialize.item.KeyIssuer',
+            'storage_config': ABS_STORAGE_SQLALCHEMY
+        }
+    }
+
+}
 
 JWK0 = {
     "keys": [
@@ -201,13 +236,12 @@ def test_build_keyjar():
         {"type": "EC", "crv": "P-256", "use": ["sig"]},
     ]
 
-    keyjar = build_keyjar(keys)
+    keyjar = build_keyjar(keys, storage_conf=STORAGE_CONFIG)
     jwks = keyjar.export_jwks()
     for key in jwks["keys"]:
         assert "d" not in key  # the JWKS shouldn't contain the private part
         # of the keys
 
-    assert len(keyjar[""]) == 3  # 3 keys
     assert len(keyjar.get_issuer_keys('')) == 3  # A total of 3 keys
     assert len(keyjar.get('sig')) == 2  # 2 for signing
     assert len(keyjar.get('enc')) == 1  # 1 for encryption
@@ -249,7 +283,7 @@ def test_build_RSA_keyjar_from_file(tmpdir):
 
     key_jar = build_keyjar(keys)
 
-    assert len(key_jar[""]) == 2
+    assert len(key_jar.get_signing_key('rsa', '')) == 1
 
 
 def test_build_EC_keyjar_missing(tmpdir):
@@ -273,7 +307,7 @@ def test_build_EC_keyjar_from_file(tmpdir):
 
     key_jar = build_keyjar(keys)
 
-    assert len(key_jar[""]) == 2
+    assert len(key_jar.get_issuer_keys("")) == 2
 
 
 class TestKeyJar(object):
@@ -283,7 +317,7 @@ class TestKeyJar(object):
         kj.add_kb('https://issuer.example.com', kb)
         assert list(kj.owners()) == ['https://issuer.example.com']
 
-    def test_setitem(self):
+    def test_add_item(self):
         kj = KeyJar()
         kb = keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"])
         kj.add_kb('https://issuer.example.com', kb)
@@ -296,76 +330,76 @@ class TestKeyJar(object):
         assert len(kj.get_signing_key('oct', '')) == 1
 
     def test_items(self):
-        ks = KeyJar()
-        ks.add_kb("", KeyBundle(
-            [{"kty": "oct", "key": "abcdefghijklmnop", "use": "sig"},
-             {"kty": "oct", "key": "ABCDEFGHIJKLMNOP", "use": "enc"}]))
-        ks.add_kb("http://www.example.org", KeyBundle([
+        _key_jar = KeyJar()
+        _key_jar.add_kb("", KeyBundle([{"kty": "oct", "key": "abcdefghijklmnop", "use": "sig"},
+                                       {"kty": "oct", "key": "ABCDEFGHIJKLMNOP", "use": "enc"}]))
+        _key_jar.add_kb("http://www.example.org", KeyBundle([
             {"kty": "oct", "key": "0123456789012345", "use": "sig"},
             {"kty": "oct", "key": "1234567890123456", "use": "enc"}]))
-        ks.add_kb("http://www.example.org",
-                  keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
-        assert len(ks.items()) == 2
+        _key_jar.add_kb("http://www.example.org",
+                        keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
+
+        assert len(_key_jar.items()) == 2
 
     def test_issuer_extra_slash(self):
-        ks = KeyJar()
-        ks.add_kb("", KeyBundle(
+        _key_jar = KeyJar()
+        _key_jar.add_kb("", KeyBundle(
             [{"kty": "oct", "key": "abcdefghijklmnop", "use": "sig"},
              {"kty": "oct", "key": "ABCDEFGHIJKLMNOP", "use": "enc"}]))
-        ks.add_kb("http://www.example.org", KeyBundle([
+        _key_jar.add_kb("http://www.example.org", KeyBundle([
             {"kty": "oct", "key": "0123456789012345", "use": "sig"},
             {"kty": "oct", "key": "1234567890123456", "use": "enc"}]))
-        ks.add_kb("http://www.example.org",
-                  keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
+        _key_jar.add_kb("http://www.example.org",
+                        keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
-        assert ks.get('sig', 'RSA', 'http://www.example.org/')
+        assert _key_jar.get('sig', key_type='RSA', issuer_id='http://www.example.org/')
 
     def test_issuer_missing_slash(self):
-        ks = KeyJar()
-        ks.add_kb("", KeyBundle(
+        _key_jar = KeyJar()
+        _key_jar.add_kb("", KeyBundle(
             [{"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "sig"},
              {"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "enc"}]))
-        ks.add_kb("http://www.example.org/", KeyBundle([
+        _key_jar.add_kb("http://www.example.org/", KeyBundle([
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "sig"},
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "enc"}]))
-        ks.add_kb("http://www.example.org/",
-                  keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
+        _key_jar.add_kb("http://www.example.org/",
+                        keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
-        assert ks.get('sig', 'RSA', 'http://www.example.org')
+        assert _key_jar.get('sig', key_type='RSA', issuer_id='http://www.example.org')
 
     def test_get_enc(self):
-        ks = KeyJar()
-        ks.add_kb("", KeyBundle(
+        _key_jar = KeyJar()
+        _key_jar.add_kb("", KeyBundle(
             [{"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "sig"},
              {"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "enc"}]))
-        ks.add_kb("http://www.example.org/", KeyBundle([
+        _key_jar.add_kb("http://www.example.org/", KeyBundle([
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "sig"},
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "enc"}]))
-        ks.add_kb("http://www.example.org/",
-                  keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
+        _key_jar.add_kb("http://www.example.org/",
+                        keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
-        assert ks.get('enc', 'oct')
+        assert _key_jar.get('enc', key_type='oct')
 
     def test_get_enc_not_mine(self):
-        ks = KeyJar()
-        ks.add_kb("", KeyBundle(
+        _key_jar = KeyJar()
+        _key_jar.add_kb("", KeyBundle(
             [{"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "sig"},
              {"kty": "oct", "key": "a1b2c3d4e5f6g7h8", "use": "enc"}]))
-        ks.add_kb("http://www.example.org/", KeyBundle([
+        _key_jar.add_kb("http://www.example.org/", KeyBundle([
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "sig"},
             {"kty": "oct", "key": "1a2b3c4d5e6f7g8h", "use": "ver"}]))
-        ks.add_kb("http://www.example.org/",
-                  keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
+        _key_jar.add_kb("http://www.example.org/",
+                        keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]))
 
-        assert ks.get('enc', 'oct', 'http://www.example.org/')
+        assert _key_jar.get('enc', key_type='oct', issuer_id='http://www.example.org/')
 
     def test_dump_issuer_keys(self):
         kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks",
                                        ["sig"])
         assert len(kb) == 1
         kj = KeyJar()
-        kj.add_kb("", kb)
+        kj.add_kb('', kb)
         _jwks_dict = kj.export_jwks()
 
         _info = _jwks_dict['keys'][0]
@@ -394,11 +428,11 @@ class TestKeyJar(object):
 
     @pytest.mark.network
     def test_provider(self):
-        kj = KeyJar()
-        kj.load_keys("https://connect-op.heroku.com",
-                     jwks_uri="https://connect-op.herokuapp.com/jwks.json")
+        _keyjar = KeyJar()
+        _keyjar.load_keys("https://connect-op.heroku.com",
+                          jwks_uri="https://connect-op.herokuapp.com/jwks.json")
 
-        assert kj.get_issuer_keys("https://connect-op.heroku.com")[0].keys()
+        assert _keyjar.get_issuer_keys("https://connect-op.heroku.com")
 
 
 def test_import_jwks():
@@ -434,12 +468,9 @@ def test_remove_after():
 
     keyjar.remove_after = 1
     # rotate_keys = create new keys + make the old as inactive
-    keyjar = rotate_keys(KEYDEFS, keyjar=keyjar)
+    rotate_keys(KEYDEFS, keyjar=keyjar)
 
     keyjar.remove_outdated(time.time() + 3600)
-
-    _interm = [k.kid for k in keyjar.get_issuer_keys('') if k.kid]
-    assert len(_interm) == 2
 
     # The remainder are the new keys
     _new = [k.kid for k in keyjar.get_issuer_keys('') if k.kid]
@@ -608,9 +639,8 @@ class TestVerifyJWTKeys(object):
         self.alice_keyjar = build_keyjar(mkey)
         # Bob has one single keys
         self.bob_keyjar = build_keyjar(skey)
-        self.alice_keyjar.import_jwks(self.alice_keyjar.export_jwks(private=True, issuer_id=''),
-                                      'Alice')
-        self.bob_keyjar.import_jwks(self.bob_keyjar.export_jwks(private=True, issuer_id=''), 'Bob')
+        self.alice_keyjar.import_jwks(self.alice_keyjar[''].export_jwks(), 'Alice')
+        self.bob_keyjar.import_jwks(self.bob_keyjar[''].export_jwks(), 'Bob')
 
         # To Alice's keyjar add Bob's public keys
         self.alice_keyjar.import_jwks(
@@ -621,11 +651,11 @@ class TestVerifyJWTKeys(object):
             self.alice_keyjar.export_jwks(issuer_id='Alice'), 'Alice')
 
         _jws = JWS('{"aud": "Bob", "iss": "Alice"}', alg='RS256')
-        sig_key = self.alice_keyjar.get_signing_key('rsa', issuer_id='Alice')[0]
+        sig_key = self.alice_keyjar.get_signing_key('rsa', owner='Alice')[0]
         self.sjwt_a = _jws.sign_compact([sig_key])
 
         _jws = JWS('{"aud": "Alice", "iss": "Bob"}', alg='RS256')
-        sig_key = self.bob_keyjar.get_signing_key('rsa', issuer_id='Bob')[0]
+        sig_key = self.bob_keyjar.get_signing_key('rsa', owner='Bob')[0]
         self.sjwt_b = _jws.sign_compact([sig_key])
 
     def test_no_kid_multiple_keys(self):
@@ -647,7 +677,7 @@ class TestVerifyJWTKeys(object):
 
     def test_no_kid_multiple_keys_no_kid_issuer(self):
         a_kids = [k.kid for k in
-                  self.alice_keyjar.get_verify_key(issuer_id='Alice',
+                  self.alice_keyjar.get_verify_key(owner='Alice',
                                                    key_type='RSA')]
         no_kid_issuer = {'Alice': a_kids}
         _jwt = factory(self.sjwt_a)
@@ -692,12 +722,16 @@ class TestVerifyJWTKeys(object):
         assert len(keys) == 1
 
 
-def test_copy():
+def key_jar_init():
     kj = KeyJar()
     kj.add_kb('Alice', KeyBundle(JWK0['keys']))
     kj.add_kb('Bob', KeyBundle(JWK1['keys']))
     kj.add_kb('C', KeyBundle(JWK2['keys']))
+    return kj
 
+
+def test_copy():
+    kj = key_jar_init()
     kjc = kj.copy()
 
     assert set(kjc.owners()) == {'Alice', 'Bob', 'C'}
@@ -713,10 +747,7 @@ def test_copy():
 
 
 def test_repr():
-    kj = KeyJar()
-    kj.add_kb('Alice', KeyBundle(JWK0['keys']))
-    kj.add_kb('Bob', KeyBundle(JWK1['keys']))
-    kj.add_kb('C', KeyBundle(JWK2['keys']))
+    kj = key_jar_init()
     txt = kj.__repr__()
     assert "<KeyJar(issuers=[" in txt
     _d = eval(txt[16:-2])
@@ -724,10 +755,8 @@ def test_repr():
 
 
 def test_get_wrong_owner():
-    kj = KeyJar()
-    kj.add_kb('Alice', KeyBundle(JWK0['keys']))
-    kj.add_kb('Bob', KeyBundle(JWK1['keys']))
-    kj.add_kb('C', KeyBundle(JWK2['keys']))
+    kj = key_jar_init()
+
     assert kj.get('sig', 'rsa', 'https://delphi.example.com/') == []
     assert kj.get('sig', 'rsa', 'https://delphi.example.com') == []
     assert kj.get('sig', 'rsa') == []
@@ -741,6 +770,7 @@ def test_match_owner():
     kj.add_kb('Alice', KeyBundle(JWK0['keys']))
     kj.add_kb('Bob', KeyBundle(JWK1['keys']))
     kj.add_kb('https://delphi.example.com/path', KeyBundle(JWK2['keys']))
+
     a = kj.match_owner('https://delphi.example.com')
     assert a == 'https://delphi.example.com/path'
 
@@ -753,6 +783,7 @@ def test_str():
     kj.add_kb('Alice', KeyBundle(JWK0['keys']))
 
     desc = '{}'.format(kj)
+    assert desc == '{"Alice": "RSA::abc"}'
     _cont = json.loads(desc)
     assert set(_cont.keys()) == {'Alice'}
 
@@ -765,7 +796,7 @@ def test_load_keys():
 
 
 def test_find():
-    _path = full_path('jwk_private_key.json')
+    _path = full_path('../tests/jwk_private_key.json')
     kb = KeyBundle(source='file://{}'.format(_path))
     kj = KeyJar()
     kj.add_kb('Alice', kb)
@@ -773,6 +804,9 @@ def test_find():
     assert kj.find('{}'.format(_path), 'Alice')
     assert kj.find('https://example.com', 'Alice') == []
     assert kj.find('{}'.format(_path), 'Bob') == []
+
+    _res = kj.find('{}'.format(_path))
+    assert set(_res.keys()) == {'Alice'}
 
 
 def test_get_decrypt_keys():
@@ -803,22 +837,22 @@ def test_get_decrypt_keys():
 
 
 def test_update_keyjar():
-    _path = full_path('jwk_private_key.json')
+    _path = full_path('../tests/jwk_private_key.json')
     kb = KeyBundle(source='file://{}'.format(_path))
     kj = KeyJar()
     kj.add_kb('Alice', kb)
 
     kj.update()
 
+    keys = kj.get_issuer_keys('Alice')
+    assert len(keys) == 1
+
 
 def test_key_summary():
-    kj = KeyJar()
-    kj.add_kb('Alice', KeyBundle(JWK0['keys']))
-    kj.add_kb('Bob', KeyBundle(JWK1['keys']))
-    kj.add_kb('C', KeyBundle(JWK2['keys']))
+    kj = key_jar_init()
 
     out = kj.key_summary('Alice')
-    assert out
+    assert out == 'RSA::abc'
 
 
 PUBLIC_FILE = '{}/public_jwks.json'.format(BASEDIR)
@@ -852,7 +886,7 @@ KEYSPEC_5 = [
 
 def test_init_key_jar():
     # Nothing written to file
-    _keyjar = init_key_jar(key_defs=KEYSPEC)
+    _keyjar = init_key_jar(key_defs=KEYSPEC, storage_conf=STORAGE_CONFIG)
     assert list(_keyjar.owners()) == ['']
     assert len(_keyjar.get_issuer_keys('')) == 2
 
@@ -863,11 +897,11 @@ def test_init_key_jar_dump_public():
             os.unlink(_file)
 
     # JWKS with public keys written to file
-    _keyjar = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC)
+    _keyjar = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC, storage_conf=STORAGE_CONFIG)
     assert list(_keyjar.owners()) == ['']
 
     # JWKS will be read from disc, not created new
-    _keyjar2 = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC)
+    _keyjar2 = init_key_jar(public_path=PUBLIC_FILE, key_defs=KEYSPEC, storage_conf=STORAGE_CONFIG)
     assert list(_keyjar2.owners()) == ['']
 
     # verify that the 2 Key jars contains the same keys
@@ -880,12 +914,14 @@ def test_init_key_jar_dump_private():
 
     # New set of keys, JWKSs with keys and public written to file
     _keyjar = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
-                           issuer_id='https://example.com')
+                           issuer_id='https://example.com', read_only=False,
+                           storage_conf=STORAGE_CONFIG)
     assert list(_keyjar.owners()) == ['https://example.com']
 
     # JWKS will be read from disc, not created new
-    _keyjar2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC)
-    assert list(_keyjar2.owners()) == ['']
+    _keyjar2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
+                            issuer_id='https://example.com', storage_conf=STORAGE_CONFIG)
+    assert list(_keyjar2.owners()) == ['https://example.com']
 
 
 def test_init_key_jar_update():
@@ -896,11 +932,12 @@ def test_init_key_jar_update():
     # New set of keys, JWKSs with keys and public written to file
     _keyjar_1 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC,
                              issuer_id='https://example.com',
-                             public_path=PUBLIC_FILE, read_only=False)
+                             public_path=PUBLIC_FILE, read_only=False,
+                             storage_conf=STORAGE_CONFIG)
     assert list(_keyjar_1.owners()) == ['https://example.com']
 
     _keyjar_2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
-                             public_path=PUBLIC_FILE)
+                             public_path=PUBLIC_FILE, storage_conf=STORAGE_CONFIG)
 
     # Both should contain the same RSA key
     rsa1 = _keyjar_1.get_signing_key('RSA', 'https://example.com')
@@ -918,16 +955,16 @@ def test_init_key_jar_update():
     assert len(ec2) == 2
 
     # The file on disc should not have changed
-    _keyjar_3 = init_key_jar(private_path=PRIVATE_FILE)
+    _keyjar_3 = init_key_jar(private_path=PRIVATE_FILE, storage_conf=STORAGE_CONFIG)
 
     assert len(_keyjar_3.get_signing_key('RSA')) == 1
     assert len(_keyjar_3.get_signing_key('EC')) == 1
 
     _keyjar_4 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
-                             public_path=PUBLIC_FILE, read_only=False)
+                             public_path=PUBLIC_FILE, read_only=False, storage_conf=STORAGE_CONFIG)
 
     # Now it should
-    _keyjar_5 = init_key_jar(private_path=PRIVATE_FILE)
+    _keyjar_5 = init_key_jar(private_path=PRIVATE_FILE, storage_conf=STORAGE_CONFIG)
 
     assert len(_keyjar_5.get_signing_key('RSA')) == 1
     assert len(_keyjar_5.get_signing_key('EC')) == 2
@@ -946,30 +983,16 @@ def test_init_key_jar_create_directories():
         if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
             shutil.rmtree("{}/{}".format(BASEDIR, _dir))
 
-    _keyjar = init_key_jar(**OIDC_KEYS)
+    _keyjar = init_key_jar(**OIDC_KEYS, storage_conf=STORAGE_CONFIG)
     assert len(_keyjar.get_signing_key('RSA')) == 1
     assert len(_keyjar.get_signing_key('EC')) == 1
 
 
 def test_dump():
-    kj = KeyJar()
-    kj.add_kb('Alice', KeyBundle(JWK0['keys']))
-    kj.add_kb('Bob', KeyBundle(JWK1['keys']))
-    kj.add_kb('C', KeyBundle(JWK2['keys']))
-
+    kj = key_jar_init()
     res = kj.dump()
 
     nkj = KeyJar().load(res)
     assert set(nkj.owners()) == {'Alice', 'Bob', 'C'}
     assert nkj.get_signing_key('rsa', 'Alice', kid="abc")
     assert nkj.get_signing_key('rsa', 'C', kid='MnC_VZcATfM5pOYiJHMba9goEKY')
-
-
-def test_contains():
-    kj = KeyJar()
-    kj.add_kb('Alice', KeyBundle(JWK0['keys']))
-    kj.add_kb('Bob', KeyBundle(JWK1['keys']))
-    kj.add_kb('C', KeyBundle(JWK2['keys']))
-
-    assert 'Bob' in kj
-    assert 'David' not in kj
