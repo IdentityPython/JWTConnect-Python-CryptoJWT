@@ -290,7 +290,8 @@ class KeyBundle:
 
         :param filename: Name of the file from which the JWKS should be loaded
         """
-        _info = json.loads(open(filename).read())
+        with open(filename) as input_file:
+            _info = json.load(input_file)
         if 'keys' in _info:
             self.do_keys(_info["keys"])
         else:
