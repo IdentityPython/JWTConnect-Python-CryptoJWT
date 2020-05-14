@@ -969,3 +969,41 @@ def test_remote():
     assert kb2.httpc_params == {'timeout': (2, 2)}
     assert kb2.imp_jwks
     assert kb2.last_updated
+
+def test_remote_not_modified():
+    source = 'https://example.com/keys.json'
+    headers = {
+        "Date": "Fri, 15 Mar 2019 10:14:25 GMT",
+        "Last-Modified": "Fri, 1 Jan 1970 00:00:00 GMT",
+    }
+    headers = {}
+
+    # Mock response
+    httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+    kb = KeyBundle(source=source, httpc=requests.request,
+                   httpc_params=httpc_params)
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
+        assert kb.do_remote()
+        assert kb.last_remote == headers.get("Last-Modified")
+        timeout1 = kb.time_out
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, status=304, headers=headers)
+        assert kb.do_remote()
+        assert kb.last_remote == headers.get("Last-Modified")
+        timeout2 = kb.time_out
+
+    assert timeout1 == timeout2
+
+    exp = kb.dump()
+    kb2 = KeyBundle().load(exp)
+    assert kb2.source == source
+    assert len(kb2.keys()) == 3
+    assert len(kb2.get("rsa")) == 1
+    assert len(kb2.get("oct")) == 1
+    assert len(kb2.get("ec")) == 1
+    assert kb2.httpc_params == {'timeout': (2, 2)}
+    assert kb2.imp_jwks
+    assert kb2.last_updated
