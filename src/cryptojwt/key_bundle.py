@@ -356,11 +356,12 @@ class KeyBundle:
 
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
+            httpc_params = self.httpc_params.copy()
             if self.last_remote is not None:
-                if "headers" not in self.httpc_params:
-                    self.httpc_params["headers"] = {}
-                self.httpc_params["headers"]["If-Modified-Since"] = self.last_remote
-            _http_resp = self.httpc('GET', self.source, **self.httpc_params)
+                if "headers" not in httpc_params:
+                    httpc_params["headers"] = {}
+                httpc_params["headers"]["If-Modified-Since"] = self.last_remote
+            _http_resp = self.httpc('GET', self.source, **httpc_params)
         except Exception as err:
             LOGGER.error(err)
             raise UpdateFailed(
