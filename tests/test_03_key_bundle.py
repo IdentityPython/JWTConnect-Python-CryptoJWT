@@ -938,7 +938,10 @@ def test_export_inactive():
                                'imp_jwks',
                                'keys',
                                'last_updated',
+                               'last_remote',
+                               'last_local',
                                'remote',
+                               'local',
                                'time_out'}
 
     kb2 = KeyBundle().load(res)
