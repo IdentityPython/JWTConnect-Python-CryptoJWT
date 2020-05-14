@@ -181,6 +181,7 @@ class KeyBundle:
         self._keys = []
         self.remote = False
         self.cache_time = cache_time
+        self.last_fetched = None
         self.time_out = 0
         self.etag = ""
         self.source = None
@@ -336,6 +337,10 @@ class KeyBundle:
 
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
+            if self.last_fetched is not None:
+                if "headers" not in self.httpc_params:
+                    self.httpc_params["headers"] = {}
+                self.httpc_params["headers"]["If-Modified-Since"] = self.last_fetched
             _http_resp = self.httpc('GET', self.source, **self.httpc_params)
         except Exception as err:
             LOGGER.error(err)
@@ -356,6 +361,14 @@ class KeyBundle:
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 raise UpdateFailed(MALFORMED.format(self.source))
+
+            if hasattr(_http_resp, "headers"):
+                headers = getattr(_http_resp, "headers")
+                self.last_fetched = headers.get("last-modified") or headers.get("date")
+
+        elif _http_resp.status_code == 304:  # Not modified
+            LOGGER.debug("%s not modified since %s", self.source, self.last_fetched)
+            pass
 
         else:
             raise UpdateFailed(
