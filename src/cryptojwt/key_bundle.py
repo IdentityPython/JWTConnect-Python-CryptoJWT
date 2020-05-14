@@ -181,7 +181,6 @@ class KeyBundle:
         self._keys = []
         self.remote = False
         self.cache_time = cache_time
-        self.last_fetched = None
         self.time_out = 0
         self.etag = ""
         self.source = None
@@ -190,6 +189,7 @@ class KeyBundle:
         self.keyusage = keyusage
         self.imp_jwks = None
         self.last_updated = 0
+        self.last_remote = None
 
         if httpc:
             self.httpc = httpc
@@ -337,10 +337,10 @@ class KeyBundle:
 
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
-            if self.last_fetched is not None:
+            if self.last_remote is not None:
                 if "headers" not in self.httpc_params:
                     self.httpc_params["headers"] = {}
-                self.httpc_params["headers"]["If-Modified-Since"] = self.last_fetched
+                self.httpc_params["headers"]["If-Modified-Since"] = self.last_remote
             _http_resp = self.httpc('GET', self.source, **self.httpc_params)
         except Exception as err:
             LOGGER.error(err)
@@ -364,10 +364,10 @@ class KeyBundle:
 
             if hasattr(_http_resp, "headers"):
                 headers = getattr(_http_resp, "headers")
-                self.last_fetched = headers.get("last-modified") or headers.get("date")
+                self.last_remote = headers.get("last-modified") or headers.get("date")
 
         elif _http_resp.status_code == 304:  # Not modified
-            LOGGER.debug("%s not modified since %s", self.source, self.last_fetched)
+            LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
             pass
 
         else:
