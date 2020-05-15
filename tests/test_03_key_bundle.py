@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import time
+from pathlib import Path
 
 import pytest
 import requests
@@ -493,6 +494,23 @@ def test_local_jwk():
     assert kb
 
 
+def test_local_jwk_update():
+    cache_time = 0.1
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path), cache_time=cache_time)
+    assert kb
+    _ = kb.keys()
+    last1 = kb.last_local
+    _ = kb.keys()
+    last2 = kb.last_local
+    assert last1 == last2  # file not changed
+    time.sleep(cache_time + 0.1)
+    Path(_path).touch()
+    _ = kb.keys()
+    last3 = kb.last_local
+    assert last2 != last3  # file changed
+
+
 def test_local_jwk_copy():
     _path = full_path('jwk_private_key.json')
     kb = KeyBundle(source='file://{}'.format(_path))
@@ -517,13 +535,14 @@ def mocked_jwks_response():
 def test_httpc_params_1():
     source = 'https://login.salesforce.com/id/keys'  # From test_jwks_url()
     # Mock response
-    responses.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
-    httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
-    kb = KeyBundle(source=source, httpc=requests.request,
-                   httpc_params=httpc_params)
-    assert kb.do_remote()
+    with responses.RequestsMock() as rsps:
+        rsps.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
+        httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(source=source, httpc=requests.request,
+                       httpc_params=httpc_params)
+        assert kb.do_remote()
 
-
+@pytest.mark.network
 def test_httpc_params_2():
     httpc_params = {'timeout': 0}
     kb = KeyBundle(source='https://login.salesforce.com/id/keys',
@@ -958,6 +977,44 @@ def test_remote():
         kb = KeyBundle(source=source, httpc=requests.request,
                        httpc_params=httpc_params)
         kb.do_remote()
+
+    exp = kb.dump()
+    kb2 = KeyBundle().load(exp)
+    assert kb2.source == source
+    assert len(kb2.keys()) == 3
+    assert len(kb2.get("rsa")) == 1
+    assert len(kb2.get("oct")) == 1
+    assert len(kb2.get("ec")) == 1
+    assert kb2.httpc_params == {'timeout': (2, 2)}
+    assert kb2.imp_jwks
+    assert kb2.last_updated
+
+def test_remote_not_modified():
+    source = 'https://example.com/keys.json'
+    headers = {
+        "Date": "Fri, 15 Mar 2019 10:14:25 GMT",
+        "Last-Modified": "Fri, 1 Jan 1970 00:00:00 GMT",
+    }
+    headers = {}
+
+    # Mock response
+    httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+    kb = KeyBundle(source=source, httpc=requests.request,
+                   httpc_params=httpc_params)
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
+        assert kb.do_remote()
+        assert kb.last_remote == headers.get("Last-Modified")
+        timeout1 = kb.time_out
+
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, status=304, headers=headers)
+        assert kb.do_remote()
+        assert kb.last_remote == headers.get("Last-Modified")
+        timeout2 = kb.time_out
+
+    assert timeout1 == timeout2
 
     exp = kb.dump()
     kb2 = KeyBundle().load(exp)
