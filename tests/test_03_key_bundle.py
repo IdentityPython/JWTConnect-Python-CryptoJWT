@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import time
+from pathlib import Path
 
 import pytest
 import requests
@@ -491,6 +492,23 @@ def test_local_jwk():
     _path = full_path('jwk_private_key.json')
     kb = KeyBundle(source='file://{}'.format(_path))
     assert kb
+
+
+def test_local_jwk_update():
+    cache_time = 0.1
+    _path = full_path('jwk_private_key.json')
+    kb = KeyBundle(source='file://{}'.format(_path), cache_time=cache_time)
+    assert kb
+    _ = kb.keys()
+    last1 = kb.last_local
+    _ = kb.keys()
+    last2 = kb.last_local
+    assert last1 == last2  # file not changed
+    time.sleep(cache_time + 0.1)
+    Path(_path).touch()
+    _ = kb.keys()
+    last3 = kb.last_local
+    assert last2 != last3  # file changed
 
 
 def test_local_jwk_copy():
