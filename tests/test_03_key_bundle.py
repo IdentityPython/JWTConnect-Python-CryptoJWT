@@ -517,13 +517,14 @@ def mocked_jwks_response():
 def test_httpc_params_1():
     source = 'https://login.salesforce.com/id/keys'  # From test_jwks_url()
     # Mock response
-    responses.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
-    httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
-    kb = KeyBundle(source=source, httpc=requests.request,
-                   httpc_params=httpc_params)
-    assert kb.do_remote()
+    with responses.RequestsMock() as rsps:
+        rsps.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
+        httpc_params = {'timeout': (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(source=source, httpc=requests.request,
+                       httpc_params=httpc_params)
+        assert kb.do_remote()
 
-
+@pytest.mark.network
 def test_httpc_params_2():
     httpc_params = {'timeout': 0}
     kb = KeyBundle(source='https://login.salesforce.com/id/keys',
