@@ -16,6 +16,7 @@ from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 from cryptojwt.jwk import JWK
+from cryptojwt.jwk import certificate_fingerprint
 from cryptojwt.jwk import pem_hash
 from cryptojwt.jwk import pems_to_x5c
 from cryptojwt.jwk.ec import NIST2SEC
@@ -28,6 +29,7 @@ from cryptojwt.jwk.jwk import import_jwk
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.rsa import generate_and_store_rsa_key
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
@@ -655,3 +657,25 @@ def test_pem_to_x5c():
 def test_pem_hash():
     _hash = pem_hash(full_path("cert.pem"))
     assert _hash
+
+
+def test_certificate_fingerprint():
+    with open(full_path('cert.der'), 'rb') as cert_file:
+        der = cert_file.read()
+
+    res = certificate_fingerprint(der)
+    assert res == '01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E:80:8B:55:49:F1:48'
+
+    res = certificate_fingerprint(der, 'sha1')
+    assert res == 'CA:CF:21:9E:72:00:CD:1C:CA:FD:4F:6D:84:6B:9E:E8:74:80:47:64'
+
+    res = certificate_fingerprint(der, 'md5')
+    assert res == '1B:2B:3B:F8:49:EE:2A:2C:C1:C7:6C:88:86:AB:C6:EE'
+
+    with pytest.raises(UnsupportedAlgorithm):
+        certificate_fingerprint(der, 'foo')
+
+
+def test_generate_and_store_rsa_key():
+    priv_key = generate_and_store_rsa_key(filename=full_path('temp_rsa.key'))
+
