@@ -7,6 +7,8 @@ import json
 import os
 import sys
 
+from cryptojwt.key_issuer import KeyIssuer
+
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.jwk import key_from_jwk_dict
@@ -114,9 +116,9 @@ def main():
         keys.append(_key)
 
     if args.jwks:
-        _k = KeyJar()
-        _k.import_jwks(open(args.jwks).read(), "")
-        keys.extend(_k.issuer_keys(""))
+        _iss = KeyIssuer()
+        _iss.import_jwks(open(args.jwks).read())
+        keys.extend(_iss.all_keys())
 
     if args.jwks_url:
         _kb = KeyBundle(source=args.jwks_url)
