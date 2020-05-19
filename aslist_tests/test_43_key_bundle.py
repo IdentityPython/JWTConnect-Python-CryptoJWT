@@ -984,6 +984,9 @@ def test_export_inactive():
                                'imp_jwks',
                                'keys',
                                'last_updated',
+                               'last_local',
+                               'last_remote',
+                               'local',
                                'remote',
                                'time_out'}
 
