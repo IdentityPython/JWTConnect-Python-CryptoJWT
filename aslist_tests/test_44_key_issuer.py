@@ -553,7 +553,7 @@ def test_keys_by_alg_and_usage():
 
 
 def test_copy():
-    issuer = KeyIssuer('Alice', storage_conf=STORAGE_CONFIG)
+    issuer = KeyIssuer(name='Alice', storage_conf=STORAGE_CONFIG)
     issuer.add_kb(KeyBundle(JWK0['keys'], storage_conf=STORAGE_CONFIG))
     issuer_copy = issuer.copy()
 
@@ -562,10 +562,10 @@ def test_copy():
 
 
 def test_repr():
-    issuer = KeyIssuer('Alice', storage_conf=STORAGE_CONFIG)
+    issuer = KeyIssuer(name='Alice', storage_conf=STORAGE_CONFIG)
     issuer.add_kb(KeyBundle(JWK0['keys'], storage_conf=STORAGE_CONFIG))
     txt = issuer.__repr__()
-    assert "<KeyIssuer(KeyBundles=" in txt
+    assert '<KeyIssuer "Alice"(KeyBundles=' in txt
 
 
 def test_load_keys():
@@ -578,7 +578,7 @@ def test_load_keys():
 def test_find():
     _path = full_path('../tests/jwk_private_key.json')
     kb = KeyBundle(source='file://{}'.format(_path), storage_conf=STORAGE_CONFIG)
-    issuer = KeyIssuer('Alice', storage_conf=STORAGE_CONFIG)
+    issuer = KeyIssuer(name='Alice', storage_conf=STORAGE_CONFIG)
     issuer.add_kb(kb)
 
     assert issuer.find('{}'.format(_path))
