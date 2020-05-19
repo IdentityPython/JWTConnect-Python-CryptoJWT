@@ -542,6 +542,7 @@ def test_httpc_params_1():
                        httpc_params=httpc_params)
         assert kb.do_remote()
 
+
 @pytest.mark.network
 def test_httpc_params_2():
     httpc_params = {'timeout': 0}
@@ -988,6 +989,7 @@ def test_remote():
     assert kb2.httpc_params == {'timeout': (2, 2)}
     assert kb2.imp_jwks
     assert kb2.last_updated
+
 
 def test_remote_not_modified():
     source = 'https://example.com/keys.json'
