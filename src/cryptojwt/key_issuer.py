@@ -49,7 +49,7 @@ class KeyIssuer(object):
         self.httpc_params = httpc_params or {}
 
     def __repr__(self) -> str:
-        return '<KeyIssuer(KeyBundles={})>'.format(self._bundles)
+        return '<KeyIssuer "{}"(KeyBundles={})>'.format(self.name, self._bundles)
 
     def __getitem__(self, item):
         return self.get_bundles()[item]
