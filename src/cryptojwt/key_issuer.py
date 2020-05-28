@@ -1,9 +1,6 @@
 import json
 import logging
 
-from abstorage.utils import importer
-from abstorage.utils import init_storage
-from abstorage.utils import qualified_name
 from requests import request
 
 from .jwe.utils import alg2keytype as jwe_alg2keytype
@@ -13,6 +10,10 @@ from .key_bundle import build_key_bundle
 
 __author__ = 'Roland Hedberg'
 
+from .utils import importer
+
+from .utils import qualified_name
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,7 +22,7 @@ class KeyIssuer(object):
 
     def __init__(self, ca_certs=None, keybundle_cls=KeyBundle,
                  remove_after=3600, httpc=None, httpc_params=None,
-                 storage_conf=None, name=''):
+                 name=''):
         """
         KeyIssuer init function
 
@@ -30,14 +31,11 @@ class KeyIssuer(object):
         :param remove_after: How long keys marked as inactive will remain in the key Jar.
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
-        :param storage_conf: The DB backend used by this instance and its KeyBundles.
         :param name: Issuer identifier
-        :return: Keyjar instance
+        :return: KeyIssuer instance
         """
 
-        self._bundles = init_storage(storage_conf, self.__class__.__name__)
-
-        self.storage_conf = storage_conf
+        self._bundles = []
 
         self.keybundle_cls = keybundle_cls
         self.name = name
@@ -55,7 +53,7 @@ class KeyIssuer(object):
         return self.get_bundles()[item]
 
     def set(self, items):
-        self._bundles.set(items)
+        self._bundles = items
 
     def get_bundles(self):
         return [kb for kb in self._bundles]
@@ -79,11 +77,10 @@ class KeyIssuer(object):
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
             _params['verify'] = False
-            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=_params,
-                                    storage_conf=self.storage_conf, **kwargs)
+            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=_params, **kwargs)
         else:
             kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=self.httpc_params,
-                                    storage_conf=self.storage_conf, **kwargs)
+                                    **kwargs)
 
         kb.update()
         self._bundles.append(kb)
@@ -263,8 +260,9 @@ class KeyIssuer(object):
             if kb.remove_outdated(self.remove_after, when=when):
                 changed = True
             kbl.append(kb)
+
         if changed:
-            self._bundles.set(kbl)
+            self._bundles = kbl
 
     def get(self, key_use, key_type="", kid=None, alg='', **kwargs):
         """
@@ -337,7 +335,6 @@ class KeyIssuer(object):
         ki._bundles = [kb.copy() for kb in self._bundles]
         ki.httpc_params = self.httpc_params
         ki.httpc = self.httpc
-        ki.storage_conf = self.storage_conf
         ki.keybundle_cls = self.keybundle_cls
         return ki
 
@@ -361,7 +358,6 @@ class KeyIssuer(object):
         info = {
             'name': self.name,
             'bundles': _bundles,
-            # 'storage_conf': self.storage_conf,
             'keybundle_cls': qualified_name(self.keybundle_cls),
             'spec2key': self.spec2key,
             'ca_certs': self.ca_certs,
@@ -377,14 +373,12 @@ class KeyIssuer(object):
         :return:
         """
         self.name = info['name']
-        # self.storage_conf = info['storage_conf']
         self.keybundle_cls = importer(info['keybundle_cls'])
         self.spec2key = info['spec2key']
         self.ca_certs = info['ca_certs']
         self.remove_after = info['remove_after']
         self.httpc_params = info['httpc_params']
-        self._bundles = [KeyBundle(storage_conf=self.storage_conf).load(val) for val in
-                         info['bundles']]
+        self._bundles = [KeyBundle().load(val) for val in info['bundles']]
         return self
 
     def update(self):
@@ -399,7 +393,7 @@ class KeyIssuer(object):
                 changed = True
             kbl.append(kb)
         if changed:
-            self._bundles.set(kbl)
+            self._bundles = kbl
 
     def mark_all_keys_as_inactive(self):
         kbl = []
@@ -407,7 +401,7 @@ class KeyIssuer(object):
             kb.mark_all_as_inactive()
             kbl.append(kb)
 
-        self._bundles.set(kbl)
+        self._bundles = kbl
 
     def key_summary(self):
         """
@@ -434,8 +428,7 @@ class KeyIssuer(object):
 # =============================================================================
 
 
-def build_keyissuer(key_conf, kid_template="", key_issuer=None, storage_conf=None,
-                    issuer_id=''):
+def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
     """
     Builds a :py:class:`oidcmsg.key_issuer.KeyIssuer` instance or adds keys to
     an existing KeyIssuer instance based on a key specification.
@@ -473,16 +466,15 @@ def build_keyissuer(key_conf, kid_template="", key_issuer=None, storage_conf=Non
     :param kid_template: A template by which to build the key IDs. If no
         kid_template is given then the built-in function add_kid() will be used.
     :param key_issuer: If an keyIssuer instance the new keys are added to this key issuer.
-    :param storage_conf:
     :return: A KeyIssuer instance
     """
 
-    bundle = build_key_bundle(key_conf, kid_template, storage_conf=storage_conf)
+    bundle = build_key_bundle(key_conf, kid_template)
     if bundle is None:
         return None
 
     if key_issuer is None:
-        key_issuer = KeyIssuer(name=issuer_id, storage_conf=storage_conf)
+        key_issuer = KeyIssuer(name=issuer_id)
 
     key_issuer.add(bundle)
 

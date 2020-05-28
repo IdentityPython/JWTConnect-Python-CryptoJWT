@@ -2,10 +2,9 @@ import json
 import logging
 import os
 from typing import List
+from typing import Optional
 
-from abstorage.utils import importer
-from abstorage.utils import init_storage
-from abstorage.utils import qualified_name
+from abstorage.base import LabeledAbstractStorage
 from requests import request
 
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
@@ -18,6 +17,8 @@ __author__ = 'Roland Hedberg'
 
 from .key_issuer import KeyIssuer
 from .key_issuer import build_keyissuer
+from .utils import importer
+from .utils import qualified_name
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +39,8 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
-                 remove_after=3600, httpc=None, httpc_params=None, storage_conf=None):
+                 remove_after=3600, httpc=None, httpc_params=None, storage_conf=None,
+                 abstract_storage_cls=LabeledAbstractStorage):
         """
         KeyJar init function
 
@@ -51,7 +53,10 @@ class KeyJar(object):
         :return: Keyjar instance
         """
 
-        self._issuers = init_storage(storage_conf, self.__class__.__name__)
+        if storage_conf is None:
+            self._issuers = {}
+        else:
+            self._issuers = abstract_storage_cls(storage_conf)
 
         self.storage_conf = storage_conf
         self.spec2key = {}
@@ -71,20 +76,33 @@ class KeyJar(object):
 
         :return:
         """
-        return [i.name for i in self._issuers]
+        return list(self._issuers.keys())
 
-    def _get_issuer(self, issuer_id):
+    def _get_issuer(self, issuer_id: str) -> Optional[KeyIssuer]:
         """
         Return the KeyIssuer instance that has name == issuer_id
 
         :param issuer_id: The issuer identifiers
         :return: A KeyIssuer instance or None
         """
-        _i = [i for i in self._issuers if i.name == issuer_id]
-        if _i:
-            return _i[0]  # should only be one
-        else:
-            return None
+
+        return self._issuers.get(issuer_id)
+
+    def _add_issuer(self, issuer_id):
+        _iss = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
+                         keybundle_cls=self.keybundle_cls,
+                         remove_after=self.remove_after,
+                         httpc=self.httpc, httpc_params=self.httpc_params)
+        self._issuers[issuer_id] = _iss
+        return _iss
+
+    def items(self):
+        """
+        Get all owner ID's and their keys
+
+        :return: list of 2-tuples (Owner ID., list of KeyBundles)
+        """
+        return self._issuers.items()
 
     def __repr__(self):
         issuers = self._issuer_ids()
@@ -100,22 +118,17 @@ class KeyJar(object):
         """
         _iss = self._get_issuer(issuer_id)
         if not _iss:
-            _iss = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
-                             keybundle_cls=self.keybundle_cls,
-                             remove_after=self.remove_after,
-                             httpc=self.httpc, httpc_params=self.httpc_params,
-                             storage_conf=self.storage_conf)
-            self._issuers.append(_iss)
+            return self._add_issuer(issuer_id)
         return _iss
 
-    def add_url(self, issuer_id, url, **kwargs):
+    def add_url(self, issuer_id: str, url: str, **kwargs) -> KeyBundle:
         """
         Add a set of keys by url. This method will create a
         :py:class:`oidcmsg.key_bundle.KeyBundle` instance with the
         url as source specification. If no file format is given it's assumed
         that what's on the other side is a JWKS.
 
-        :param issuer: Who issued the keys
+        :param issuer_id: Who issued the keys
         :param url: Where can the key/-s be found
         :param kwargs: extra parameters for instantiating KeyBundle
         :return: A :py:class:`oidcmsg.oauth2.keybundle.KeyBundle` instance
@@ -148,32 +161,7 @@ class KeyJar(object):
         """
         issuer = self.return_issuer(issuer_id)
         issuer.add_kb(kb)
-
-    # def __setitem__(self, issuer_id, val):
-    #     """
-    #     Bind one or a list of key bundles to a special identifier.
-    #     Will overwrite whatever was there before !!
-    #
-    #     :param issuer_id: The owner of the keys in the key bundle/-s
-    #     :param val: A single or a list of KeyBundle instance
-    #     """
-    #     if not isinstance(val, list):
-    #         val = [val]
-    #
-    #     for kb in val:
-    #         if not isinstance(kb, KeyBundle):
-    #             raise ValueError('{} not an KeyBundle instance'.format(kb))
-    #
-    #     issuer = self.return_issuer(issuer_id)
-    #     issuer.set(val)
-
-    def items(self):
-        """
-        Get all owner ID's and their keys
-
-        :return: list of 2-tuples (Owner ID., list of KeyBundles)
-        """
-        return [(i.name, i.get_bundles()) for i in self._issuers]
+        self[issuer_id] = issuer
 
     def get(self, key_use, key_type="", issuer_id="", kid=None, **kwargs):
         """
@@ -317,13 +305,25 @@ class KeyJar(object):
         """
         return self._get_issuer(issuer_id)
 
+    def __setitem__(self, issuer_id, issuer):
+        """
+        Set a KeyIssuer with the name == issuer_id
+
+        :param issuer_id: The entity ID
+        :param issuer: KeyIssuer instance
+        """
+        self._issuers[issuer_id] = issuer
+
+    def set(self, issuer_id, issuer):
+        self[issuer_id] = issuer
+
     def owners(self):
         """
         Return a list of all the entities that has keys in this key jar.
 
         :return: A list of entity IDs
         """
-        return self._issuer_ids()
+        return list(self._issuers.keys())
 
     def match_owner(self, url):
         """
@@ -334,16 +334,16 @@ class KeyJar(object):
         :param url: A URL
         :return: An issue entity ID that exists in the Key jar
         """
-        _iss = [i for i in self._issuers if i.name.startswith(url)]
+        _iss = [i for i in self._issuers.keys() if i.startswith(url)]
         if _iss:
-            return _iss[0].name
+            return _iss[0]
 
         raise KeyError("No keys for '{}' in this keyjar".format(url))
 
     def __str__(self):
         _res = {}
-        for _issuer in self._issuers:
-            _res[_issuer.name] = _issuer.key_summary()
+        for _id, _issuer in self._issuers.items():
+            _res[_id] = _issuer.key_summary()
         return json.dumps(_res)
 
     def load_keys(self, issuer_id, jwks_uri='', jwks=None, replace=False):
@@ -371,6 +371,8 @@ class KeyJar(object):
             _keys = jwks['keys']
             _issuer.add_kb(self.keybundle_cls(_keys))
 
+        self[issuer_id] = _issuer
+
     def find(self, source, issuer_id=None):
         """
         Find a key bundle based on the source of the keys
@@ -381,7 +383,7 @@ class KeyJar(object):
         """
         if issuer_id is None:
             res = {}
-            for _issuer in self._issuers:
+            for _, _issuer in self._issuers.items():
                 kbs = _issuer.find(source)
                 if kbs:
                     res[_issuer.name] = kbs
@@ -438,8 +440,8 @@ class KeyJar(object):
         else:
             _issuer = self.return_issuer(issuer_id=issuer_id)
             _issuer.add(self.keybundle_cls(_keys, httpc=self.httpc,
-                                           httpc_params=self.httpc_params,
-                                           storage_conf=self.storage_conf))
+                                           httpc_params=self.httpc_params))
+        self[issuer_id] = _issuer
 
     def import_jwks_as_json(self, jwks, issuer_id):
         """
@@ -476,9 +478,7 @@ class KeyJar(object):
         return True
 
     def __delitem__(self, key):
-        _issuer = self._get_issuer(key)
-        if _issuer:
-            self._issuers.remove(_issuer)
+        del self._issuers[key]
 
     def remove_outdated(self, when=0):
         """
@@ -492,14 +492,9 @@ class KeyJar(object):
 
         :param when: To facilitate testing
         """
-        _ids = self._issuer_ids()
-        for _id in _ids:
-            _issuer = self[_id]
+        for _id, _issuer in self._issuers.items():
             _before = len(_issuer)
             _issuer.remove_outdated(when)
-            if len(_issuer) != _before:
-                del self[_id]
-                self.append(_issuer)
 
     def _add_key(self, keys, issuer_id, use, key_type='', kid='',
                  no_kid_issuer=None, allow_missing_kid=False):
@@ -640,10 +635,18 @@ class KeyJar(object):
 
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
-        kj = KeyJar()
-        for _issuer in self._issuers:
-            _iss = kj.return_issuer(_issuer.name)
-            _iss.set([kb.copy() for kb in _issuer])
+        if self.storage_conf:
+            _conf = self.storage_conf.get('KeyJar')
+            if _conf:
+                _label = self.storage_conf.get('label')
+                if _label:
+                    self.storage_conf['KeyJar']['label'] = '{}.copy'.format(_label)
+
+        kj = KeyJar(storage_conf=self.storage_conf)
+        for _id, _issuer in self._issuers.items():
+            _issuer_copy = KeyIssuer()
+            _issuer_copy.set([kb.copy() for kb in _issuer])
+            kj[_id] = _issuer_copy
 
         kj.httpc_params = self.httpc_params
         kj.httpc = self.httpc
@@ -667,11 +670,11 @@ class KeyJar(object):
             'remove_after': self.remove_after,
             'httpc_params': self.httpc_params}
 
-        _issuers = []
-        for _issuer in self._issuers:
+        _issuers = {}
+        for _id, _issuer in self._issuers.items():
             if exclude and _issuer.name in exclude:
                 continue
-            _issuers.append(_issuer.dump())
+            _issuers[_id] = _issuer.dump()
         info['issuers'] = _issuers
 
         return info
@@ -689,12 +692,9 @@ class KeyJar(object):
         self.remove_after = info['remove_after']
         self.httpc_params = info['httpc_params']
 
-        for _issuer_desc in info['issuers']:
-            self._issuers.append(KeyIssuer(storage_conf=self.storage_conf).load(_issuer_desc))
+        for _issuer_id, _issuer_desc in info['issuers'].items():
+            self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
         return self
-
-    def append(self, issuer):
-        self._issuers.append(issuer)
 
     def key_summary(self, issuer_id):
         _issuer = self._get_issuer(issuer_id)
@@ -705,16 +705,16 @@ class KeyJar(object):
 
     def update(self):
         """
-        Go through the whole key jar, key bundle by key bundle and update them one
+        Go through the whole key jar, key issuer by key issuer and update them one
         by one.
 
         :param keyjar: The key jar to update
         """
-        for _id in self._issuer_ids():
-            _issuer = self._get_issuer(_id)
-            self._issuers.remove(_issuer)
+        ids = self._issuers.keys()
+        for _id in ids:
+            _issuer = self[_id]
             _issuer.update()
-            self._issuers.append(_issuer)
+            self[_id] = _issuer
 
 
 # =============================================================================
@@ -763,15 +763,14 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id='', storage_c
     :return: A KeyJar instance
     """
 
-    _issuer = build_keyissuer(key_conf, kid_template, storage_conf=storage_conf,
-                              issuer_id=issuer_id)
+    _issuer = build_keyissuer(key_conf, kid_template, issuer_id=issuer_id)
     if _issuer is None:
         return None
 
     if keyjar is None:
-        keyjar = KeyJar()
+        keyjar = KeyJar(storage_conf=storage_conf)
 
-    keyjar.append(_issuer)
+    keyjar[issuer_id] = _issuer
 
     return keyjar
 
@@ -824,7 +823,7 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
     if private_path:
         if os.path.isfile(private_path):
             _jwks = open(private_path, 'r').read()
-            _issuer = KeyIssuer(name=issuer_id, storage_conf=storage_conf)
+            _issuer = KeyIssuer(name=issuer_id)
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
                 _kb = _issuer[0]
@@ -840,7 +839,7 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
                         fp.write(json.dumps(jwks))
                         fp.close()
         else:
-            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id, storage_conf=storage_conf)
+            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
             if not read_only:
                 jwks = _issuer.export_jwks(private=True)
                 head, tail = os.path.split(private_path)
@@ -861,7 +860,7 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
     elif public_path:
         if os.path.isfile(public_path):
             _jwks = open(public_path, 'r').read()
-            _issuer = KeyIssuer(name=issuer_id, storage_conf=storage_conf)
+            _issuer = KeyIssuer(name=issuer_id)
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
                 _kb = _issuer[0]
@@ -877,7 +876,7 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
                         fp.write(json.dumps(jwks))
                         fp.close()
         else:
-            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id, storage_conf=storage_conf)
+            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
             if not read_only:
                 _jwks = _issuer.export_jwks(issuer=issuer_id)
                 head, tail = os.path.split(public_path)
@@ -887,20 +886,18 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
                 fp.write(json.dumps(_jwks))
                 fp.close()
     else:
-        _issuer = build_keyissuer(key_defs, issuer_id=issuer_id, storage_conf=storage_conf)
+        _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
 
     keyjar = KeyJar(storage_conf=storage_conf)
-    keyjar.append(_issuer)
+    keyjar[issuer_id] = _issuer
     return keyjar
 
 
-def rotate_keys(key_conf, keyjar, kid_template="", issuer_id='', storage_conf=None):
-    new_keys = build_keyissuer(key_conf, kid_template, storage_conf=storage_conf,
-                               issuer_id=issuer_id)
+def rotate_keys(key_conf, keyjar, kid_template="", issuer_id=''):
+    new_keys = build_keyissuer(key_conf, kid_template, issuer_id=issuer_id)
     _issuer = keyjar[issuer_id]
     _issuer.mark_all_keys_as_inactive()
     for kb in new_keys:
         _issuer.add_kb(kb)
-    del keyjar[_issuer.name]
-    keyjar.append(_issuer)
+    keyjar[issuer_id] = _issuer
     return keyjar
