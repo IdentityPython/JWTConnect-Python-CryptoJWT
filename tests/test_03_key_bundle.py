@@ -1014,7 +1014,7 @@ def test_remote_not_modified():
         assert kb.last_remote == headers.get("Last-Modified")
         timeout2 = kb.time_out
 
-    assert timeout1 == timeout2
+    assert timeout1 != timeout2
 
     exp = kb.dump()
     kb2 = KeyBundle().load(exp)
