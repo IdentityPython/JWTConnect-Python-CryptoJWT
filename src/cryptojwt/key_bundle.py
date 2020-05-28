@@ -389,7 +389,7 @@ class KeyBundle:
 
         elif _http_resp.status_code == 304:  # Not modified
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
-            pass
+            self.time_out = time.time() + self.cache_time
 
         else:
             LOGGER.warning("HTTP status %d reading remote JWKS from %s",
