@@ -1,4 +1,5 @@
 """Implementation of a Key Bundle."""
+import copy
 import json
 import logging
 import os
@@ -6,7 +7,6 @@ import time
 from functools import cmp_to_key
 
 import requests
-from abstorage.utils import init_storage
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
@@ -64,7 +64,7 @@ def harmonize_usage(use):
     return None
 
 
-def rsa_init(spec, storage_conf=None):
+def rsa_init(spec):
     """
     Initiates a :py:class:`oidcmsg.keybundle.KeyBundle` instance
     containing newly minted RSA keys according to a spec.
@@ -75,7 +75,6 @@ def rsa_init(spec, storage_conf=None):
     Using the spec above 2 RSA keys would be minted, one for
     encryption and one for signing.
     :param spec:
-    :param storage_conf: Configuration of the storage facility
     :return: KeyBundle
     """
 
@@ -84,7 +83,7 @@ def rsa_init(spec, storage_conf=None):
     except KeyError:
         size = 2048
 
-    _kb = KeyBundle(keytype="RSA", storage_conf=storage_conf)
+    _kb = KeyBundle(keytype="RSA")
     if 'use' in spec:
         for use in harmonize_usage(spec["use"]):
             _key = new_rsa_key(use=use, key_size=size)
@@ -96,7 +95,7 @@ def rsa_init(spec, storage_conf=None):
     return _kb
 
 
-def sym_init(spec, storage_conf=None):
+def sym_init(spec):
     """
     Initiates a :py:class:`oidcmsg.keybundle.KeyBundle` instance
     containing newly minted SYM keys according to a spec.
@@ -116,7 +115,7 @@ def sym_init(spec, storage_conf=None):
     except KeyError:
         size = 24
 
-    _kb = KeyBundle(keytype="oct", storage_conf=storage_conf)
+    _kb = KeyBundle(keytype="oct")
     if 'use' in spec:
         for use in harmonize_usage(spec["use"]):
             _key = new_sym_key(use=use, bytes=size)
@@ -128,7 +127,7 @@ def sym_init(spec, storage_conf=None):
     return _kb
 
 
-def ec_init(spec, storage_conf=None):
+def ec_init(spec):
     """
     Initiate a key bundle with an elliptic curve key.
 
@@ -139,7 +138,7 @@ def ec_init(spec, storage_conf=None):
     """
     curve = spec.get("crv", "P-256")
 
-    _kb = KeyBundle(keytype="EC", storage_conf=storage_conf)
+    _kb = KeyBundle(keytype="EC")
     if 'use' in spec:
         for use in spec["use"]:
             eck = new_ec_key(crv=curve, use=use)
@@ -156,7 +155,7 @@ class KeyBundle:
 
     def __init__(self, keys=None, source="", cache_time=300,
                  fileformat="jwks", keytype="RSA", keyusage=None, kid='',
-                 httpc=None, httpc_params=None, storage_conf=None):
+                 httpc=None, httpc_params=None):
         """
         Contains a set of keys that have a common origin.
         The sources can be serveral:
@@ -176,12 +175,9 @@ class KeyBundle:
         :param httpc: A HTTP client function
         :param httpc_params: Additional parameters to pass to the HTTP client
             function
-        :param storage_conf: Configuration of a database backend in which to store the keys
         """
 
-        self._keys = init_storage(storage_conf, self.__class__.__name__)
-
-        self.storage_conf = storage_conf
+        self._keys = []
         self.remote = False
         self.local = False
         self.cache_time = cache_time
@@ -194,7 +190,7 @@ class KeyBundle:
         self.imp_jwks = None
         self.last_updated = 0
         self.last_remote = None  # HTTP Date of last remote update
-        self.last_local = None   # UNIX timestamp of last local update
+        self.last_local = None  # UNIX timestamp of last local update
 
         if httpc:
             self.httpc = httpc
@@ -448,10 +444,10 @@ class KeyBundle:
         """
         res = True  # An update was successful
         if self.source:
-            _old_keys = self._keys.get()  # just in case
+            _old_keys = self._keys  # just in case
 
             # reread everything
-            self._keys.set([])
+            self._keys = []
 
             try:
                 if self.local:
@@ -464,7 +460,7 @@ class KeyBundle:
                     res = self.do_remote()
             except Exception as err:
                 LOGGER.error('Key bundle update failed: %s', err)
-                self._keys.set(_old_keys)  # restore
+                self._keys = _old_keys  # restore
                 return False
 
             now = time.time()
@@ -490,7 +486,7 @@ class KeyBundle:
         if typ:
             _keys = [k for k in self._keys if k.kty in _typs]
         else:
-            _keys = self._keys.get()
+            _keys = self._keys
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -505,7 +501,7 @@ class KeyBundle:
         """
         self._uptodate()
 
-        return self._keys.get()
+        return self._keys
 
     def active_keys(self):
         """Return the set of active keys."""
@@ -527,7 +523,7 @@ class KeyBundle:
         :param typ: Type of key (rsa, ec, oct, ..)
         """
         _typs = [typ.lower(), typ.upper()]
-        self._keys.set([k for k in self._keys if not k.kty in _typs])
+        self._keys = [k for k in self._keys if not k.kty in _typs]
 
     def __str__(self):
         return str(self.jwks())
@@ -584,7 +580,7 @@ class KeyBundle:
 
     def set(self, keys):
         """Set the keys to the set provided."""
-        self._keys.set(keys)
+        self._keys = keys
 
     def get_key_with_kid(self, kid):
         """
@@ -641,7 +637,7 @@ class KeyBundle:
         for k in _keys:
             k.inactive_since = time.time()
             _updated.append(k)
-        self._keys.set(_updated)
+        self._keys = _updated
 
     def remove_outdated(self, after, when=0):
         """
@@ -670,7 +666,7 @@ class KeyBundle:
 
             _kl.append(k)
 
-        self._keys.set(_kl)
+        self._keys= _kl
         return changed
 
     def __contains__(self, key):
@@ -683,10 +679,10 @@ class KeyBundle:
         :return: The copy
         """
         _bundle = KeyBundle()
-        _bundle._keys = self._keys.copy()
+        _bundle._keys = self._keys[:]
 
         _bundle.cache_time = self.cache_time
-        _bundle.httpc_params = self.httpc_params.copy()
+        _bundle.httpc_params = copy.deepcopy(self.httpc_params)
         if self.source:
             _bundle.source = self.source
             _bundle.fileformat = self.fileformat
@@ -756,7 +752,7 @@ class KeyBundle:
         return self
 
 
-def keybundle_from_local_file(filename, typ, usage, keytype="RSA", storage_conf=None):
+def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     """
     Create a KeyBundle based on the content in a local file.
 
@@ -771,14 +767,12 @@ def keybundle_from_local_file(filename, typ, usage, keytype="RSA", storage_conf=
     if typ.lower() == "jwks":
         _bundle = KeyBundle(source=filename,
                             fileformat="jwks",
-                            keyusage=usage,
-                            storage_conf=storage_conf)
+                            keyusage=usage)
     elif typ.lower() == "der":
         _bundle = KeyBundle(source=filename,
                             fileformat="der",
                             keyusage=usage,
-                            keytype=keytype,
-                            storage_conf=storage_conf)
+                            keytype=keytype)
     else:
         raise UnknownKeyType("Unsupported key type")
 
@@ -830,7 +824,7 @@ def _set_kid(spec, bundle, kid_template, kid):
                 k.add_kid()
 
 
-def build_key_bundle(key_conf, kid_template="", storage_conf=None):
+def build_key_bundle(key_conf, kid_template=""):
     """
     Builds a :py:class:`oidcmsg.key_bundle.KeyBundle` instance based on a key
     specification.
@@ -907,7 +901,7 @@ def build_key_bundle(key_conf, kid_template="", storage_conf=None):
         _bundles.append(_bundle)
 
     if _bundles:
-        complete_bundle = KeyBundle(storage_conf=storage_conf)
+        complete_bundle = KeyBundle()
         for _bundle in _bundles:
             complete_bundle.extend(_bundle.keys())
 

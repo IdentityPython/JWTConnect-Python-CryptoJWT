@@ -66,7 +66,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
     """
 
     # uncouple from the original item
-    _jwk_dict = copy.copy(jwk_dict)
+    _jwk_dict = copy.deepcopy(jwk_dict)
 
     if 'kty' not in _jwk_dict:
         raise MissingValue('kty missing')

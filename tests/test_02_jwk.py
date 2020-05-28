@@ -12,15 +12,17 @@ import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
+
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 from cryptojwt.jwk import JWK
+from cryptojwt.jwk import calculate_x5t
 from cryptojwt.jwk import certificate_fingerprint
 from cryptojwt.jwk import pem_hash
 from cryptojwt.jwk import pems_to_x5c
-from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.hmac import sha256_digest
@@ -29,7 +31,6 @@ from cryptojwt.jwk.jwk import import_jwk
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import generate_and_store_rsa_key
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
@@ -627,7 +628,7 @@ def test_dump_load():
 def test_key_ops():
     sk = SYMKey(
         key='df34db91c16613deba460752522d28f6ebc8a73d0d9185836270c26b',
-        alg = "HS256",
+        alg="HS256",
         key_ops=["sign", "verify"]
     )
 
@@ -639,9 +640,9 @@ def test_key_ops_and_use():
     with pytest.raises(ValueError):
         SYMKey(
             key='df34db91c16613deba460752522d28f6ebc8a73d0d9185836270c26b',
-            alg = "HS256",
+            alg="HS256",
             key_ops=["sign", "verify"],
-            use = "sig"
+            use="sig"
         )
 
 
@@ -651,7 +652,9 @@ def test_pem_to_x5c():
 
     x5c = pems_to_x5c([cert_chain])
     assert len(x5c) == 1
-    assert x5c[0] == 'MIIB2jCCAUOgAwIBAgIBATANBgkqhkiG9w0BAQUFADA0MRgwFgYDVQQDEw9UaGUgY29kZSB0ZXN0ZXIxGDAWBgNVBAoTD1VtZWEgVW5pdmVyc2l0eTAeFw0xMjEwMDQwMDIzMDNaFw0xMzEwMDQwMDIzMDNaMDIxCzAJBgNVBAYTAlNFMSMwIQYDVQQDExpPcGVuSUQgQ29ubmVjdCBUZXN0IFNlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwf+wiusGhA+gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB/87ds3dy3Rfym/GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQCsTntG4dfW5kO/Qle6uBhIhZU+3IreIPmbwzpXoCbcgjRa01z6WiBLwDC1RLAL7ucaF/EVlUq4e0cNXKt4ESGNc1xHISOMLetwvS1SN5tKWA9HNua/SaqRtiShxLUjPjmrtpUgotLNDRvUYnTdTT1vhZar7TSPr1yObirjvz/qLw=='
+    assert x5c[
+               0] == \
+           'MIIB2jCCAUOgAwIBAgIBATANBgkqhkiG9w0BAQUFADA0MRgwFgYDVQQDEw9UaGUgY29kZSB0ZXN0ZXIxGDAWBgNVBAoTD1VtZWEgVW5pdmVyc2l0eTAeFw0xMjEwMDQwMDIzMDNaFw0xMzEwMDQwMDIzMDNaMDIxCzAJBgNVBAYTAlNFMSMwIQYDVQQDExpPcGVuSUQgQ29ubmVjdCBUZXN0IFNlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwf+wiusGhA+gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB/87ds3dy3Rfym/GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQCsTntG4dfW5kO/Qle6uBhIhZU+3IreIPmbwzpXoCbcgjRa01z6WiBLwDC1RLAL7ucaF/EVlUq4e0cNXKt4ESGNc1xHISOMLetwvS1SN5tKWA9HNua/SaqRtiShxLUjPjmrtpUgotLNDRvUYnTdTT1vhZar7TSPr1yObirjvz/qLw=='
 
 
 def test_pem_hash():
@@ -664,7 +667,8 @@ def test_certificate_fingerprint():
         der = cert_file.read()
 
     res = certificate_fingerprint(der)
-    assert res == '01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E:80:8B:55:49:F1:48'
+    assert res == '01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E' \
+                  ':80:8B:55:49:F1:48'
 
     res = certificate_fingerprint(der, 'sha1')
     assert res == 'CA:CF:21:9E:72:00:CD:1C:CA:FD:4F:6D:84:6B:9E:E8:74:80:47:64'
@@ -676,6 +680,17 @@ def test_certificate_fingerprint():
         certificate_fingerprint(der, 'foo')
 
 
-def test_generate_and_store_rsa_key():
-    priv_key = generate_and_store_rsa_key(filename=full_path('temp_rsa.key'))
+# def test_generate_and_store_rsa_key():
+#     priv_key = generate_and_store_rsa_key(filename=full_path('temp_rsa.key'))
 
+
+def test_x5t_calculation():
+    with open(full_path('cert.der'), 'rb') as cert_file:
+        der = cert_file.read()
+
+    x5t = calculate_x5t(der)
+    assert x5t == b'Q0FDRjIxOUU3MjAwQ0QxQ0NBRkQ0RjZEODQ2QjlFRTg3NDgwNDc2NA=='
+
+    x5t_s256 = calculate_x5t(der, 'sha256')
+    assert x5t_s256 == \
+           b'MDFERkYxRDQ1RjIxN0IyRTNBQTJEOENBMTM0QzQxNjYwM0ExRUYzRTdCNUU4QjY5MDQ1RTgwOEI1NTQ5RjE0OA=='
