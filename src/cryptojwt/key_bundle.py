@@ -304,7 +304,7 @@ class KeyBundle:
 
         :param filename: Name of the file from which the JWKS should be loaded
         """
-        LOGGER.debug("Reading JWKS from %s", filename)
+        LOGGER.info("Reading local JWKS from %s", filename)
         with open(filename) as input_file:
             _info = json.load(input_file)
         if 'keys' in _info:
@@ -322,7 +322,7 @@ class KeyBundle:
         :param keytype: Presently 'rsa' and 'ec' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
         """
-        LOGGER.debug("Reading DER from %s", filename)
+        LOGGER.info("Reading local DER from %s", filename)
         key_args = {}
         _kty = keytype.lower()
         if _kty in ['rsa', 'ec']:
@@ -354,6 +354,7 @@ class KeyBundle:
         # if self.verify_ssl is not None:
         #     self.httpc_params["verify"] = self.verify_ssl
 
+        LOGGER.info("Reading remote JWKS from %s", self.source)
         try:
             LOGGER.debug('KeyBundle fetch keys from: %s', self.source)
             httpc_params = self.httpc_params.copy()
@@ -388,9 +389,11 @@ class KeyBundle:
 
         elif _http_resp.status_code == 304:  # Not modified
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
-            pass
+            self.time_out = time.time() + self.cache_time
 
         else:
+            LOGGER.warning("HTTP status %d reading remote JWKS from %s",
+                           _http_resp.status_code, self.source)
             raise UpdateFailed(
                 REMOTE_FAILED.format(self.source, _http_resp.status_code))
         self.last_updated = time.time()
