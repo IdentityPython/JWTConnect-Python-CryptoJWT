@@ -8,7 +8,7 @@ python:
 addons:
   apt:
     packages:
-    -
+    - 
 install:
 - pip install codecov
 - pip install tox
@@ -26,6 +26,6 @@ deploy:
     tags: true
   distributions: bdist_wheel
   skip_existing: true
-  user: __token__
+  username: __token__
   password:
-    secure: "kW7wRRnQDkeD/bvDrktoLTLrFV4W0B548PhtXVBD7rfbx09oE+jmoM6Ojc2y+t18XQ0zYIfO1qXdoenzti2YiY8xGgA1EYDpHuT0d+DX3tPuLiXou+pts+dXo5Q0YJRFlmBgxtyT+eHhScojDPvDmCFQodIQhiGK1cyzV1p+jE9W/wjiCOQWSQ0LoIV/ajjIMArEmucqwU1wlXxPPgVaV2EuZ7hXBULA6C1DKJENja+qeORtDdW6DMXPJQ4AD74dR+IHaqX4W+mRjRO8wZHKBxrxQ65nZErcfwjbqWRhPIUWzkVngC21BWrs/5eMvxuSPDj4XUY/wiB/1xR883bM6YypEqlCM5x3CFA6a65iI+dfT4iqQRdwOF04oxDkNf2N1LBx8Pv01KxDs5cblv3i/TQHoBIKH8wY6yxrVT2gtcGOwj5+/Pay3PGUN4S8YyzzmSuX/trQgWl/6BD2UPDRchhz24AfV8vXPr6ljBllNdGtWVWJd0ad7u2nqTrUcec909cAhz9SHP1LO8IqCjh8XGdQATOmZXptXJLLmysN9+OwgyTA4SH0Q4FKPG/xriq2cbMCfBTnBOTb5N9ZCm1VeGZlcMdva9UDcRWjtEStAy+gnYQc10EBD060O0jUDB9qdm5zyiTSqOY701828Z2a5uMWXqWUlEsbF61BN6cuD4s="
+    secure: sCvQSnLW2R9i01dTvG1JyZ+lU99jXjEmPeniSTB8SAZMlfIbuo8I5kjkKxxaa4uTOU3mZiWDG/wq/liUuUzxjXYLA47gwVqU6QrkgIh0/QqGIN1+GYtHqZZETueGClSS8drCgYchpknNTA+30JL/kpt4fjq5hSUFII5BuybVYbh5WVnmwjhZOnZdKxVuQrrfzNVe14wr/TY7VvtL7W5bSCigxYh4oSUiFB6WkFyPZFetqYRO5eCTRt4Tn/hT3Y5Aiz033hMFhrjB4XxuWK7P1f6WVVGRMfAwa4XuC3w0oPSp/9I0cMBtLkExs+tdq25lgmJOcdzVwo3QHPs4pn6AjHKPyoTr/jiuysKnSZCwgcMPFpORgrOWQh/qFxHqNFI0QzNasZXhEBDJaaR2pN/GLjW97NiuaCFuZ/me0SWtpdhPuJpjgx9xxwymRRC4aBu6aPrzoxFGABp4Bkica7KsBmWgQ0ZFMPO6bXB6bU5w8a+wlOY/6I8b06/cIOIyMh8Tas7UwO2/e0L65qhAkR3u1evmagex94w9UameP+518yYik0L5uwrn7vPeRNpH1UEctd3RG73HlEdu8wMCo0pPrvFqsQGtIiPTLPx99453z8Z/raWwAa1Zpn2c8mSm9YIOQZ20rsiFy1vfwAm2b7/dfm005hUirmfwtiG7Oq8iLdg=
