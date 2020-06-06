@@ -99,15 +99,7 @@ class WrongKeyType(JWKESTException):
     pass
 
 
-class UnknownKeyType(JWKESTException):
-    pass
-
-
 class UnsupportedKeyType(JWKESTException):
-    pass
-
-
-class UpdateFailed(JWKESTException):
     pass
 
 
