@@ -6,7 +6,6 @@ from cryptojwt import key_issuer
 
 
 class KeyIssuer:
-
     @staticmethod
     def serialize(item: key_issuer.KeyIssuer) -> str:
         """ Convert from KeyIssuer to JSON """

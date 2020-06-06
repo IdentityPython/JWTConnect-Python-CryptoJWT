@@ -4,7 +4,6 @@ import os
 from typing import List
 from typing import Optional
 
-from abstorage.base import LabeledAbstractStorage
 from requests import request
 
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
@@ -40,7 +39,7 @@ class KeyJar(object):
 
     def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
                  remove_after=3600, httpc=None, httpc_params=None, storage_conf=None,
-                 abstract_storage_cls=LabeledAbstractStorage):
+                 abstract_storage_cls=None):
         """
         KeyJar init function
 
@@ -56,6 +55,8 @@ class KeyJar(object):
         if storage_conf is None:
             self._issuers = {}
         else:
+            if not abstract_storage_cls:
+                raise ValueError('Missing storage class specification')
             self._issuers = abstract_storage_cls(storage_conf)
 
         self.storage_conf = storage_conf
@@ -407,7 +408,7 @@ class KeyJar(object):
         """
         _issuer = self._get_issuer(issuer_id=issuer_id)
         if _issuer is None:
-            return {}
+            return {"keys": []}
 
         keys = []
         for kb in _issuer:
@@ -437,11 +438,12 @@ class KeyJar(object):
             _keys = jwks["keys"]
         except KeyError:
             raise ValueError('Not a proper JWKS')
-        else:
+
+        if _keys:
             _issuer = self.return_issuer(issuer_id=issuer_id)
             _issuer.add(self.keybundle_cls(_keys, httpc=self.httpc,
                                            httpc_params=self.httpc_params))
-        self[issuer_id] = _issuer
+            self[issuer_id] = _issuer
 
     def import_jwks_as_json(self, jwks, issuer_id):
         """
@@ -776,7 +778,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id='', storage_c
 
 
 def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', read_only=True,
-                 storage_conf=None):
+                 storage_conf=None, abstract_storage_cls=None):
     """
     A number of cases here:
 
@@ -888,7 +890,10 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
     else:
         _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
 
-    keyjar = KeyJar(storage_conf=storage_conf)
+    if _issuer is None:
+        raise ValueError('Could not find any keys')
+
+    keyjar = KeyJar(storage_conf=storage_conf, abstract_storage_cls=abstract_storage_cls)
     keyjar[issuer_id] = _issuer
     return keyjar
 
