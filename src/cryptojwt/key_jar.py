@@ -49,6 +49,9 @@ class KeyJar(object):
         :param remove_after: How long keys marked as inactive will remain in the key Jar.
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
+        :param storage_conf: Storage configuration
+        :param abstract_storage_cls: Storage class. The only demand on a storage class is that it
+            should behave like a dictionary.
         :return: Keyjar instance
         """
 
