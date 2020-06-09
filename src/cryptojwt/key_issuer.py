@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 from requests import request
 
@@ -9,6 +10,9 @@ from .key_bundle import KeyBundle
 from .key_bundle import build_key_bundle
 
 __author__ = 'Roland Hedberg'
+
+from .key_bundle import key_diff
+from .key_bundle import update_key_bundle
 
 from .utils import importer
 
@@ -424,6 +428,23 @@ class KeyIssuer(object):
         for bundle in self._bundles:
             yield bundle
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+
+        if len(other.all_keys()) != len(self.all_keys()):
+            return False
+
+        for k in self.all_keys():
+            if k not in other:
+                return False
+
+        for k in other.all_keys():
+            if k not in self:
+                return False
+
+        return True
+
 
 # =============================================================================
 
@@ -479,3 +500,129 @@ def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
     key_issuer.add(bundle)
 
     return key_issuer
+
+
+def rotate_keys(key_conf, issuer, kid_template=""):
+    new_keys = build_keyissuer(key_conf, kid_template)
+    issuer.mark_all_keys_as_inactive()
+    for kb in new_keys:
+        issuer.add_kb(kb)
+    return issuer
+
+
+def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True,
+                 storage_conf=None, abstract_storage_cls=None):
+    """
+    A number of cases here:
+
+    1. A private path is given
+
+       a. The file exists and a JWKS is found there.
+          From that JWKS a KeyJar instance is built.
+       b.
+          If the private path file doesn't exit the key definitions are
+          used to build a KeyJar instance. A JWKS with the private keys are
+          written to the file named in private_path.
+
+       If a public path is also provided a JWKS with public keys are written
+       to that file.
+
+    2. A public path is given but no private path.
+
+       a. If the public path file exists then the JWKS in that file is used to
+          construct a KeyJar.
+       b. If no such file exists then a KeyJar will be built
+          based on the key_defs specification and a JWKS with the public keys
+          will be written to the public path file.
+
+    3. If neither a public path nor a private path is given then a KeyJar is
+       built based on the key_defs specification and no JWKS will be written
+       to file.
+
+    In all cases a KeyJar instance is returned
+
+    The keys stored in the KeyJar will be stored under the '' identifier.
+
+    :param public_path: A file path to a file that contains a JWKS with public
+        keys
+    :param private_path: A file path to a file that contains a JWKS with
+        private keys.
+    :param key_defs: A definition of what keys should be created if they are
+        not already available
+    :param read_only: This function should not attempt to write anything
+        to a file system.
+    :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
+    """
+
+    if private_path:
+        if os.path.isfile(private_path):
+            _jwks = open(private_path, 'r').read()
+            _issuer = KeyIssuer()
+            _issuer.import_jwks(json.loads(_jwks))
+            if key_defs:
+                _kb = _issuer[0]
+                _diff = key_diff(_kb, key_defs)
+                if _diff:
+                    update_key_bundle(_kb, _diff)
+                    if read_only:
+                        logger.error('Not allowed to write to disc!')
+                    else:
+                        _issuer.set([_kb])
+                        jwks = _issuer.export_jwks(private=True)
+                        fp = open(private_path, 'w')
+                        fp.write(json.dumps(jwks))
+                        fp.close()
+        else:
+            _issuer = build_keyissuer(key_defs)
+            if not read_only:
+                jwks = _issuer.export_jwks(private=True)
+                head, tail = os.path.split(private_path)
+                if head and not os.path.isdir(head):
+                    os.makedirs(head)
+                fp = open(private_path, 'w')
+                fp.write(json.dumps(jwks))
+                fp.close()
+
+        if public_path and not read_only:
+            jwks = _issuer.export_jwks()  # public part
+            head, tail = os.path.split(public_path)
+            if head and not os.path.isdir(head):
+                os.makedirs(head)
+            fp = open(public_path, 'w')
+            fp.write(json.dumps(jwks))
+            fp.close()
+    elif public_path:
+        if os.path.isfile(public_path):
+            _jwks = open(public_path, 'r').read()
+            _issuer = KeyIssuer()
+            _issuer.import_jwks(json.loads(_jwks))
+            if key_defs:
+                _kb = _issuer[0]
+                _diff = key_diff(_kb, key_defs)
+                if _diff:
+                    if read_only:
+                        logger.error('Not allowed to write to disc!')
+                    else:
+                        update_key_bundle(_kb, _diff)
+                        _issuer.set([_kb])
+                        jwks = _issuer.export_jwks()
+                        fp = open(public_path, 'w')
+                        fp.write(json.dumps(jwks))
+                        fp.close()
+        else:
+            _issuer = build_keyissuer(key_defs)
+            if not read_only:
+                _jwks = _issuer.export_jwks()
+                head, tail = os.path.split(public_path)
+                if head and not os.path.isdir(head):
+                    os.makedirs(head)
+                fp = open(public_path, 'w')
+                fp.write(json.dumps(_jwks))
+                fp.close()
+    else:
+        _issuer = build_keyissuer(key_defs)
+
+    if _issuer is None:
+        raise ValueError('Could not find any keys')
+
+    return _issuer

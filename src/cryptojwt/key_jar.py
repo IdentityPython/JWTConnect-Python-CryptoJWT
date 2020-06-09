@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from typing import List
 from typing import Optional
 
@@ -9,15 +8,13 @@ from requests import request
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
-from .key_bundle import key_diff
-from .key_bundle import update_key_bundle
-
-__author__ = 'Roland Hedberg'
-
 from .key_issuer import KeyIssuer
 from .key_issuer import build_keyissuer
+from .key_issuer import init_key_issuer
 from .utils import importer
 from .utils import qualified_name
+
+__author__ = 'Roland Hedberg'
 
 logger = logging.getLogger(__name__)
 
@@ -92,7 +89,7 @@ class KeyJar(object):
 
         return self._issuers.get(issuer_id)
 
-    def _add_issuer(self, issuer_id):
+    def _add_issuer(self, issuer_id) -> KeyIssuer:
         _iss = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
                          keybundle_cls=self.keybundle_cls,
                          remove_after=self.remove_after,
@@ -197,51 +194,53 @@ class KeyJar(object):
         if _issuer is None:
             return []
 
-        lst = []
-        for bundle in _issuer:
-            if key_type:
-                if key_use in ['ver', 'dec']:
-                    _bkeys = bundle.get(key_type, only_active=False)
-                else:
-                    _bkeys = bundle.get(key_type)
-            else:
-                _bkeys = bundle.keys()
-            for key in _bkeys:
-                if key.inactive_since and key_use != "sig":
-                    # Skip inactive keys unless for signature verification
-                    continue
-                if not key.use or use == key.use:
-                    if kid:
-                        if key.kid == kid:
-                            lst.append(key)
-                            break
-                        else:
-                            continue
-                    else:
-                        lst.append(key)
+        return _issuer.get(key_use=key_use, key_type=key_type, kid=kid, **kwargs)
 
-        # if elliptic curve, have to check if I have a key of the right curve
-        if key_type == "EC" and "alg" in kwargs:
-            name = "P-{}".format(kwargs["alg"][2:])  # the type
-            _lst = []
-            for key in lst:
-                if name != key.crv:
-                    continue
-                _lst.append(key)
-            lst = _lst
-
-        if use == 'enc' and key_type == 'oct' and issuer_id != '':
-            # Add my symmetric keys
-            _issuer = self._get_issuer('')
-            if _issuer:
-                for kb in _issuer:
-                    for key in kb.get(key_type):
-                        if key.inactive_since:
-                            continue
-                        if not key.use or key.use == use:
-                            lst.append(key)
-
-        return lst
+        # lst = []
+        # for bundle in _issuer:
+        #     if key_type:
+        #         if key_use in ['ver', 'dec']:
+        #             _bkeys = bundle.get(key_type, only_active=False)
+        #         else:
+        #             _bkeys = bundle.get(key_type)
+        #     else:
+        #         _bkeys = bundle.keys()
+        #     for key in _bkeys:
+        #         if key.inactive_since and key_use != "sig":
+        #             # Skip inactive keys unless for signature verification
+        #             continue
+        #         if not key.use or use == key.use:
+        #             if kid:
+        #                 if key.kid == kid:
+        #                     lst.append(key)
+        #                     break
+        #                 else:
+        #                     continue
+        #             else:
+        #                 lst.append(key)
+        #
+        # # if elliptic curve, have to check if I have a key of the right curve
+        # if key_type == "EC" and "alg" in kwargs:
+        #     name = "P-{}".format(kwargs["alg"][2:])  # the type
+        #     _lst = []
+        #     for key in lst:
+        #         if name != key.crv:
+        #             continue
+        #         _lst.append(key)
+        #     lst = _lst
+        #
+        # if use == 'enc' and key_type == 'oct' and issuer_id != '':
+        #     # Add my symmetric keys
+        #     _issuer = self._get_issuer('')
+        #     if _issuer:
+        #         for kb in _issuer:
+        #             for key in kb.get(key_type):
+        #                 if key.inactive_since:
+        #                     continue
+        #                 if not key.use or key.use == use:
+        #                     lst.append(key)
+        #
+        # return lst
 
     def get_signing_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         """
@@ -472,12 +471,7 @@ class KeyJar(object):
 
         # Keys per issuer must be the same
         for iss in self.owners():
-            sk = self.get_issuer_keys(iss)
-            ok = other.get_issuer_keys(iss)
-            if len(sk) != len(ok):
-                return False
-
-            if not any(k in ok for k in sk):
+            if self[iss] != other[iss]:
                 return False
 
         return True
@@ -825,73 +819,9 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
-    if private_path:
-        if os.path.isfile(private_path):
-            _jwks = open(private_path, 'r').read()
-            _issuer = KeyIssuer(name=issuer_id)
-            _issuer.import_jwks(json.loads(_jwks))
-            if key_defs:
-                _kb = _issuer[0]
-                _diff = key_diff(_kb, key_defs)
-                if _diff:
-                    update_key_bundle(_kb, _diff)
-                    if read_only:
-                        logger.error('Not allowed to write to disc!')
-                    else:
-                        _issuer.set([_kb])
-                        jwks = _issuer.export_jwks(private=True)
-                        fp = open(private_path, 'w')
-                        fp.write(json.dumps(jwks))
-                        fp.close()
-        else:
-            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
-            if not read_only:
-                jwks = _issuer.export_jwks(private=True)
-                head, tail = os.path.split(private_path)
-                if head and not os.path.isdir(head):
-                    os.makedirs(head)
-                fp = open(private_path, 'w')
-                fp.write(json.dumps(jwks))
-                fp.close()
-
-        if public_path and not read_only:
-            jwks = _issuer.export_jwks()  # public part
-            head, tail = os.path.split(public_path)
-            if head and not os.path.isdir(head):
-                os.makedirs(head)
-            fp = open(public_path, 'w')
-            fp.write(json.dumps(jwks))
-            fp.close()
-    elif public_path:
-        if os.path.isfile(public_path):
-            _jwks = open(public_path, 'r').read()
-            _issuer = KeyIssuer(name=issuer_id)
-            _issuer.import_jwks(json.loads(_jwks))
-            if key_defs:
-                _kb = _issuer[0]
-                _diff = key_diff(_kb, key_defs)
-                if _diff:
-                    if read_only:
-                        logger.error('Not allowed to write to disc!')
-                    else:
-                        update_key_bundle(_kb, _diff)
-                        _issuer.set([_kb])
-                        jwks = _issuer.export_jwks()
-                        fp = open(public_path, 'w')
-                        fp.write(json.dumps(jwks))
-                        fp.close()
-        else:
-            _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
-            if not read_only:
-                _jwks = _issuer.export_jwks(issuer=issuer_id)
-                head, tail = os.path.split(public_path)
-                if head and not os.path.isdir(head):
-                    os.makedirs(head)
-                fp = open(public_path, 'w')
-                fp.write(json.dumps(_jwks))
-                fp.close()
-    else:
-        _issuer = build_keyissuer(key_defs, issuer_id=issuer_id)
+    _issuer = init_key_issuer(public_path=public_path, private_path=private_path,
+                              key_defs=key_defs, read_only=read_only,
+                              storage_conf=storage_conf, abstract_storage_cls=abstract_storage_cls)
 
     if _issuer is None:
         raise ValueError('Could not find any keys')
