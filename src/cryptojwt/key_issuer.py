@@ -78,6 +78,8 @@ class KeyIssuer(object):
         if not url:
             raise KeyError("No url given")
 
+        logger.debug('httpc_params: %s', self.httpc_params)
+
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
             _params['verify'] = False
