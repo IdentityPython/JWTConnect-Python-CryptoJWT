@@ -204,52 +204,6 @@ class KeyJar(object):
 
         return _issuer.get(key_use=key_use, key_type=key_type, kid=kid, **kwargs)
 
-        # lst = []
-        # for bundle in _issuer:
-        #     if key_type:
-        #         if key_use in ['ver', 'dec']:
-        #             _bkeys = bundle.get(key_type, only_active=False)
-        #         else:
-        #             _bkeys = bundle.get(key_type)
-        #     else:
-        #         _bkeys = bundle.keys()
-        #     for key in _bkeys:
-        #         if key.inactive_since and key_use != "sig":
-        #             # Skip inactive keys unless for signature verification
-        #             continue
-        #         if not key.use or use == key.use:
-        #             if kid:
-        #                 if key.kid == kid:
-        #                     lst.append(key)
-        #                     break
-        #                 else:
-        #                     continue
-        #             else:
-        #                 lst.append(key)
-        #
-        # # if elliptic curve, have to check if I have a key of the right curve
-        # if key_type == "EC" and "alg" in kwargs:
-        #     name = "P-{}".format(kwargs["alg"][2:])  # the type
-        #     _lst = []
-        #     for key in lst:
-        #         if name != key.crv:
-        #             continue
-        #         _lst.append(key)
-        #     lst = _lst
-        #
-        # if use == 'enc' and key_type == 'oct' and issuer_id != '':
-        #     # Add my symmetric keys
-        #     _issuer = self._get_issuer('')
-        #     if _issuer:
-        #         for kb in _issuer:
-        #             for key in kb.get(key_type):
-        #                 if key.inactive_since:
-        #                     continue
-        #                 if not key.use or key.use == use:
-        #                     lst.append(key)
-        #
-        # return lst
-
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def get_signing_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         """
@@ -805,6 +759,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id='', storage_c
     return keyjar
 
 
+@deprecated_alias(issuer='issuer_id', owner='issuer_id')
 def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', read_only=True,
                  storage_conf=None, abstract_storage_cls=None):
     """
