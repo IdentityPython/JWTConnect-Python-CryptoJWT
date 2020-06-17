@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyIssuer(object):
-    """ A issuer contains a number of KeyBundles. """
+    """ A key issuer instance contains a number of KeyBundles. """
 
     def __init__(self, ca_certs=None, keybundle_cls=KeyBundle,
                  remove_after=3600, httpc=None, httpc_params=None,
@@ -69,7 +69,6 @@ class KeyIssuer(object):
         url as source specification. If no file format is given it's assumed
         that what's on the other side is a JWKS.
 
-        :param issuer: Who issued the keys
         :param url: Where can the key/-s be found
         :param kwargs: extra parameters for instantiating KeyBundle
         :return: A :py:class:`oidcmsg.oauth2.keybundle.KeyBundle` instance
@@ -234,19 +233,19 @@ class KeyIssuer(object):
             self._bundles.append(
                 self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params))
 
-    def import_jwks_as_json(self, jwks, issuer):
+    def import_jwks_as_json(self, jwks, issuer_id):
         """
         Imports all the keys that are represented in a JWKS expressed as a
         JSON object
 
         :param jwks: JSON representation of a JWKS
-        :param issuer: Who 'owns' the JWKS
+        :param issuer_id: Who 'owns' the JWKS
         """
         return self.import_jwks(json.loads(jwks))
 
-    def import_jwks_from_file(self, filename, issuer):
+    def import_jwks_from_file(self, filename, issuer_id):
         with open(filename) as jwks_file:
-            self.import_jwks_as_json(jwks_file.read(), issuer)
+            self.import_jwks_as_json(jwks_file.read(), issuer_id)
 
     def remove_outdated(self, when=0):
         """
@@ -352,7 +351,7 @@ class KeyIssuer(object):
 
     def dump(self, exclude=None):
         """
-        Returns the key issuer content as a dictionary.
+        Returns the content as a dictionary.
 
         :return: A dictionary
         """
@@ -447,6 +446,20 @@ class KeyIssuer(object):
 
         return True
 
+    def rotate_keys(self, key_conf, kid_template=""):
+        """
+
+        :param key_conf: The configuration for the new keys
+        :param issuer: KeyIssuer instance
+        :param kid_template: A key id template
+        :return:
+        """
+        new_keys = build_keyissuer(key_conf, kid_template)
+        self.mark_all_keys_as_inactive()
+        for kb in new_keys:
+            self.add_kb(kb)
+        return self
+
 
 # =============================================================================
 
@@ -489,6 +502,7 @@ def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
     :param kid_template: A template by which to build the key IDs. If no
         kid_template is given then the built-in function add_kid() will be used.
     :param key_issuer: If an keyIssuer instance the new keys are added to this key issuer.
+    :param issuer_id: The identifier of the issuer
     :return: A KeyIssuer instance
     """
 
@@ -504,16 +518,7 @@ def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
     return key_issuer
 
 
-def rotate_keys(key_conf, issuer, kid_template=""):
-    new_keys = build_keyissuer(key_conf, kid_template)
-    issuer.mark_all_keys_as_inactive()
-    for kb in new_keys:
-        issuer.add_kb(kb)
-    return issuer
-
-
-def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True,
-                 storage_conf=None, abstract_storage_cls=None):
+def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True):
     """
     A number of cases here:
 
