@@ -1,12 +1,15 @@
 import base64
+import functools
 import importlib
 import json
 import re
 import struct
+import warnings
 from binascii import unhexlify
 from typing import List
 
 from cryptojwt.exception import BadSyntax
+
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -203,6 +206,7 @@ def deser(val):
 
     return base64_to_long(_val)
 
+
 def modsplit(name):
     """Split importable"""
     if ':' in name:
@@ -227,3 +231,31 @@ def importer(name):
 
 def qualified_name(cls):
     return cls.__module__ + "." + cls.__name__
+
+
+# This is borrowed from
+# https://stackoverflow.com/questions/49802412/how-to-implement-deprecation-in-python-with
+# -argument-alias
+# cudos to https://stackoverflow.com/users/2357112/user2357112-supports-monica
+
+def deprecated_alias(**aliases):
+    def deco(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            rename_kwargs(f.__name__, kwargs, aliases)
+            return f(*args, **kwargs)
+
+        return wrapper
+
+    return deco
+
+
+def rename_kwargs(func_name, kwargs, aliases):
+    for alias, new in aliases.items():
+        if alias in kwargs:
+            if new in kwargs:
+                raise TypeError('{} received both {} and {}'.format(
+                    func_name, alias, new))
+            warnings.warn('{} is deprecated; use {}'.format(alias, new),
+                          DeprecationWarning)
+            kwargs[new] = kwargs.pop(alias)
