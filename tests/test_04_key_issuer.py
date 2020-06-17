@@ -9,12 +9,9 @@ from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_bundle import keybundle_from_local_file
 from cryptojwt.key_issuer import KeyIssuer
 from cryptojwt.key_issuer import build_keyissuer
-
-__author__ = 'Roland Hedberg'
-
 from cryptojwt.key_issuer import init_key_issuer
 
-from cryptojwt.key_issuer import rotate_keys
+__author__ = 'Roland Hedberg'
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "test_keys"))
@@ -392,7 +389,7 @@ def test_remove_after():
 
     key_issuer.remove_after = 1
     # rotate_keys = create new keys + make the old as inactive
-    key_issuer = rotate_keys(KEYDEFS, issuer=key_issuer)
+    key_issuer = key_issuer.rotate_keys(KEYDEFS)
 
     key_issuer.remove_outdated(time.time() + 3600)
 
@@ -629,7 +626,7 @@ def test_init_key_issuer_update():
 
     # keyjar1 should only contain one EC key while keyjar2 should contain 2.
 
-    ec1 = _keyissuer_1.get('sig','EC')
+    ec1 = _keyissuer_1.get('sig', 'EC')
     ec2 = _keyissuer_2.get('sig', 'EC', '')
     assert len(ec1) == 1
     assert len(ec2) == 2
@@ -637,8 +634,8 @@ def test_init_key_issuer_update():
     # The file on disc should not have changed
     _keyissuer_3 = init_key_issuer(private_path=PRIVATE_FILE)
 
-    assert len(_keyissuer_3.get('sig','RSA')) == 1
-    assert len(_keyissuer_3.get('sig','EC')) == 1
+    assert len(_keyissuer_3.get('sig', 'RSA')) == 1
+    assert len(_keyissuer_3.get('sig', 'EC')) == 1
 
     _keyissuer_4 = init_key_issuer(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2,
                                    public_path=PUBLIC_FILE, read_only=False)
@@ -646,8 +643,8 @@ def test_init_key_issuer_update():
     # Now it should
     _keyissuer_5 = init_key_issuer(private_path=PRIVATE_FILE)
 
-    assert len(_keyissuer_5.get('sig','RSA')) == 1
-    assert len(_keyissuer_5.get('sig','EC')) == 2
+    assert len(_keyissuer_5.get('sig', 'RSA')) == 1
+    assert len(_keyissuer_5.get('sig', 'EC')) == 2
 
 
 OIDC_KEYS = {
@@ -664,8 +661,8 @@ def test_init_key_issuer_create_directories():
             shutil.rmtree("{}/{}".format(BASEDIR, _dir))
 
     _keyissuer = init_key_issuer(**OIDC_KEYS)
-    assert len(_keyissuer.get('sig','RSA')) == 1
-    assert len(_keyissuer.get('sig','EC')) == 1
+    assert len(_keyissuer.get('sig', 'RSA')) == 1
+    assert len(_keyissuer.get('sig', 'EC')) == 1
 
 
 def test_dump():
@@ -675,8 +672,8 @@ def test_dump():
     res = issuer.dump()
 
     nkj = KeyIssuer().load(res)
-    assert nkj.get('sig','rsa', kid="kriMPdmBvx68skT8-mPAB3BseeA")
-    assert nkj.get('sig','rsa', kid='MnC_VZcATfM5pOYiJHMba9goEKY')
+    assert nkj.get('sig', 'rsa', kid="kriMPdmBvx68skT8-mPAB3BseeA")
+    assert nkj.get('sig', 'rsa', kid='MnC_VZcATfM5pOYiJHMba9goEKY')
 
 
 def test_contains():
