@@ -252,7 +252,7 @@ class KeyJar(object):
         """
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
-            return []
+            raise KeyError(issuer_id)
         return _issuer.all_keys()
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
