@@ -248,6 +248,9 @@ class JWK(object):
         elif self.key_ops:
             return usage in self.key_ops
 
+    def update(self):
+        pass
+
 
 def pems_to_x5c(cert_chain):
     """
