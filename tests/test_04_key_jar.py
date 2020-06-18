@@ -733,7 +733,8 @@ def test_get_wrong_owner():
     assert kj.get('sig', 'rsa') == []
 
     assert 'https://delphi.example.com' not in kj
-    assert kj['https://delphi.example.com'] == None
+    with pytest.raises(KeyError):
+        kj['https://delphi.example.com']
 
 
 def test_match_owner():

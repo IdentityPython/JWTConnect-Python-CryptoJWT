@@ -93,12 +93,12 @@ class KeyJar(object):
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def _add_issuer(self, issuer_id) -> KeyIssuer:
-        _iss = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
-                         keybundle_cls=self.keybundle_cls,
-                         remove_after=self.remove_after,
-                         httpc=self.httpc, httpc_params=self.httpc_params)
-        self._issuers[issuer_id] = _iss
-        return _iss
+        _issuer = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
+                            keybundle_cls=self.keybundle_cls,
+                            remove_after=self.remove_after,
+                            httpc=self.httpc, httpc_params=self.httpc_params)
+        self._issuers[issuer_id] = _issuer
+        return _issuer
 
     def items(self):
         """
@@ -121,10 +121,10 @@ class KeyJar(object):
         :param issuer_id: The issuer ID
         :return: A KeyIssuer instance
         """
-        _iss = self._get_issuer(issuer_id)
-        if _iss is None:
+        _issuer = self._get_issuer(issuer_id)
+        if _issuer is None:
             return self._add_issuer(issuer_id)
-        return _iss
+        return _issuer
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def add_url(self, issuer_id: str, url: str, **kwargs) -> KeyBundle:
@@ -252,9 +252,8 @@ class KeyJar(object):
         """
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
-            raise KeyError(issuer_id)
-        else:
-            return _issuer.all_keys()
+            return []
+        return _issuer.all_keys()
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __contains__(self, issuer_id):
@@ -272,7 +271,10 @@ class KeyJar(object):
         :param issuer_id: The entity ID
         :return: A KeyIssuer instance
         """
-        return self._get_issuer(issuer_id)
+        _issuer = self._get_issuer(issuer_id)
+        if _issuer is None:
+            raise KeyError(issuer_id)
+        return _issuer
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __setitem__(self, issuer_id, key_issuer):
