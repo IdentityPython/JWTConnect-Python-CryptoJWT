@@ -332,9 +332,9 @@ class KeyIssuer(object):
 
     def copy(self):
         """
-        Make deep copy of this key jar.
+        Make deep copy of this key issuer.
 
-        :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
+        :return: A :py:class:`oidcmsg.key_issuer.KeyIssuer` instance
         """
         ki = KeyIssuer()
         ki._bundles = [kb.copy() for kb in self._bundles]
