@@ -122,7 +122,7 @@ class KeyJar(object):
         :return: A KeyIssuer instance
         """
         _iss = self._get_issuer(issuer_id)
-        if not _iss:
+        if _iss is None:
             return self._add_issuer(issuer_id)
         return _iss
 
@@ -169,7 +169,7 @@ class KeyJar(object):
         """
         issuer = self.return_issuer(issuer_id)
         issuer.add_kb(kb)
-        self[issuer_id] = issuer
+        self._issuers[issuer_id] = issuer
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def get(self, key_use, key_type="", issuer_id="", kid=None, **kwargs):
@@ -182,11 +182,6 @@ class KeyJar(object):
         :param kid: A Key Identifier
         :return: A possibly empty list of keys
         """
-
-        if key_use in ["dec", "enc"]:
-            use = "enc"
-        else:
-            use = "sig"
 
         _issuer = None
         if issuer_id != "":
@@ -256,22 +251,23 @@ class KeyJar(object):
         :return: A possibly empty list of keys
         """
         _issuer = self._get_issuer(issuer_id)
-        if _issuer:
-            return _issuer.all_keys()
+        if _issuer is None:
+            raise KeyError(issuer_id)
         else:
-            return []
+            return _issuer.all_keys()
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __contains__(self, issuer_id):
-        if self._get_issuer(issuer_id):
-            return True
-        else:
+        _iss = self._get_issuer(issuer_id)
+        if _iss is None:
             return False
+        else:
+            return True
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __getitem__(self, issuer_id=''):
         """
-        Get all the KeyIssuer with the name == issuer_id
+        Get the KeyIssuer with the name == issuer_id
 
         :param issuer_id: The entity ID
         :return: A KeyIssuer instance
@@ -677,7 +673,7 @@ class KeyJar(object):
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def key_summary(self, issuer_id):
         _issuer = self._get_issuer(issuer_id)
-        if _issuer:
+        if _issuer is not None:
             return _issuer.key_summary()
 
         raise KeyError('Unknown Issuer ID: "{}"'.format(issuer_id))
