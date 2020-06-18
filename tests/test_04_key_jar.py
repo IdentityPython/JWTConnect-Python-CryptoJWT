@@ -973,3 +973,15 @@ def test_contains():
 
     assert 'Bob' in kj
     assert 'David' not in kj
+
+
+def test_similar():
+    ISSUER = "xyzzy"
+
+    kj = KeyJar()
+    kb = KeyBundle(JWK2)
+    kj.add_kb(issuer=ISSUER, kb=kb)
+
+    keys1 = kj.get_issuer_keys(ISSUER)
+    keys2 = kj[ISSUER].all_keys()
+    assert keys1 == keys2
