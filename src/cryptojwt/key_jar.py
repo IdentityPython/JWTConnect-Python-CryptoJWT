@@ -256,7 +256,7 @@ class KeyJar(object):
         :return: A possibly empty list of keys
         """
         _issuer = self._get_issuer(issuer_id)
-        if _issuer:
+        if _issuer is not None:
             return _issuer.all_keys()
         else:
             return []
