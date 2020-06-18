@@ -276,7 +276,10 @@ class KeyJar(object):
         :param issuer_id: The entity ID
         :return: A KeyIssuer instance
         """
-        return self._get_issuer(issuer_id)
+        _iss = self._get_issuer(issuer_id)
+        if _iss is None:
+            raise KeyError(issuer_id)
+        return _iss
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __setitem__(self, issuer_id, key_issuer):
