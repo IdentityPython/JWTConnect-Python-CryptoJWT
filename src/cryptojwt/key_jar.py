@@ -122,7 +122,7 @@ class KeyJar(object):
         :return: A KeyIssuer instance
         """
         _issuer = self._get_issuer(issuer_id)
-        if not _issuer:
+        if _issuer is None:
             return self._add_issuer(issuer_id)
         return _issuer
 
@@ -256,10 +256,9 @@ class KeyJar(object):
         :return: A possibly empty list of keys
         """
         _issuer = self._get_issuer(issuer_id)
-        if _issuer is not None:
-            return _issuer.all_keys()
-        else:
+        if _issuer is None:
             return []
+        return _issuer.all_keys()
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def __contains__(self, issuer_id):
@@ -680,7 +679,7 @@ class KeyJar(object):
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
     def key_summary(self, issuer_id):
         _issuer = self._get_issuer(issuer_id)
-        if _issuer:
+        if _issuer is not None:
             return _issuer.key_summary()
 
         raise KeyError('Unknown Issuer ID: "{}"'.format(issuer_id))
