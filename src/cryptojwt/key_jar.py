@@ -364,7 +364,7 @@ class KeyJar(object):
         else:
             _issuer = self._get_issuer(issuer_id)
             if _issuer is None:
-                return []
+                return None
             else:
                 res = _issuer.find(source)
 

@@ -773,7 +773,7 @@ def test_find():
 
     assert kj.find('{}'.format(_path), 'Alice')
     assert kj.find('https://example.com', 'Alice') == []
-    assert kj.find('{}'.format(_path), 'Bob') == []
+    assert kj.find('{}'.format(_path), 'Bob') is None
 
 
 def test_get_decrypt_keys():
