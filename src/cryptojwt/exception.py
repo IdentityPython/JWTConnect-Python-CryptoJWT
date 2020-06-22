@@ -43,6 +43,18 @@ class MissingKey(JWKESTException):
     """ No usable key """
 
 
+class KeyIOError(Exception):
+    pass
+
+
+class UnknownKeyType(KeyIOError):
+    pass
+
+
+class UpdateFailed(KeyIOError):
+    pass
+
+
 class UnknownKeytype(Invalid):
     """An unknown key type"""
 
@@ -87,15 +99,7 @@ class WrongKeyType(JWKESTException):
     pass
 
 
-class UnknownKeyType(JWKESTException):
-    pass
-
-
 class UnsupportedKeyType(JWKESTException):
-    pass
-
-
-class UpdateFailed(JWKESTException):
     pass
 
 

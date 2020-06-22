@@ -248,6 +248,9 @@ class JWK(object):
         elif self.key_ops:
             return usage in self.key_ops
 
+    def update(self):
+        pass
+
 
 def pems_to_x5c(cert_chain):
     """
@@ -301,6 +304,12 @@ def certificate_fingerprint(der, hash="sha256"):
         raise UnsupportedAlgorithm(hash)
 
     return ':'.join([fp[i:i + 2] for i in range(0, len(fp), 2)]).upper()
+
+
+def calculate_x5t(der, hash='sha1'):
+    val = certificate_fingerprint(der, hash)
+    val = val.replace(':', '')
+    return base64.b64encode(as_bytes(val))
 
 
 def pem_hash(pem_file):

@@ -1,4 +1,5 @@
 """Implementation of a Key Bundle."""
+import copy
 import json
 import logging
 import os
@@ -9,7 +10,6 @@ import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
-from .exception import DeSerializationNotPossible
 from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UnsupportedAlgorithm
@@ -153,7 +153,7 @@ def ec_init(spec):
 class KeyBundle:
     """The Key Bundle"""
 
-    def __init__(self, keys=None, source="", cache_time=300, verify_ssl=True,
+    def __init__(self, keys=None, source="", cache_time=300,
                  fileformat="jwks", keytype="RSA", keyusage=None, kid='',
                  httpc=None, httpc_params=None):
         """
@@ -167,7 +167,6 @@ class KeyBundle:
         :param keys: A dictionary or a list of dictionaries
             with the keys ["kty", "key", "alg", "use", "kid"]
         :param source: Where the key set can be fetch from
-        :param verify_ssl: Verify the SSL cert used by the server
         :param fileformat: For a local file either "jwks" or "der"
         :param keytype: Iff local file and 'der' format what kind of key it is.
             presently 'rsa' and 'ec' are supported.
@@ -191,7 +190,7 @@ class KeyBundle:
         self.imp_jwks = None
         self.last_updated = 0
         self.last_remote = None  # HTTP Date of last remote update
-        self.last_local = None   # UNIX timestamp of last local update
+        self.last_local = None  # UNIX timestamp of last local update
 
         if httpc:
             self.httpc = httpc
@@ -256,6 +255,8 @@ class KeyBundle:
         :param keys:
         :return:
         """
+        _new_key = []
+
         for inst in keys:
             if inst["kty"].lower() in K2C:
                 inst["kty"] = inst["kty"].lower()
@@ -290,11 +291,14 @@ class KeyBundle:
                     if _key not in self._keys:
                         if not _key.kid:
                             _key.add_kid()
-                        self._keys.append(_key)
+                        _new_key.append(_key)
                     _error = ''
-                    break
+
             if _error:
                 LOGGER.warning('While loading keys, %s', _error)
+
+        if _new_key:
+            self._keys.extend(_new_key)
 
         self.last_updated = time.time()
 
@@ -440,7 +444,7 @@ class KeyBundle:
         """
         res = True  # An update was successful
         if self.source:
-            _keys = self._keys  # just in case
+            _old_keys = self._keys  # just in case
 
             # reread everything
             self._keys = []
@@ -456,11 +460,11 @@ class KeyBundle:
                     res = self.do_remote()
             except Exception as err:
                 LOGGER.error('Key bundle update failed: %s', err)
-                self._keys = _keys  # restore
+                self._keys = _old_keys  # restore
                 return False
 
             now = time.time()
-            for _key in _keys:
+            for _key in _old_keys:
                 if _key not in self._keys:
                     if not _key.inactive_since:  # If already marked don't mess
                         _key.inactive_since = now
@@ -616,7 +620,24 @@ class KeyBundle:
         :param kid: The Key Identifier
         """
         k = self.get_key_with_kid(kid)
-        k.inactive_since = time.time()
+        if k:
+            self._keys.remove(k)
+            k.inactive_since = time.time()
+            self._keys.append(k)
+            return True
+        else:
+            return False
+
+    def mark_all_as_inactive(self):
+        """
+        Mark a specific key as inactive based on the keys KeyID.
+        """
+        _keys = self.keys()
+        _updated = []
+        for k in _keys:
+            k.inactive_since = time.time()
+            _updated.append(k)
+        self._keys = _updated
 
     def remove_outdated(self, after, when=0):
         """
@@ -637,13 +658,16 @@ class KeyBundle:
             after = float(after)
 
         _kl = []
+        changed = False
         for k in self._keys:
             if k.inactive_since and k.inactive_since + after < now:
+                changed = True
                 continue
 
             _kl.append(k)
 
-        self._keys = _kl
+        self._keys= _kl
+        return changed
 
     def __contains__(self, key):
         return key in self._keys
@@ -655,10 +679,10 @@ class KeyBundle:
         :return: The copy
         """
         _bundle = KeyBundle()
-        _bundle.set(self._keys[:])
+        _bundle._keys = self._keys[:]
 
         _bundle.cache_time = self.cache_time
-        _bundle.httpc_params = self.httpc_params.copy()
+        _bundle.httpc_params = copy.deepcopy(self.httpc_params)
         if self.source:
             _bundle.source = self.source
             _bundle.fileformat = self.fileformat
@@ -741,7 +765,9 @@ def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     usage = harmonize_usage(usage)
 
     if typ.lower() == "jwks":
-        _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
+        _bundle = KeyBundle(source=filename,
+                            fileformat="jwks",
+                            keyusage=usage)
     elif typ.lower() == "der":
         _bundle = KeyBundle(source=filename,
                             fileformat="der",
@@ -840,32 +866,27 @@ def build_key_bundle(key_conf, kid_template=""):
 
     kid = 0
 
-    complete_bundle = KeyBundle()
+    _bundles = []
     for spec in key_conf:
         typ = spec["type"].upper()
 
+        _bundle = None
         if typ == "RSA":
             if "key" in spec and spec["key"]:
-                error_to_catch = (OSError, IOError,
-                                  DeSerializationNotPossible)
-                try:
+                if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(source="file://%s" % spec["key"],
                                         fileformat="der",
-                                        keytype=typ, keyusage=spec["use"])
-                except error_to_catch:
-                    _bundle = rsa_init(spec)
+                                        keytype=typ,
+                                        keyusage=spec["use"])
             else:
                 _bundle = rsa_init(spec)
         elif typ == "EC":
             if "key" in spec and spec["key"]:
-                error_to_catch = (OSError, IOError,
-                                  DeSerializationNotPossible)
-                try:
+                if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(source="file://%s" % spec["key"],
                                         fileformat="der",
-                                        keytype=typ, keyusage=spec["use"])
-                except error_to_catch:
-                    _bundle = ec_init(spec)
+                                        keytype=typ,
+                                        keyusage=spec["use"])
             else:
                 _bundle = ec_init(spec)
         elif typ.lower() == "oct":
@@ -873,11 +894,20 @@ def build_key_bundle(key_conf, kid_template=""):
         else:
             continue
 
+        if not _bundle:
+            continue
+
         _set_kid(spec, _bundle, kid_template, kid)
+        _bundles.append(_bundle)
 
-        complete_bundle.extend(_bundle.keys())
+    if _bundles:
+        complete_bundle = KeyBundle()
+        for _bundle in _bundles:
+            complete_bundle.extend(_bundle.keys())
 
-    return complete_bundle
+        return complete_bundle
+    else:
+        return None
 
 
 def _cmp(kd1, kd2):
@@ -1065,8 +1095,12 @@ def update_key_bundle(key_bundle, diff):
         pass
     else:
         _now = time.time()
+        _keys = key_bundle.keys()
         for k in _del:
+            _keys.remove(k)
             k.inactive_since = _now
+            _keys.append(k)
+        key_bundle.set(_keys)
 
 
 def key_rollover(bundle):
