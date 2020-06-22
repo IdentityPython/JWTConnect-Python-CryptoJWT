@@ -152,23 +152,6 @@ class KeyIssuer(object):
                 _res[kb.source] = [kb]
         return _res
 
-    def __str__(self):
-        _res = {}
-        for kb in self._bundles:
-            key_list = []
-            for key in kb.keys():
-                if key.inactive_since:
-                    key_list.append(
-                        '*{}:{}:{}'.format(key.kty, key.use, key.kid))
-                else:
-                    key_list.append(
-                        '{}:{}:{}'.format(key.kty, key.use, key.kid))
-            if kb.source in _res:
-                _res[kb.source] += ', ' + ', '.join(key_list)
-            else:
-                _res[kb.source] = ', '.join(key_list)
-        return json.dumps(_res)
-
     def load_keys(self, jwks_uri='', jwks=None):
         """
         Fetch keys from another server
@@ -276,6 +259,7 @@ class KeyIssuer(object):
         :param key_use: A key useful for this usage (enc, dec, sig, ver)
         :param key_type: Type of key (rsa, ec, oct, ..)
         :param kid: A Key Identifier
+        :param alg: Algorithm
         :return: A possibly empty list of keys
         """
 
@@ -319,8 +303,8 @@ class KeyIssuer(object):
             lst = [key for key in lst if not key.alg or key.alg == alg]
 
         # if elliptic curve, have to check if I have a key of the right curve
-        if key_type == "EC" and "alg" in kwargs:
-            name = "P-{}".format(kwargs["alg"][2:])  # the type
+        if key_type and key_type.upper() == "EC" and alg:
+            name = "P-{}".format(alg[2:])  # the type
             _lst = []
             for key in lst:
                 if name != key.crv:

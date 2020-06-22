@@ -3,8 +3,10 @@ import shutil
 import time
 
 import pytest
+import responses
 
 from cryptojwt.exception import JWKESTException
+from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_bundle import keybundle_from_local_file
 from cryptojwt.key_issuer import KeyIssuer
@@ -232,7 +234,7 @@ def test_build_keyissuer_missing(tmpdir):
     assert key_issuer is None
 
 
-def test_build_RSA_keyjar_from_file(tmpdir):
+def test_build_RSA_keyissuer_from_file(tmpdir):
     keys = [
         {
             "type": "RSA", "key": RSA0,
@@ -244,7 +246,7 @@ def test_build_RSA_keyjar_from_file(tmpdir):
     assert len(key_issuer) == 2
 
 
-def test_build_EC_keyjar_missing(tmpdir):
+def test_build_EC_keyissuer_missing(tmpdir):
     keys = [
         {
             "type": "EC", "key": os.path.join(tmpdir.dirname, "missing_file"),
@@ -256,7 +258,7 @@ def test_build_EC_keyjar_missing(tmpdir):
     assert key_issuer is None
 
 
-def test_build_EC_keyjar_from_file(tmpdir):
+def test_build_EC_keyissuer_from_file(tmpdir):
     keys = [
         {
             "type": "EC", "key": EC0,
@@ -574,7 +576,7 @@ def test_init_key_issuer():
     assert len(_keyissuer) == 2
 
 
-def test_init_key_jar_dump_public():
+def test_init_key_issuer_dump_public():
     for _file in [PRIVATE_FILE, PUBLIC_FILE]:
         if os.path.isfile(_file):
             os.unlink(_file)
@@ -587,7 +589,7 @@ def test_init_key_jar_dump_public():
     _keyissuer2 = init_key_issuer(public_path=PUBLIC_FILE, key_defs=KEYSPEC)
     assert len(_keyissuer2) == 2
 
-    # verify that the 2 Key jars contains the same keys
+    # verify that the 2 Key issuers contains the same keys
 
 
 def test_init_key_issuer_dump_private():
@@ -624,7 +626,7 @@ def test_init_key_issuer_update():
     assert len(rsa2) == 1
     assert rsa1[0] == rsa2[0]
 
-    # keyjar1 should only contain one EC key while keyjar2 should contain 2.
+    # keyissuer1 should only contain one EC key while keyissuer2 should contain 2.
 
     ec1 = _keyissuer_1.get('sig', 'EC')
     ec2 = _keyissuer_2.get('sig', 'EC', '')
@@ -665,6 +667,50 @@ def test_init_key_issuer_create_directories():
     assert len(_keyissuer.get('sig', 'EC')) == 1
 
 
+OIDC_PUB_KEYS = {
+    'key_defs': KEYSPEC,
+    'public_path': '{}/public/jwks.json'.format(BASEDIR),
+    'read_only': False
+}
+
+
+def test_init_key_issuer_public_key_only():
+    # make sure the directories are gone
+    for _dir in ['public']:
+        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
+            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+
+    _keyissuer = init_key_issuer(**OIDC_PUB_KEYS)
+    assert len(_keyissuer.get('sig', 'RSA')) == 1
+    assert len(_keyissuer.get('sig', 'EC')) == 1
+
+    _keyissuer2 = init_key_issuer(**OIDC_PUB_KEYS)
+    assert len(_keyissuer2.get('sig', 'RSA')) == 1
+    assert len(_keyissuer2.get('sig', 'EC')) == 1
+
+
+OIDC_PUB_KEYS2 = {
+    'key_defs': KEYSPEC_3,
+    'public_path': '{}/public/jwks.json'.format(BASEDIR),
+    'read_only': False
+}
+
+
+def test_init_key_issuer_public_key_only_with_diff():
+    # make sure the directories are gone
+    for _dir in ['public']:
+        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
+            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+
+    _keyissuer = init_key_issuer(**OIDC_PUB_KEYS)
+    assert len(_keyissuer.get('sig', 'RSA')) == 1
+    assert len(_keyissuer.get('sig', 'EC')) == 1
+
+    _keyissuer2 = init_key_issuer(**OIDC_PUB_KEYS2)
+    assert len(_keyissuer2.get('sig', 'RSA')) == 1
+    assert len(_keyissuer2.get('sig', 'EC')) == 3
+
+
 def test_dump():
     issuer = KeyIssuer()
     issuer.add_kb(KeyBundle(JWK2['keys']))
@@ -681,3 +727,98 @@ def test_contains():
     issuer.add_kb(KeyBundle(JWK1['keys']))
     for k in issuer.all_keys():
         assert k in issuer
+
+
+def test_missing_url():
+    issuer = KeyIssuer()
+    with pytest.raises(KeyError):
+        issuer.add_url('')
+
+
+def test_localhost_url():
+    issuer = KeyIssuer(httpc_params={'verify': True})
+    url = 'http://localhost/jwks.json'
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=url, json=JWK2, status=200)
+        issuer.add_url(url)
+
+    kb = issuer.find(url)
+    assert len(kb) == 1
+    assert kb[0].httpc_params == {'verify': False}
+
+
+def test_add_url():
+    issuer = KeyIssuer(httpc_params={'verify': True})
+    url = 'http://localhost/jwks.json'
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=url, json=JWK2, status=200)
+        issuer.add(url)
+
+    kb = issuer.find(url)
+    assert len(kb) == 1
+    assert kb[0].source == url
+
+
+def test_add_symmetric():
+    issuer = KeyIssuer()
+    issuer.add('LongRamblingKeyThatShouldBeLongEnough')
+    kb = issuer.find(None)
+    assert len(kb) == 1
+    assert kb[0].keys()[0].kty == 'oct'
+
+
+def test_not_in():
+    issuer = KeyIssuer()
+    _jwk = SYMKey(key='LongRamblingKeyThatShouldBeLongEnough')
+    assert _jwk not in issuer
+
+
+def test_str():
+    issuer = KeyIssuer(name='foo')
+    issuer.add('LongRamblingKeyThatShouldBeLongEnough')
+    assert str(issuer).startswith('<KeyIssuer "foo" oct::')
+
+
+def test_items():
+    issuer = KeyIssuer(name='foo')
+    url = 'http://localhost/jwks.json'
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=url, json=JWK2, status=200)
+        issuer.add(url)
+
+    issuer.add('LongRamblingKeyThatShouldBeLongEnough')
+
+    items = issuer.items()
+    assert set(items.keys()) == {None, url}
+    assert items[None][0].keys()[0].kty == 'oct'
+    assert len(items[url][0].keys()) == 4
+
+
+def test_load_keys_uri():
+    issuer = KeyIssuer(httpc_params={'verify': True})
+    url = 'http://localhost/jwks.json'
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=url, json=JWK2, status=200)
+        issuer.load_keys(jwks_uri=url)
+
+    kb = issuer.find(url)
+    assert len(kb) == 1
+    assert kb[0].source == url
+
+
+def test_load_keys():
+    issuer = KeyIssuer(httpc_params={'verify': True})
+    issuer.load_keys(jwks=JWK2)
+
+    items = issuer.items()
+    assert len(items[None][0].keys()) == 4
+
+
+def test_ec_alg():
+    kb = KeyBundle(source=os.path.join(BASE_PATH, 'ec-p256.json'), keyusage='sig')
+    issuer = KeyIssuer()
+    issuer.add_kb(kb)
+    k = issuer.get(key_use='sig', key_type='ec', alg='P-384')
+    assert k == []
+    k = issuer.get(key_use='sig', key_type='ec', alg='P-256')
+    assert len(k) == 1
