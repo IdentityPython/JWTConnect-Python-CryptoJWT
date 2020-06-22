@@ -36,10 +36,10 @@ BOB_KEY_JAR = KeyJar()
 BOB_KEY_JAR.add_kb(BOB, kb3)
 
 # Load the opponents keys
-_jwks = ALICE_KEY_JAR.export_jwks_as_json(issuer=ALICE)
+_jwks = ALICE_KEY_JAR.export_jwks_as_json(issuer_id=ALICE)
 BOB_KEY_JAR.import_jwks_as_json(_jwks, ALICE)
 
-_jwks = BOB_KEY_JAR.export_jwks_as_json(issuer=BOB)
+_jwks = BOB_KEY_JAR.export_jwks_as_json(issuer_id=BOB)
 ALICE_KEY_JAR.import_jwks_as_json(_jwks, BOB)
 
 def _eq(l1, l2):
