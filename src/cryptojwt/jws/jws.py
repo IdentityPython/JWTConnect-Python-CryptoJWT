@@ -177,7 +177,7 @@ class JWS(JWx):
 
             self.jwt = jwt
         elif not self.jwt:
-            raise ValueError('Missing singed JWT')
+            raise ValueError('Missing signed JWT')
         else:
             jwt = self.jwt
 
