@@ -1,5 +1,9 @@
 import os
 
+import pytest
+
+from cryptojwt.exception import JWKESTException, IssuerNotFound
+from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
 from cryptojwt.jwt import pick_key
 from cryptojwt.key_bundle import KeyBundle
@@ -62,6 +66,29 @@ def test_jwt_pack_and_unpack():
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {'iat', 'iss', 'sub'}
+
+
+def test_jwt_pack_and_unpack_unknown_issuer():
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg='RS256')
+    payload = {'sub': 'sub'}
+    _jwt = alice.pack(payload=payload)
+
+    kj = KeyJar()
+    bob = JWT(key_jar=kj, iss=BOB, allowed_sign_algs=["RS256"])
+    with pytest.raises(IssuerNotFound):
+        info = bob.unpack(_jwt)
+
+
+def test_jwt_pack_and_unpack_unknown_key():
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg='RS256')
+    payload = {'sub': 'sub'}
+    _jwt = alice.pack(payload=payload)
+
+    kj = KeyJar()
+    kj.add_kb(ALICE, KeyBundle())
+    bob = JWT(key_jar=kj, iss=BOB, allowed_sign_algs=["RS256"])
+    with pytest.raises(NoSuitableSigningKeys):
+        info = bob.unpack(_jwt)
 
 
 def test_jwt_pack_and_unpack_with_lifetime():

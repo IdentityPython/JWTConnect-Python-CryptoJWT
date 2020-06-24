@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from cryptojwt.exception import JWKESTException
+from cryptojwt.exception import JWKESTException, IssuerNotFound
 from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import JWS
 from cryptojwt.jws.jws import factory
@@ -799,8 +799,8 @@ def test_get_decrypt_keys():
     keys = kj.get_jwt_decrypt_keys(jwt)
     assert keys
 
-    keys = kj.get_jwt_decrypt_keys(jwt, aud='Bob')
-    assert keys
+    with pytest.raises(IssuerNotFound):
+        keys = kj.get_jwt_decrypt_keys(jwt, aud='Bob')
 
 
 def test_update_keyjar():
