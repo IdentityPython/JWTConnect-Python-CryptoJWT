@@ -467,7 +467,7 @@ class KeyJar(object):
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
             logger.error('Issuer "{}" not in keyjar'.format(issuer_id))
-            return keys
+            raise IssuerNotFound(issuer_id)
 
         logger.debug('Key summary for {}: {}'.format(issuer_id, _issuer.key_summary()))
 
