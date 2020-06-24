@@ -40,7 +40,7 @@ class BadType(Invalid):
 
 
 class MissingKey(JWKESTException):
-    """ No usable key """
+    """No usable key"""
 
 
 class MissingIssuer(JWKESTException):
