@@ -5,6 +5,7 @@ from typing import Optional
 
 from requests import request
 
+from .exception import UnknownKeyType, KeyIOError, UpdateFailed
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
@@ -18,18 +19,6 @@ from .utils import qualified_name
 __author__ = 'Roland Hedberg'
 
 logger = logging.getLogger(__name__)
-
-
-class KeyIOError(Exception):
-    pass
-
-
-class UnknownKeyType(KeyIOError):
-    pass
-
-
-class UpdateFailed(KeyIOError):
-    pass
 
 
 class KeyJar(object):
