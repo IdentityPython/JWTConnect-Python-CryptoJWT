@@ -5,7 +5,7 @@ from typing import Optional
 
 from requests import request
 
-from .exception import UnknownKeyType, KeyIOError, UpdateFailed
+from .exception import UnknownKeyType, KeyIOError, UpdateFailed, IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
@@ -241,7 +241,7 @@ class KeyJar(object):
         """
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
-            raise KeyError(issuer_id)
+            raise IssuerNotFound(issuer_id)
         return _issuer.all_keys()
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
@@ -262,7 +262,7 @@ class KeyJar(object):
         """
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
-            raise KeyError(issuer_id)
+            raise IssuerNotFound(issuer_id)
         return _issuer
 
     @deprecated_alias(issuer='issuer_id', owner='issuer_id')
@@ -667,7 +667,7 @@ class KeyJar(object):
         if _issuer is not None:
             return _issuer.key_summary()
 
-        raise KeyError('Unknown Issuer ID: "{}"'.format(issuer_id))
+        raise IssuerNotFound(issuer_id)
 
     def update(self):
         """
