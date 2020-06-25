@@ -5,7 +5,8 @@ import time
 
 import pytest
 
-from cryptojwt.exception import JWKESTException, IssuerNotFound
+from cryptojwt.exception import IssuerNotFound
+from cryptojwt.exception import JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
 from cryptojwt.jws.jws import JWS
 from cryptojwt.jws.jws import factory
@@ -15,10 +16,10 @@ from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_jar import KeyJar
 from cryptojwt.key_jar import build_keyjar
 from cryptojwt.key_jar import init_key_jar
+from cryptojwt.key_jar import rotate_keys
 
 __author__ = 'Roland Hedberg'
 
-from cryptojwt.key_jar import rotate_keys
 
 BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                          "test_keys"))

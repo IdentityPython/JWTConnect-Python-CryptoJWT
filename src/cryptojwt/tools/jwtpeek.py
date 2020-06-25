@@ -7,7 +7,9 @@ import json
 import os
 import sys
 
-from cryptojwt.key_issuer import KeyIssuer
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers.data import JsonLexer
 
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
@@ -16,10 +18,8 @@ from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_issuer import KeyIssuer
 from cryptojwt.key_jar import KeyJar
-from pygments import highlight
-from pygments.formatters.terminal import TerminalFormatter
-from pygments.lexers.data import JsonLexer
 
 __author__ = 'roland'
 

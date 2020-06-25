@@ -3,6 +3,7 @@ import sys
 
 import pytest
 import test_vector
+
 from cryptojwt import utils
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwk.jwk import key_from_jwk_dict

@@ -2,6 +2,7 @@ import json
 import os
 
 import pytest
+
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwx import JWx
 

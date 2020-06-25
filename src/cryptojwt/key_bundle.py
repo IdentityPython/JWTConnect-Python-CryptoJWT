@@ -10,6 +10,7 @@ import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
+
 from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UnsupportedAlgorithm

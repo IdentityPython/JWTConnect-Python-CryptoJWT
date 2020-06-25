@@ -4,12 +4,12 @@ import json
 import ssl
 from typing import List
 
-from .utils import DIGEST_HASH
 from ..exception import UnsupportedAlgorithm
 from ..utils import as_bytes
 from ..utils import as_unicode
 from ..utils import b64e
 from ..utils import base64url_to_long
+from .utils import DIGEST_HASH
 
 USE = {
     'sign': 'sig',

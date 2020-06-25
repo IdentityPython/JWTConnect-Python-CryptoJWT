@@ -8,6 +8,7 @@ import sys
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+
 from cryptojwt.exception import BadSyntax
 from cryptojwt.exception import HeaderError
 from cryptojwt.exception import MissingKey
