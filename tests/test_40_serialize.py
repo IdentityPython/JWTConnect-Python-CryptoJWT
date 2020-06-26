@@ -14,8 +14,7 @@ def full_path(local_file):
 
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
-BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                         "test_keys"))
+BASE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "test_keys"))
 CERT = full_path("cert.pem")
 
 
@@ -29,6 +28,6 @@ def test_key_issuer():
     _iss = item.KeyIssuer().deserialize(_item)
 
     assert len(_iss) == 1  # 1 key
-    assert len(_iss.get('sig', 'rsa')) == 1  # 1 RSA key
+    assert len(_iss.get("sig", "rsa")) == 1  # 1 RSA key
     _kb = _iss[0]
     assert kb.difference(_kb) == []  # no difference

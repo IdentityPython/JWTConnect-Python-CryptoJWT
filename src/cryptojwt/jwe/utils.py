@@ -10,11 +10,7 @@ from cryptography.hazmat.primitives.hashes import SHA512
 
 from ..utils import b64e
 
-LENMET = {
-    32: (16, SHA256),
-    48: (24, SHA384),
-    64: (32, SHA512)
-}
+LENMET = {32: (16, SHA256), 48: (24, SHA384), 64: (32, SHA512)}
 
 
 def get_keys_seclen_dgst(key, iv):
@@ -105,7 +101,7 @@ def concat_sha256(secret, dk_len, other_info):
     :param other_info: Other info to be incorporated (see SP800-56A)
     :return: The derived key
     """
-    dkm = b''
+    dkm = b""
     dk_bytes = int(ceil(dk_len / 8.0))
     counter = 0
     while len(dkm) < dk_bytes:

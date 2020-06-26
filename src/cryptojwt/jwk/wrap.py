@@ -6,7 +6,7 @@ from .. import JWE
 from . import JWK
 from .jwk import key_from_jwk_dict
 
-__author__ = 'jschlyter'
+__author__ = "jschlyter"
 
 DEFAULT_WRAP_PARAMS = {
     "EC": {"alg": "ECDH-ES+A128KW", "enc": "A128GCM"},
@@ -15,7 +15,9 @@ DEFAULT_WRAP_PARAMS = {
 }
 
 
-def wrap_key(key: JWK, wrapping_key: JWK, wrap_params: dict = DEFAULT_WRAP_PARAMS) -> str:
+def wrap_key(
+    key: JWK, wrapping_key: JWK, wrap_params: dict = DEFAULT_WRAP_PARAMS
+) -> str:
     message = json.dumps(key.serialize(private=True)).encode()
     try:
         enc_params = wrap_params[wrapping_key.kty]

@@ -7,15 +7,15 @@ from . import Signer
 
 
 class HMACSigner(Signer):
-    def __init__(self, algorithm='SHA256'):
-        if algorithm == 'SHA256':
+    def __init__(self, algorithm="SHA256"):
+        if algorithm == "SHA256":
             self.algorithm = hashes.SHA256
-        elif algorithm == 'SHA384':
+        elif algorithm == "SHA384":
             self.algorithm = hashes.SHA384
-        elif algorithm == 'SHA512':
+        elif algorithm == "SHA512":
             self.algorithm = hashes.SHA512
         else:
-            raise Unsupported('algorithm: {}'.format(algorithm))
+            raise Unsupported("algorithm: {}".format(algorithm))
 
     def sign(self, msg, key):
         """

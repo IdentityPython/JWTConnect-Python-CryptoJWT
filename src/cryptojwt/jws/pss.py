@@ -14,15 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 class PSSSigner(Signer):
-    def __init__(self, algorithm='SHA256'):
-        if algorithm == 'SHA256':
+    def __init__(self, algorithm="SHA256"):
+        if algorithm == "SHA256":
             self.hash_algorithm = hashes.SHA256
-        elif algorithm == 'SHA384':
+        elif algorithm == "SHA384":
             self.hash_algorithm = hashes.SHA384
-        elif algorithm == 'SHA512':
+        elif algorithm == "SHA512":
             self.hash_algorithm = hashes.SHA512
         else:
-            raise Unsupported('algorithm: {}'.format(algorithm))
+            raise Unsupported("algorithm: {}".format(algorithm))
 
     def sign(self, msg, key):
         """
@@ -39,8 +39,10 @@ class PSSSigner(Signer):
             digest,
             padding.PSS(
                 mgf=padding.MGF1(self.hash_algorithm()),
-                salt_length=padding.PSS.MAX_LENGTH),
-            utils.Prehashed(self.hash_algorithm()))
+                salt_length=padding.PSS.MAX_LENGTH,
+            ),
+            utils.Prehashed(self.hash_algorithm()),
+        )
         return sig
 
     def verify(self, msg, signature, key):
@@ -54,10 +56,15 @@ class PSSSigner(Signer):
         :return: True
         """
         try:
-            key.verify(signature, msg,
-                       padding.PSS(mgf=padding.MGF1(self.hash_algorithm()),
-                                   salt_length=padding.PSS.MAX_LENGTH),
-                       self.hash_algorithm())
+            key.verify(
+                signature,
+                msg,
+                padding.PSS(
+                    mgf=padding.MGF1(self.hash_algorithm()),
+                    salt_length=padding.PSS.MAX_LENGTH,
+                ),
+                self.hash_algorithm(),
+            )
         except InvalidSignature as err:
             raise BadSignature(err)
         else:

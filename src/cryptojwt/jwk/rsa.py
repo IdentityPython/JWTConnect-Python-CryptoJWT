@@ -24,8 +24,7 @@ PREFIX = "-----BEGIN CERTIFICATE-----"
 POSTFIX = "-----END CERTIFICATE-----"
 
 
-def generate_and_store_rsa_key(key_size=2048, filename='rsa.key',
-                               passphrase=''):
+def generate_and_store_rsa_key(key_size=2048, filename="rsa.key", passphrase=""):
     """
     Generate a private RSA key and store a PEM representation of it in a
     file.
@@ -37,22 +36,23 @@ def generate_and_store_rsa_key(key_size=2048, filename='rsa.key',
     :return: A
         cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey instance
     """
-    private_key = rsa.generate_private_key(public_exponent=65537,
-                                           key_size=key_size,
-                                           backend=default_backend())
+    private_key = rsa.generate_private_key(
+        public_exponent=65537, key_size=key_size, backend=default_backend()
+    )
 
     with open(filename, "wb") as keyfile:
         if passphrase:
             pem = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.BestAvailableEncryption(
-                    passphrase))
+                encryption_algorithm=serialization.BestAvailableEncryption(passphrase),
+            )
         else:
             pem = private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption())
+                encryption_algorithm=serialization.NoEncryption(),
+            )
         keyfile.write(pem)
         keyfile.close()
     return private_key
@@ -69,9 +69,8 @@ def import_private_rsa_key_from_file(filename, passphrase=None):
     """
     with open(filename, "rb") as key_file:
         private_key = serialization.load_pem_private_key(
-            key_file.read(),
-            password=passphrase,
-            backend=default_backend())
+            key_file.read(), password=passphrase, backend=default_backend()
+        )
     return private_key
 
 
@@ -86,8 +85,8 @@ def import_public_rsa_key_from_file(filename):
     """
     with open(filename, "rb") as key_file:
         public_key = serialization.load_pem_public_key(
-            key_file.read(),
-            backend=default_backend())
+            key_file.read(), backend=default_backend()
+        )
     return public_key
 
 
@@ -99,16 +98,15 @@ def import_rsa_key(pem_data):
     :return: rsa.RSAPublicKey instance
     """
     if not pem_data.startswith(PREFIX):
-        pem_data = bytes('{}\n{}\n{}'.format(PREFIX, pem_data, POSTFIX),
-                         'utf-8')
+        pem_data = bytes("{}\n{}\n{}".format(PREFIX, pem_data, POSTFIX), "utf-8")
     else:
-        pem_data = bytes(pem_data, 'utf-8')
+        pem_data = bytes(pem_data, "utf-8")
     cert = x509.load_pem_x509_certificate(pem_data, default_backend())
     return cert.public_key()
 
 
 def import_rsa_key_from_cert_file(pem_file):
-    with open(pem_file, 'r') as cert_file:
+    with open(pem_file, "r") as cert_file:
         return import_rsa_key(cert_file.read())
 
 
@@ -145,41 +143,41 @@ def rsa_construct_public(numbers):
 
 
 def rsa_construct_private(numbers):
-    args = dict([(k, v) for k, v in numbers.items() if k in ['n', 'e', 'd']])
-    cnum = {'d': numbers['d']}
-    if 'p' not in numbers and 'q' not in numbers:
+    args = dict([(k, v) for k, v in numbers.items() if k in ["n", "e", "d"]])
+    cnum = {"d": numbers["d"]}
+    if "p" not in numbers and "q" not in numbers:
         (p, q) = rsa.rsa_recover_prime_factors(**args)
-        cnum['p'] = p
-        cnum['q'] = q
+        cnum["p"] = p
+        cnum["q"] = q
     else:
-        cnum['p'] = numbers['p']
-        cnum['q'] = numbers['q']
+        cnum["p"] = numbers["p"]
+        cnum["q"] = numbers["q"]
 
     try:
-        cnum['dmp1'] = numbers['dp']
+        cnum["dmp1"] = numbers["dp"]
     except KeyError:
-        cnum['dmp1'] = rsa.rsa_crt_dmp1(cnum['d'], cnum['p'])
+        cnum["dmp1"] = rsa.rsa_crt_dmp1(cnum["d"], cnum["p"])
     else:
-        if not numbers['dp']:
-            cnum['dmp1'] = rsa.rsa_crt_dmp1(cnum['d'], cnum['p'])
+        if not numbers["dp"]:
+            cnum["dmp1"] = rsa.rsa_crt_dmp1(cnum["d"], cnum["p"])
 
     try:
-        cnum['dmq1'] = numbers['dq']
+        cnum["dmq1"] = numbers["dq"]
     except KeyError:
-        cnum['dmq1'] = rsa.rsa_crt_dmq1(cnum['d'], cnum['q'])
+        cnum["dmq1"] = rsa.rsa_crt_dmq1(cnum["d"], cnum["q"])
     else:
-        if not numbers['dq']:
-            cnum['dmq1'] = rsa.rsa_crt_dmq1(cnum['d'], cnum['q'])
+        if not numbers["dq"]:
+            cnum["dmq1"] = rsa.rsa_crt_dmq1(cnum["d"], cnum["q"])
 
     try:
-        cnum['iqmp'] = numbers['di']
+        cnum["iqmp"] = numbers["di"]
     except KeyError:
-        cnum['iqmp'] = rsa.rsa_crt_iqmp(cnum['p'], cnum['p'])
+        cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
     else:
-        if not numbers['di']:
-            cnum['iqmp'] = rsa.rsa_crt_iqmp(cnum['p'], cnum['p'])
+        if not numbers["di"]:
+            cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
 
-    rpubn = rsa.RSAPublicNumbers(e=numbers['e'], n=numbers['n'])
+    rpubn = rsa.RSAPublicNumbers(e=numbers["e"], n=numbers["n"])
     rprivn = rsa.RSAPrivateNumbers(public_numbers=rpubn, **cnum)
     return rprivn.private_key(default_backend())
 
@@ -192,7 +190,7 @@ def der_cert(der_data):
     :return: A cryptography.x509.certificate instance
     """
     if isinstance(der_data, str):
-        der_data = bytes(der_data, 'utf-8')
+        der_data = bytes(der_data, "utf-8")
     return x509.load_der_x509_certificate(der_data, default_backend())
 
 
@@ -207,7 +205,7 @@ def load_x509_cert(url, httpc, spec2key, **get_args):
     :return: List of 2-tuples (keytype, key)
     """
     try:
-        r = httpc('GET', url, allow_redirects=True, **get_args)
+        r = httpc("GET", url, allow_redirects=True, **get_args)
         if r.status_code == 200:
             cert = str(r.text)
             try:
@@ -251,7 +249,7 @@ def cmp_private_numbers(pn1, pn2):
     if not cmp_public_numbers(pn1.public_numbers, pn2.public_numbers):
         return False
 
-    for param in ['d', 'p', 'q']:
+    for param in ["d", "p", "q"]:
         if getattr(pn1, param) != getattr(pn2, param):
             return False
     return True
@@ -266,7 +264,7 @@ def x5t_calculation(cert):
     :return: x5t value
     """
     if isinstance(cert, str):
-        der_cert = base64.b64decode(cert.encode('ascii'))
+        der_cert = base64.b64decode(cert.encode("ascii"))
     else:
         der_cert = base64.b64decode(cert)
 
@@ -292,6 +290,7 @@ class RSAKey(AsymmetricKey):
 
     Parameters according to https://tools.ietf.org/html/rfc7518#section-6.3
     """
+
     members = JWK.members[:]
     # These are the RSA key specific parameters, they are always supposed to
     # be strings or bytes
@@ -301,13 +300,29 @@ class RSAKey(AsymmetricKey):
     public_members = JWK.public_members[:]
     # the public members of the key
     public_members.extend(["n", "e"])
-    required = ['kty', 'n', 'e']
+    required = ["kty", "n", "e"]
 
-    def __init__(self, kty="RSA", alg="", use="", kid="",
-                 x5c=None, x5t="", x5u="", n="", e="", d="", p="", q="",
-                 dp="", dq="", di="", qi="", **kwargs):
-        AsymmetricKey.__init__(self, kty, alg, use, kid, x5c, x5t, x5u,
-                               **kwargs)
+    def __init__(
+        self,
+        kty="RSA",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        n="",
+        e="",
+        d="",
+        p="",
+        q="",
+        dp="",
+        dq="",
+        di="",
+        qi="",
+        **kwargs
+    ):
+        AsymmetricKey.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.n = n
         self.e = e
         self.d = d
@@ -333,7 +348,7 @@ class RSAKey(AsymmetricKey):
         elif not self.n and not self.e:
             pass
         else:  # one of n or e but not both
-            raise JWKESTException('Missing required parameter')
+            raise JWKESTException("Missing required parameter")
 
     def deserialize(self):
         """
@@ -361,7 +376,7 @@ class RSAKey(AsymmetricKey):
                         else:
                             numbers[param] = val
 
-                if 'd' in numbers:
+                if "d" in numbers:
                     self.priv_key = rsa_construct_private(numbers)
                     self.pub_key = self.priv_key.public_key()
                 else:
@@ -378,15 +393,17 @@ class RSAKey(AsymmetricKey):
                 if isinstance(self.x5t, bytes):
                     _x5t = self.x5t
                 else:
-                    _x5t = self.x5t.encode('ascii')
+                    _x5t = self.x5t.encode("ascii")
                 if _x5t != x5t_calculation(self.x5c[0]):
                     raise DeSerializationNotPossible(
-                        "The thumbprint 'x5t' does not match the certificate.")
+                        "The thumbprint 'x5t' does not match the certificate."
+                    )
 
             if self.pub_key:
                 if not rsa_eq(self.pub_key, _cert_chain[0].public_key()):
                     raise ValueError(
-                        'key described by components and key in x5c not equal')
+                        "key described by components and key in x5c not equal"
+                    )
             else:
                 self.pub_key = _cert_chain[0].public_key()
 
@@ -418,14 +435,13 @@ class RSAKey(AsymmetricKey):
 
         if private:
             for param in self.longs:
-                if not private and param in ["d", "p", "q", "dp", "dq", "di",
-                                             "qi"]:
+                if not private and param in ["d", "p", "q", "dp", "dq", "di", "qi"]:
                     continue
                 item = getattr(self, param)
                 if item:
                     res[param] = item
         if self.x5c:
-            res['x5c'] = [as_unicode(x) for x in self.x5c]
+            res["x5c"] = [as_unicode(x) for x in self.x5c]
 
         return res
 
@@ -504,15 +520,16 @@ class RSAKey(AsymmetricKey):
             pn2 = other.priv_key.private_numbers()
         except Exception:
             try:
-                return cmp_public_numbers(self.pub_key.public_numbers(),
-                                          other.pub_key.public_numbers())
+                return cmp_public_numbers(
+                    self.pub_key.public_numbers(), other.pub_key.public_numbers()
+                )
             except Exception:
                 return False
         else:
             return cmp_private_numbers(pn1, pn2)
 
 
-def new_rsa_key(key_size=2048, kid='', public_exponent=65537, **kwargs):
+def new_rsa_key(key_size=2048, kid="", public_exponent=65537, **kwargs):
     """
     Creates a new RSA key pair and wraps it in a
     :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
@@ -523,9 +540,9 @@ def new_rsa_key(key_size=2048, kid='', public_exponent=65537, **kwargs):
     :return: A :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
     """
 
-    _key = rsa.generate_private_key(public_exponent=public_exponent,
-                                    key_size=key_size,
-                                    backend=default_backend())
+    _key = rsa.generate_private_key(
+        public_exponent=public_exponent, key_size=key_size, backend=default_backend()
+    )
 
     _rk = RSAKey(priv_key=_key, kid=kid, **kwargs)
     if not _rk.kid:

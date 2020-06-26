@@ -13,9 +13,7 @@ from .key_bundle import update_key_bundle
 from .utils import importer
 from .utils import qualified_name
 
-__author__ = 'Roland Hedberg'
-
-
+__author__ = "Roland Hedberg"
 
 
 logger = logging.getLogger(__name__)
@@ -24,9 +22,15 @@ logger = logging.getLogger(__name__)
 class KeyIssuer(object):
     """ A key issuer instance contains a number of KeyBundles. """
 
-    def __init__(self, ca_certs=None, keybundle_cls=KeyBundle,
-                 remove_after=3600, httpc=None, httpc_params=None,
-                 name=''):
+    def __init__(
+        self,
+        ca_certs=None,
+        keybundle_cls=KeyBundle,
+        remove_after=3600,
+        httpc=None,
+        httpc_params=None,
+        name="",
+    ):
         """
         KeyIssuer init function
 
@@ -77,15 +81,18 @@ class KeyIssuer(object):
         if not url:
             raise KeyError("No url given")
 
-        logger.debug('httpc_params: %s', self.httpc_params)
+        logger.debug("httpc_params: %s", self.httpc_params)
 
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
-            _params['verify'] = False
-            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=_params, **kwargs)
+            _params["verify"] = False
+            kb = self.keybundle_cls(
+                source=url, httpc=self.httpc, httpc_params=_params, **kwargs
+            )
         else:
-            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=self.httpc_params,
-                                    **kwargs)
+            kb = self.keybundle_cls(
+                source=url, httpc=self.httpc, httpc_params=self.httpc_params, **kwargs
+            )
 
         kb.update()
         self._bundles.append(kb)
@@ -107,7 +114,9 @@ class KeyIssuer(object):
             self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key}]))
         else:
             for use in usage:
-                self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key, "use": use}]))
+                self._bundles.append(
+                    self.keybundle_cls([{"kty": "oct", "key": key, "use": use}])
+                )
 
     def add_kb(self, kb):
         """
@@ -120,8 +129,11 @@ class KeyIssuer(object):
     def add(self, item, **kwargs):
         if isinstance(item, KeyBundle):
             self.add_kb(item)
-        elif item.startswith('http://') or item.startswith('file://') or item.startswith(
-                'https://'):
+        elif (
+            item.startswith("http://")
+            or item.startswith("file://")
+            or item.startswith("https://")
+        ):
             self.add_url(item, **kwargs)
         else:
             self.add_symmetric(item, **kwargs)
@@ -152,7 +164,7 @@ class KeyIssuer(object):
                 _res[kb.source] = [kb]
         return _res
 
-    def load_keys(self, jwks_uri='', jwks=None):
+    def load_keys(self, jwks_uri="", jwks=None):
         """
         Fetch keys from another server
 
@@ -165,7 +177,7 @@ class KeyIssuer(object):
             self.add_url(jwks_uri)
         elif jwks:
             # jwks should only be considered if no jwks_uri is present
-            _keys = jwks['keys']
+            _keys = jwks["keys"]
             self._bundles.append(self.keybundle_cls(_keys))
 
     def find(self, source):
@@ -188,9 +200,14 @@ class KeyIssuer(object):
         """
         keys = []
         for kb in self._bundles:
-            keys.extend([k.serialize(private) for k in kb.keys() if
-                         k.inactive_since == 0 and (
-                                 usage is None or (hasattr(k, 'use') and k.use == usage))])
+            keys.extend(
+                [
+                    k.serialize(private)
+                    for k in kb.keys()
+                    if k.inactive_since == 0
+                    and (usage is None or (hasattr(k, "use") and k.use == usage))
+                ]
+            )
         return {"keys": keys}
 
     def export_jwks_as_json(self, private=False, usage=None):
@@ -211,10 +228,13 @@ class KeyIssuer(object):
         try:
             _keys = jwks["keys"]
         except KeyError:
-            raise ValueError('Not a proper JWKS')
+            raise ValueError("Not a proper JWKS")
         else:
             self._bundles.append(
-                self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params))
+                self.keybundle_cls(
+                    _keys, httpc=self.httpc, httpc_params=self.httpc_params
+                )
+            )
 
     def import_jwks_as_json(self, jwks, issuer_id):
         """
@@ -252,7 +272,7 @@ class KeyIssuer(object):
         if changed:
             self._bundles = kbl
 
-    def get(self, key_use, key_type="", kid=None, alg='', **kwargs):
+    def get(self, key_use, key_type="", kid=None, alg="", **kwargs):
         """
         Get all keys that matches a set of search criteria
 
@@ -270,7 +290,7 @@ class KeyIssuer(object):
 
         if not key_type:
             if alg:
-                if use == 'sig':
+                if use == "sig":
                     key_type = jws_alg2keytype(alg)
                 else:
                     key_type = jwe_alg2keytype(alg)
@@ -278,7 +298,7 @@ class KeyIssuer(object):
         lst = []
         for bundle in self._bundles:
             if key_type:
-                if key_use in ['ver', 'dec']:
+                if key_use in ["ver", "dec"]:
                     _bkeys = bundle.get(key_type, only_active=False)
                 else:
                     _bkeys = bundle.get(key_type)
@@ -345,13 +365,13 @@ class KeyIssuer(object):
             _bundles.append(kb.dump())
 
         info = {
-            'name': self.name,
-            'bundles': _bundles,
-            'keybundle_cls': qualified_name(self.keybundle_cls),
-            'spec2key': self.spec2key,
-            'ca_certs': self.ca_certs,
-            'remove_after': self.remove_after,
-            'httpc_params': self.httpc_params
+            "name": self.name,
+            "bundles": _bundles,
+            "keybundle_cls": qualified_name(self.keybundle_cls),
+            "spec2key": self.spec2key,
+            "ca_certs": self.ca_certs,
+            "remove_after": self.remove_after,
+            "httpc_params": self.httpc_params,
         }
         return info
 
@@ -361,13 +381,13 @@ class KeyIssuer(object):
         :param items: A list with the information
         :return:
         """
-        self.name = info['name']
-        self.keybundle_cls = importer(info['keybundle_cls'])
-        self.spec2key = info['spec2key']
-        self.ca_certs = info['ca_certs']
-        self.remove_after = info['remove_after']
-        self.httpc_params = info['httpc_params']
-        self._bundles = [KeyBundle().load(val) for val in info['bundles']]
+        self.name = info["name"]
+        self.keybundle_cls = importer(info["keybundle_cls"])
+        self.spec2key = info["spec2key"]
+        self.ca_certs = info["ca_certs"]
+        self.remove_after = info["remove_after"]
+        self.httpc_params = info["httpc_params"]
+        self._bundles = [KeyBundle().load(val) for val in info["bundles"]]
         return self
 
     def update(self):
@@ -402,12 +422,10 @@ class KeyIssuer(object):
         for kb in self._bundles:
             for key in kb.keys():
                 if key.inactive_since:
-                    key_list.append(
-                        '*{}:{}:{}'.format(key.kty, key.use, key.kid))
+                    key_list.append("*{}:{}:{}".format(key.kty, key.use, key.kid))
                 else:
-                    key_list.append(
-                        '{}:{}:{}'.format(key.kty, key.use, key.kid))
-        return ', '.join(key_list)
+                    key_list.append("{}:{}:{}".format(key.kty, key.use, key.kid))
+        return ", ".join(key_list)
 
     def __iter__(self):
         for bundle in self._bundles:
@@ -448,7 +466,7 @@ class KeyIssuer(object):
 # =============================================================================
 
 
-def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
+def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=""):
     """
     Builds a :py:class:`oidcmsg.key_issuer.KeyIssuer` instance or adds keys to
     an existing KeyIssuer instance based on a key specification.
@@ -502,7 +520,7 @@ def build_keyissuer(key_conf, kid_template="", key_issuer=None, issuer_id=''):
     return key_issuer
 
 
-def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True):
+def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True):
     """
     A number of cases here:
 
@@ -547,7 +565,7 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
 
     if private_path:
         if os.path.isfile(private_path):
-            _jwks = open(private_path, 'r').read()
+            _jwks = open(private_path, "r").read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -556,11 +574,11 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
                 if _diff:
                     update_key_bundle(_kb, _diff)
                     if read_only:
-                        logger.error('Not allowed to write to disc!')
+                        logger.error("Not allowed to write to disc!")
                     else:
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks(private=True)
-                        fp = open(private_path, 'w')
+                        fp = open(private_path, "w")
                         fp.write(json.dumps(jwks))
                         fp.close()
         else:
@@ -570,7 +588,7 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
                 head, tail = os.path.split(private_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(private_path, 'w')
+                fp = open(private_path, "w")
                 fp.write(json.dumps(jwks))
                 fp.close()
 
@@ -579,12 +597,12 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
             head, tail = os.path.split(public_path)
             if head and not os.path.isdir(head):
                 os.makedirs(head)
-            fp = open(public_path, 'w')
+            fp = open(public_path, "w")
             fp.write(json.dumps(jwks))
             fp.close()
     elif public_path:
         if os.path.isfile(public_path):
-            _jwks = open(public_path, 'r').read()
+            _jwks = open(public_path, "r").read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -592,12 +610,12 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
                 _diff = key_diff(_kb, key_defs)
                 if _diff:
                     if read_only:
-                        logger.error('Not allowed to write to disc!')
+                        logger.error("Not allowed to write to disc!")
                     else:
                         update_key_bundle(_kb, _diff)
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks()
-                        fp = open(public_path, 'w')
+                        fp = open(public_path, "w")
                         fp.write(json.dumps(jwks))
                         fp.close()
         else:
@@ -607,13 +625,13 @@ def init_key_issuer(public_path='', private_path='', key_defs='', read_only=True
                 head, tail = os.path.split(public_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(public_path, 'w')
+                fp = open(public_path, "w")
                 fp.write(json.dumps(_jwks))
                 fp.close()
     else:
         _issuer = build_keyissuer(key_defs)
 
     if _issuer is None:
-        raise ValueError('Could not find any keys')
+        raise ValueError("Could not find any keys")
 
     return _issuer
