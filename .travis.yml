@@ -15,7 +15,7 @@ install:
 - pip install tox-travis
 - pip install isort
 script:
-- isort --check --recursive src
+- isort --check --recursive src tests
 - codecov --version
 - tox
 after_success:
