@@ -14,10 +14,10 @@ install:
   - pip install tox
   - pip install tox-travis
   - pip install isort
-  - test "$TRAVIS_PYTHON_VERSION" != "pypy3" && pip install black
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "pypy3" ]]; then pip install black; fi
 script:
   - isort --check --recursive src tests
-  - test "$TRAVIS_PYTHON_VERSION" != "pypy3" && black --check src tests
+  - if [[ "$TRAVIS_PYTHON_VERSION" != "pypy3" ]]; then black --check src tests; fi
   - codecov --version
   - tox
 after_success:
