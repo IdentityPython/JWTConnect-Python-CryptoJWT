@@ -5,7 +5,10 @@ from typing import Optional
 
 from requests import request
 
-from .exception import UnknownKeyType, KeyIOError, UpdateFailed, IssuerNotFound
+from .exception import IssuerNotFound
+from .exception import KeyIOError
+from .exception import UnknownKeyType
+from .exception import UpdateFailed
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle

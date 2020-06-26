@@ -11,10 +11,10 @@ from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..exception import SerializationNotPossible
 from ..exception import UnsupportedKeyType
+from ..utils import as_unicode
 from ..utils import b64e
 from ..utils import deser
 from ..utils import long_to_base64
-from ..utils import as_unicode
 from . import JWK
 from .asym import AsymmetricKey
 

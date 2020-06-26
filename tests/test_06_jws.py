@@ -18,8 +18,8 @@ from cryptojwt.jws.exception import FormatError
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.exception import SignerAlgError
 from cryptojwt.jws.jws import JWS
-from cryptojwt.jws.jws import JWSig
 from cryptojwt.jws.jws import SIGNER_ALGS
+from cryptojwt.jws.jws import JWSig
 from cryptojwt.jws.jws import factory
 from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash

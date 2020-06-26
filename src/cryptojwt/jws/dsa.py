@@ -1,10 +1,8 @@
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.utils import \
-    decode_dss_signature
-from cryptography.hazmat.primitives.asymmetric.utils import \
-    encode_dss_signature
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
 from cryptography.utils import int_from_bytes
 from cryptography.utils import int_to_bytes
 

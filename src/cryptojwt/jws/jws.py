@@ -3,14 +3,7 @@ import json
 import logging
 
 from cryptojwt.jws.exception import JWSException
-from .dsa import ECDSASigner
-from .exception import FormatError
-from .exception import NoSuitableSigningKeys
-from .exception import SignerAlgError
-from .hmac import HMACSigner
-from .pss import PSSSigner
-from .rsa import RSASigner
-from .utils import alg2keytype
+
 from ..exception import BadSignature
 from ..exception import UnknownAlgorithm
 from ..exception import WrongNumberOfParts
@@ -20,6 +13,14 @@ from ..simple_jwt import SimpleJWT
 from ..utils import b64d_enc_dec
 from ..utils import b64e_enc_dec
 from ..utils import b64encode_item
+from .dsa import ECDSASigner
+from .exception import FormatError
+from .exception import NoSuitableSigningKeys
+from .exception import SignerAlgError
+from .hmac import HMACSigner
+from .pss import PSSSigner
+from .rsa import RSASigner
+from .utils import alg2keytype
 
 try:
     from builtins import str

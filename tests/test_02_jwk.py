@@ -21,8 +21,8 @@ from cryptojwt.jwk import calculate_x5t
 from cryptojwt.jwk import certificate_fingerprint
 from cryptojwt.jwk import pem_hash
 from cryptojwt.jwk import pems_to_x5c
-from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import NIST2SEC
+from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.hmac import sha256_digest
