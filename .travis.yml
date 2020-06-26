@@ -4,7 +4,6 @@ python:
   - 3.6
   - 3.7
   - 3.8
-  - pypy3
 addons:
   apt:
     packages:
@@ -14,10 +13,10 @@ install:
   - pip install tox
   - pip install tox-travis
   - pip install isort
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "pypy3" ]]; then pip install black; fi
+  - pip install black
 script:
   - isort --check --recursive src tests
-  - if [[ "$TRAVIS_PYTHON_VERSION" != "pypy3" ]]; then black --check src tests; fi
+  - black --check src tests
   - codecov --version
   - tox
 after_success:
