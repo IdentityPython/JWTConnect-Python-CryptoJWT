@@ -19,7 +19,7 @@ from .utils import deprecated_alias
 from .utils import importer
 from .utils import qualified_name
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,17 @@ logger = logging.getLogger(__name__)
 class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
-    def __init__(self, ca_certs=None, verify_ssl=True, keybundle_cls=KeyBundle,
-                 remove_after=3600, httpc=None, httpc_params=None, storage_conf=None,
-                 abstract_storage_cls=None):
+    def __init__(
+        self,
+        ca_certs=None,
+        verify_ssl=True,
+        keybundle_cls=KeyBundle,
+        remove_after=3600,
+        httpc=None,
+        httpc_params=None,
+        storage_conf=None,
+        abstract_storage_cls=None,
+    ):
         """
         KeyJar init function
 
@@ -49,7 +57,7 @@ class KeyJar(object):
             self._issuers = {}
         else:
             if not abstract_storage_cls:
-                raise ValueError('Missing storage class specification')
+                raise ValueError("Missing storage class specification")
             self._issuers = abstract_storage_cls(storage_conf)
 
         self.storage_conf = storage_conf
@@ -72,7 +80,7 @@ class KeyJar(object):
         """
         return list(self._issuers.keys())
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def _get_issuer(self, issuer_id: str) -> Optional[KeyIssuer]:
         """
         Return the KeyIssuer instance that has name == issuer_id
@@ -83,12 +91,16 @@ class KeyJar(object):
 
         return self._issuers.get(issuer_id)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def _add_issuer(self, issuer_id) -> KeyIssuer:
-        _issuer = KeyIssuer(ca_certs=self.ca_certs, name=issuer_id,
-                            keybundle_cls=self.keybundle_cls,
-                            remove_after=self.remove_after,
-                            httpc=self.httpc, httpc_params=self.httpc_params)
+        _issuer = KeyIssuer(
+            ca_certs=self.ca_certs,
+            name=issuer_id,
+            keybundle_cls=self.keybundle_cls,
+            remove_after=self.remove_after,
+            httpc=self.httpc,
+            httpc_params=self.httpc_params,
+        )
         self._issuers[issuer_id] = _issuer
         return _issuer
 
@@ -102,9 +114,9 @@ class KeyJar(object):
 
     def __repr__(self):
         issuers = self._issuer_ids()
-        return '<KeyJar(issuers={})>'.format(issuers)
+        return "<KeyJar(issuers={})>".format(issuers)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def return_issuer(self, issuer_id):
         """
         Return a KeyIssuer instance with name == issuer_id.
@@ -118,7 +130,7 @@ class KeyJar(object):
             return self._add_issuer(issuer_id)
         return _issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def add_url(self, issuer_id: str, url: str, **kwargs) -> KeyBundle:
         """
         Add a set of keys by url. This method will create a
@@ -136,7 +148,7 @@ class KeyJar(object):
         kb = issuer.add_url(url, **kwargs)
         return kb
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def add_symmetric(self, issuer_id, key, usage=None):
         """
         Add a symmetric key. This is done by wrapping it in a key bundle
@@ -151,7 +163,7 @@ class KeyJar(object):
         issuer = self.return_issuer(issuer_id)
         issuer.add_symmetric(key, usage=usage)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def add_kb(self, issuer_id, kb):
         """
         Add a key bundle and bind it to an identifier
@@ -163,7 +175,7 @@ class KeyJar(object):
         issuer.add_kb(kb)
         self._issuers[issuer_id] = issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get(self, key_use, key_type="", issuer_id="", kid=None, **kwargs):
         """
         Get all keys that matches a set of search criteria
@@ -191,7 +203,7 @@ class KeyJar(object):
 
         return _issuer.get(key_use=key_use, key_type=key_type, kid=kid, **kwargs)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get_signing_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         """
         Shortcut to use for signing keys only.
@@ -204,19 +216,19 @@ class KeyJar(object):
         """
         return self.get("sig", key_type, issuer_id, kid, **kwargs)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get_verify_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         return self.get("ver", key_type, issuer_id, kid, **kwargs)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get_encrypt_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         return self.get("enc", key_type, issuer_id, kid, **kwargs)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get_decrypt_key(self, key_type="", issuer_id="", kid=None, **kwargs):
         return self.get("dec", key_type, issuer_id, kid, **kwargs)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def keys_by_alg_and_usage(self, issuer_id, alg, usage):
         """
         Find all keys that can be used for a specific crypto algorithm and
@@ -234,7 +246,7 @@ class KeyJar(object):
 
         return self.get(usage, ktype, issuer_id)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get_issuer_keys(self, issuer_id):
         """
         Get all the keys that belong to an entity.
@@ -247,7 +259,7 @@ class KeyJar(object):
             raise IssuerNotFound(issuer_id)
         return _issuer.all_keys()
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __contains__(self, issuer_id):
         _iss = self._get_issuer(issuer_id)
         if _iss is None:
@@ -255,8 +267,8 @@ class KeyJar(object):
         else:
             return True
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
-    def __getitem__(self, issuer_id=''):
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
+    def __getitem__(self, issuer_id=""):
         """
         Get the KeyIssuer with the name == issuer_id
 
@@ -268,7 +280,7 @@ class KeyJar(object):
             raise IssuerNotFound(issuer_id)
         return _issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __setitem__(self, issuer_id, key_issuer):
         """
         Set a KeyIssuer with the name == issuer_id
@@ -310,8 +322,8 @@ class KeyJar(object):
             _res[_id] = _issuer.key_summary()
         return json.dumps(_res)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
-    def load_keys(self, issuer_id, jwks_uri='', jwks=None, replace=False):
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
+    def load_keys(self, issuer_id, jwks_uri="", jwks=None, replace=False):
         """
         Fetch keys from another server
 
@@ -333,12 +345,12 @@ class KeyJar(object):
             _issuer.add_url(jwks_uri)
         elif jwks:
             # jwks should only be considered if no jwks_uri is present
-            _keys = jwks['keys']
+            _keys = jwks["keys"]
             _issuer.add_kb(self.keybundle_cls(_keys))
 
         self[issuer_id] = _issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def find(self, source, issuer_id=None):
         """
         Find a key bundle based on the source of the keys
@@ -362,7 +374,7 @@ class KeyJar(object):
 
         return res
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def export_jwks(self, private=False, issuer_id="", usage=None):
         """
         Produces a dictionary that later can be easily mapped into a
@@ -378,12 +390,17 @@ class KeyJar(object):
 
         keys = []
         for kb in _issuer:
-            keys.extend([k.serialize(private) for k in kb.keys() if
-                         k.inactive_since == 0 and (
-                                 usage is None or (hasattr(k, 'use') and k.use == usage))])
+            keys.extend(
+                [
+                    k.serialize(private)
+                    for k in kb.keys()
+                    if k.inactive_since == 0
+                    and (usage is None or (hasattr(k, "use") and k.use == usage))
+                ]
+            )
         return {"keys": keys}
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def export_jwks_as_json(self, private=False, issuer_id=""):
         """
         Export a JWKS as a JSON document.
@@ -394,7 +411,7 @@ class KeyJar(object):
         """
         return json.dumps(self.export_jwks(private, issuer_id))
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def import_jwks(self, jwks, issuer_id):
         """
         Imports all the keys that are represented in a JWKS
@@ -405,15 +422,18 @@ class KeyJar(object):
         try:
             _keys = jwks["keys"]
         except KeyError:
-            raise ValueError('Not a proper JWKS')
+            raise ValueError("Not a proper JWKS")
 
         if _keys:
             _issuer = self.return_issuer(issuer_id=issuer_id)
-            _issuer.add(self.keybundle_cls(_keys, httpc=self.httpc,
-                                           httpc_params=self.httpc_params))
+            _issuer.add(
+                self.keybundle_cls(
+                    _keys, httpc=self.httpc, httpc_params=self.httpc_params
+                )
+            )
             self[issuer_id] = _issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def import_jwks_as_json(self, jwks, issuer_id):
         """
         Imports all the keys that are represented in a JWKS expressed as a
@@ -424,7 +444,7 @@ class KeyJar(object):
         """
         return self.import_jwks(json.loads(jwks), issuer_id)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def import_jwks_from_file(self, filename, issuer_id):
         with open(filename) as jwks_file:
             self.import_jwks_as_json(jwks_file.read(), issuer_id)
@@ -463,16 +483,24 @@ class KeyJar(object):
             _before = len(_issuer)
             _issuer.remove_outdated(when)
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
-    def _add_key(self, keys, issuer_id, use, key_type='', kid='',
-                 no_kid_issuer=None, allow_missing_kid=False):
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
+    def _add_key(
+        self,
+        keys,
+        issuer_id,
+        use,
+        key_type="",
+        kid="",
+        no_kid_issuer=None,
+        allow_missing_kid=False,
+    ):
 
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
             logger.error('Issuer "{}" not in keyjar'.format(issuer_id))
             raise IssuerNotFound(issuer_id)
 
-        logger.debug('Key summary for {}: {}'.format(issuer_id, _issuer.key_summary()))
+        logger.debug("Key summary for {}: {}".format(issuer_id, _issuer.key_summary()))
 
         if kid:
             for _key in _issuer.get(use, kid=kid, key_type=key_type):
@@ -515,39 +543,40 @@ class KeyJar(object):
         """
 
         try:
-            _key_type = jwe_alg2keytype(jwt.headers['alg'])
+            _key_type = jwe_alg2keytype(jwt.headers["alg"])
         except KeyError:
-            _key_type = ''
+            _key_type = ""
 
         try:
-            _kid = jwt.headers['kid']
+            _kid = jwt.headers["kid"]
         except KeyError:
-            logger.info('Missing kid')
-            _kid = ''
+            logger.info("Missing kid")
+            _kid = ""
 
-        keys = self.get(key_use='enc', issuer_id='', key_type=_key_type)
+        keys = self.get(key_use="enc", issuer_id="", key_type=_key_type)
 
         try:
-            _aud = kwargs['aud']
+            _aud = kwargs["aud"]
         except KeyError:
-            _aud = ''
+            _aud = ""
 
         if _aud:
             try:
-                allow_missing_kid = kwargs['allow_missing_kid']
+                allow_missing_kid = kwargs["allow_missing_kid"]
             except KeyError:
                 allow_missing_kid = False
 
             try:
-                nki = kwargs['no_kid_issuer']
+                nki = kwargs["no_kid_issuer"]
             except KeyError:
                 nki = {}
 
-            keys = self._add_key(keys, _aud, 'enc', _key_type, _kid, nki,
-                                 allow_missing_kid)
+            keys = self._add_key(
+                keys, _aud, "enc", _key_type, _kid, nki, allow_missing_kid
+            )
 
         # Only want the appropriate keys.
-        keys = [k for k in keys if k.appropriate_for('decrypt')]
+        keys = [k for k in keys if k.appropriate_for("decrypt")]
         return keys
 
     def get_jwt_verify_keys(self, jwt, **kwargs):
@@ -560,18 +589,18 @@ class KeyJar(object):
         :return: list of usable keys
         """
 
-        allow_missing_kid = kwargs.get('allow_missing_kid', False)
+        allow_missing_kid = kwargs.get("allow_missing_kid", False)
 
-        _key_type = ''
-        if jwt.headers.get('alg'):
-            _key_type = jws_alg2keytype(jwt.headers['alg'])
+        _key_type = ""
+        if jwt.headers.get("alg"):
+            _key_type = jws_alg2keytype(jwt.headers["alg"])
 
-        _kid = jwt.headers.get('kid', "")
-        nki = kwargs.get('no_kid_issuer', {})
+        _kid = jwt.headers.get("kid", "")
+        nki = kwargs.get("no_kid_issuer", {})
 
         _payload = jwt.payload()
 
-        _iss = _payload.get('iss') or kwargs.get('iss') or ""
+        _iss = _payload.get("iss") or kwargs.get("iss") or ""
 
         if _iss:
             # First extend the key jar iff allowed
@@ -584,17 +613,17 @@ class KeyJar(object):
                     except KeyError:
                         pass
 
-            keys = self._add_key([], _iss, 'sig', _key_type,
-                                 _kid, nki, allow_missing_kid)
+            keys = self._add_key(
+                [], _iss, "sig", _key_type, _kid, nki, allow_missing_kid
+            )
 
-            if _key_type == 'oct':
-                keys.extend(self.get(key_use='sig', issuer_id='',
-                                     key_type=_key_type))
+            if _key_type == "oct":
+                keys.extend(self.get(key_use="sig", issuer_id="", key_type=_key_type))
         else:  # No issuer, just use all keys I have
-            keys = self.get(key_use='sig', issuer_id='', key_type=_key_type)
+            keys = self.get(key_use="sig", issuer_id="", key_type=_key_type)
 
         # Only want the appropriate keys.
-        keys = [k for k in keys if k.appropriate_for('verify')]
+        keys = [k for k in keys if k.appropriate_for("verify")]
         return keys
 
     def copy(self):
@@ -604,11 +633,11 @@ class KeyJar(object):
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
         if self.storage_conf:
-            _conf = self.storage_conf.get('KeyJar')
+            _conf = self.storage_conf.get("KeyJar")
             if _conf:
-                _label = self.storage_conf.get('label')
+                _label = self.storage_conf.get("label")
                 if _label:
-                    self.storage_conf['KeyJar']['label'] = '{}.copy'.format(_label)
+                    self.storage_conf["KeyJar"]["label"] = "{}.copy".format(_label)
 
         kj = KeyJar(storage_conf=self.storage_conf)
         for _id, _issuer in self._issuers.items():
@@ -632,18 +661,19 @@ class KeyJar(object):
 
         info = {
             # 'storage_conf': self.storage_conf,
-            'spec2key': self.spec2key,
-            'ca_certs': self.ca_certs,
-            'keybundle_cls': qualified_name(self.keybundle_cls),
-            'remove_after': self.remove_after,
-            'httpc_params': self.httpc_params}
+            "spec2key": self.spec2key,
+            "ca_certs": self.ca_certs,
+            "keybundle_cls": qualified_name(self.keybundle_cls),
+            "remove_after": self.remove_after,
+            "httpc_params": self.httpc_params,
+        }
 
         _issuers = {}
         for _id, _issuer in self._issuers.items():
             if exclude and _issuer.name in exclude:
                 continue
             _issuers[_id] = _issuer.dump()
-        info['issuers'] = _issuers
+        info["issuers"] = _issuers
 
         return info
 
@@ -654,17 +684,17 @@ class KeyJar(object):
         :return:
         """
         # self.storage_conf = info['storage_conf']
-        self.spec2key = info['spec2key']
-        self.ca_certs = info['ca_certs']
-        self.keybundle_cls = importer(info['keybundle_cls'])
-        self.remove_after = info['remove_after']
-        self.httpc_params = info['httpc_params']
+        self.spec2key = info["spec2key"]
+        self.ca_certs = info["ca_certs"]
+        self.keybundle_cls = importer(info["keybundle_cls"])
+        self.remove_after = info["remove_after"]
+        self.httpc_params = info["httpc_params"]
 
-        for _issuer_id, _issuer_desc in info['issuers'].items():
+        for _issuer_id, _issuer_desc in info["issuers"].items():
             self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
         return self
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def key_summary(self, issuer_id):
         _issuer = self._get_issuer(issuer_id)
         if _issuer is not None:
@@ -683,8 +713,8 @@ class KeyJar(object):
             _issuer.update()
             self[_id] = _issuer
 
-    @deprecated_alias(issuer='issuer_id', owner='issuer_id')
-    def rotate_keys(self, key_conf, kid_template="", issuer_id=''):
+    @deprecated_alias(issuer="issuer_id", owner="issuer_id")
+    def rotate_keys(self, key_conf, kid_template="", issuer_id=""):
         _issuer = self[issuer_id]
         _issuer.rotate_keys(key_conf=key_conf, kid_template=kid_template)
         self[issuer_id] = _issuer
@@ -694,7 +724,9 @@ class KeyJar(object):
 # =============================================================================
 
 
-def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id='', storage_conf=None):
+def build_keyjar(
+    key_conf, kid_template="", keyjar=None, issuer_id="", storage_conf=None
+):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
     an existing KeyJar based on a key specification.
@@ -749,9 +781,16 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id='', storage_c
     return keyjar
 
 
-@deprecated_alias(issuer='issuer_id', owner='issuer_id')
-def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', read_only=True,
-                 storage_conf=None, abstract_storage_cls=None):
+@deprecated_alias(issuer="issuer_id", owner="issuer_id")
+def init_key_jar(
+    public_path="",
+    private_path="",
+    key_defs="",
+    issuer_id="",
+    read_only=True,
+    storage_conf=None,
+    abstract_storage_cls=None,
+):
     """
     A number of cases here:
 
@@ -791,18 +830,24 @@ def init_key_jar(public_path='', private_path='', key_defs='', issuer_id='', rea
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
-    _issuer = init_key_issuer(public_path=public_path, private_path=private_path,
-                              key_defs=key_defs, read_only=read_only)
+    _issuer = init_key_issuer(
+        public_path=public_path,
+        private_path=private_path,
+        key_defs=key_defs,
+        read_only=read_only,
+    )
 
     if _issuer is None:
-        raise ValueError('Could not find any keys')
+        raise ValueError("Could not find any keys")
 
-    keyjar = KeyJar(storage_conf=storage_conf, abstract_storage_cls=abstract_storage_cls)
+    keyjar = KeyJar(
+        storage_conf=storage_conf, abstract_storage_cls=abstract_storage_cls
+    )
     keyjar[issuer_id] = _issuer
     return keyjar
 
 
-def rotate_keys(key_conf, keyjar, kid_template="", issuer_id=''):
+def rotate_keys(key_conf, keyjar, kid_template="", issuer_id=""):
     new_keys = build_keyissuer(key_conf, kid_template, issuer_id=issuer_id)
     _issuer = keyjar[issuer_id]
     _issuer.mark_all_keys_as_inactive()

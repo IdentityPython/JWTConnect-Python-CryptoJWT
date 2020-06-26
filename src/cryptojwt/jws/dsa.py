@@ -12,18 +12,18 @@ from . import Signer
 
 
 class ECDSASigner(Signer):
-    def __init__(self, algorithm='ES256'):
-        if algorithm == 'ES256':
+    def __init__(self, algorithm="ES256"):
+        if algorithm == "ES256":
             self.hash_algorithm = hashes.SHA256
             self.curve_name = "secp256r1"
-        elif algorithm == 'ES384':
+        elif algorithm == "ES384":
             self.hash_algorithm = hashes.SHA384
             self.curve_name = "secp384r1"
-        elif algorithm == 'ES512':
+        elif algorithm == "ES512":
             self.hash_algorithm = hashes.SHA512
             self.curve_name = "secp521r1"
         else:
-            raise Unsupported('algorithm: {}'.format(algorithm))
+            raise Unsupported("algorithm: {}".format(algorithm))
 
         self.algorithm = algorithm
 
@@ -39,8 +39,8 @@ class ECDSASigner(Signer):
 
         if not isinstance(key, ec.EllipticCurvePrivateKey):
             raise TypeError(
-                "The private key must be an instance of "
-                "ec.EllipticCurvePrivateKey")
+                "The private key must be an instance of " "ec.EllipticCurvePrivateKey"
+            )
 
         self._cross_check(key.public_key())
         num_bits = key.curve.key_size
@@ -63,14 +63,14 @@ class ECDSASigner(Signer):
         """
         if not isinstance(key, ec.EllipticCurvePublicKey):
             raise TypeError(
-                "The public key must be an instance of "
-                "ec.EllipticCurvePublicKey")
+                "The public key must be an instance of " "ec.EllipticCurvePublicKey"
+            )
         self._cross_check(key)
 
         num_bits = key.curve.key_size
         num_bytes = (num_bits + 7) // 8
         if len(sig) != 2 * num_bytes:
-            raise ValueError('Invalid signature')
+            raise ValueError("Invalid signature")
 
         try:
             # cryptography uses ASN.1-encoded signature data; split JWS
@@ -94,7 +94,8 @@ class ECDSASigner(Signer):
         if self.curve_name != pub_key.curve.name:
             raise ValueError(
                 "The curve in private key {} and in algorithm {} don't "
-                "match".format(pub_key.curve.name, self.curve_name))
+                "match".format(pub_key.curve.name, self.curve_name)
+            )
 
     @staticmethod
     def _split_raw_signature(sig):
@@ -105,6 +106,6 @@ class ECDSASigner(Signer):
         :return: A 2-tuple
         """
         c_length = len(sig) // 2
-        r = int_from_bytes(sig[:c_length], byteorder='big')
-        s = int_from_bytes(sig[c_length:], byteorder='big')
+        r = int_from_bytes(sig[:c_length], byteorder="big")
+        s = int_from_bytes(sig[c_length:], byteorder="big")
         return r, s

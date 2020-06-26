@@ -17,9 +17,14 @@ class RSAEncrypter(Encrypter):
             _chosen_hash = hashes.SHA256
         else:
             raise Exception("Unsupported padding")
-        return key.encrypt(msg,
-                           _padding(mgf=padding.MGF1(algorithm=_chosen_hash()),
-                                    algorithm=_chosen_hash(), label=None))
+        return key.encrypt(
+            msg,
+            _padding(
+                mgf=padding.MGF1(algorithm=_chosen_hash()),
+                algorithm=_chosen_hash(),
+                label=None,
+            ),
+        )
 
     def decrypt(self, ciphertext, key, sign_padding="pkcs1_padding"):
         _chosen_hash = hashes.SHA1
@@ -35,10 +40,14 @@ class RSAEncrypter(Encrypter):
             raise Exception("Unsupported padding")
 
         try:
-            text = key.decrypt(ciphertext,
-                               _padding(
-                                   mgf=padding.MGF1(algorithm=_chosen_hash()),
-                                   algorithm=_chosen_hash(), label=None))
+            text = key.decrypt(
+                ciphertext,
+                _padding(
+                    mgf=padding.MGF1(algorithm=_chosen_hash()),
+                    algorithm=_chosen_hash(),
+                    label=None,
+                ),
+            )
         except Exception:
             raise
 

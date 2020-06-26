@@ -21,14 +21,14 @@ class AES_CBCEncrypter(Encrypter):
     """
     """
 
-    def __init__(self, key_len=32, key=None, msg_padding='PKCS7'):
+    def __init__(self, key_len=32, key=None, msg_padding="PKCS7"):
         Encrypter.__init__(self)
         if key:
             self.key = key
         else:
             self.key = os.urandom(key_len)
 
-        if msg_padding == 'PKCS7':
+        if msg_padding == "PKCS7":
             self.padder = PKCS7(128).padder()
             self.unpadder = PKCS7(128).unpadder()
         else:
@@ -46,18 +46,18 @@ class AES_CBCEncrypter(Encrypter):
         m = h.finalize()
         return m[:key_len]
 
-    def encrypt(self, msg, iv='', auth_data=b''):
+    def encrypt(self, msg, iv="", auth_data=b""):
         if not iv:
             iv = os.urandom(16)
             self.iv = iv
         else:
             self.iv = iv
 
-        hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key,
-                                                                     iv)
+        hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key, iv)
 
-        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv),
-                        backend=default_backend())
+        cipher = Cipher(
+            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
+        )
         encryptor = cipher.encryptor()
 
         pmsg = self.padder.update(msg)
@@ -67,21 +67,22 @@ class AES_CBCEncrypter(Encrypter):
         tag = self._mac(hash_key, hash_func, auth_data, iv, ct, key_len)
         return ct, tag
 
-    def decrypt(self, msg, iv='', auth_data=b'', tag=b'', key=None):
+    def decrypt(self, msg, iv="", auth_data=b"", tag=b"", key=None):
         if key is None:
             if self.key:
                 key = self.key
             else:
-                raise MissingKey('No available key')
+                raise MissingKey("No available key")
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(key, iv)
 
         comp_tag = self._mac(hash_key, hash_func, auth_data, iv, msg, key_len)
         if comp_tag != tag:
-            raise VerificationError('AES-CBC HMAC')
+            raise VerificationError("AES-CBC HMAC")
 
-        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv),
-                        backend=default_backend())
+        cipher = Cipher(
+            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
+        )
         decryptor = cipher.decryptor()
 
         ctext = decryptor.update(msg)
@@ -102,9 +103,9 @@ class AES_GCMEncrypter(Encrypter):
 
             self.key = AESGCM(AESGCM.generate_key(bit_length=bit_length))
         else:
-            raise ValueError('Need key or key bit length')
+            raise ValueError("Need key or key bit length")
 
-    def encrypt(self, msg, iv='', auth_data=None):
+    def encrypt(self, msg, iv="", auth_data=None):
         """
         Encrypts and authenticates the data provided as well as authenticating
         the associated_data.
@@ -115,11 +116,11 @@ class AES_GCMEncrypter(Encrypter):
         :return: The cipher text bytes with the 16 byte tag appended.
         """
         if not iv:
-            raise ValueError('Missing Nonce')
+            raise ValueError("Missing Nonce")
 
         return self.key.encrypt(iv, msg, auth_data)
 
-    def decrypt(self, cipher_text, iv='', auth_data=None, tag=b''):
+    def decrypt(self, cipher_text, iv="", auth_data=None, tag=b""):
         """
         Decrypts the data and authenticates the associated_data (if provided).
 
@@ -130,6 +131,6 @@ class AES_GCMEncrypter(Encrypter):
         :return: The original plaintext
         """
         if not iv:
-            raise ValueError('Missing Nonce')
+            raise ValueError("Missing Nonce")
 
-        return self.key.decrypt(iv, cipher_text+tag, auth_data)
+        return self.key.decrypt(iv, cipher_text + tag, auth_data)

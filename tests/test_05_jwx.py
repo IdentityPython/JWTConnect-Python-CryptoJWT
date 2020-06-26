@@ -43,14 +43,14 @@ def test_jwx_set_jwk_error():
 
 @pytest.mark.network
 def test_jws_set_jku():
-    jwx = JWx(jku='https://login.salesforce.com/id/keys')
+    jwx = JWx(jku="https://login.salesforce.com/id/keys")
     keys = jwx._get_keys()
     # I know there will be keys, how many and what type may change
     assert len(keys)
 
 
 def test_jwx_set_x5c():
-    jwx = JWx(x5c=open(full_path('cert.pem')).read())
+    jwx = JWx(x5c=open(full_path("cert.pem")).read())
     keys = jwx._get_keys()
     assert len(keys)
     assert isinstance(keys[0], RSAKey)
@@ -58,12 +58,12 @@ def test_jwx_set_x5c():
 
 def test_jwx_get_set():
     jwx = JWx()
-    if 'alg' not in jwx:
-        jwx['alg'] = 'RS256'
+    if "alg" not in jwx:
+        jwx["alg"] = "RS256"
 
-    assert jwx['alg'] == 'RS256'
-    assert jwx.alg == 'RS256'
-    assert list(jwx.keys()) == ['alg']
+    assert jwx["alg"] == "RS256"
+    assert jwx.alg == "RS256"
+    assert list(jwx.keys()) == ["alg"]
 
 
 def test_jwx_get_non_existent_attribute():
@@ -73,28 +73,28 @@ def test_jwx_get_non_existent_attribute():
 
 
 def test_get_headers():
-    jwx = JWx(jwk=JSON_RSA_PUB_KEY, alg='RS256')
+    jwx = JWx(jwk=JSON_RSA_PUB_KEY, alg="RS256")
     _headers = jwx.headers()
-    assert set(_headers.keys()) == {'jwk', 'alg'}
+    assert set(_headers.keys()) == {"jwk", "alg"}
 
-    _headers = jwx.headers(kid='123')
-    assert set(_headers.keys()) == {'jwk', 'alg', 'kid'}
+    _headers = jwx.headers(kid="123")
+    assert set(_headers.keys()) == {"jwk", "alg", "kid"}
 
 
 @pytest.mark.network
 def test_headers_jku():
-    jwx = JWx(jku='https://login.salesforce.com/id/keys')
+    jwx = JWx(jku="https://login.salesforce.com/id/keys")
     _headers = jwx.headers()
-    assert set(_headers.keys()) == {'jku'}
+    assert set(_headers.keys()) == {"jku"}
 
 
 def test_decode():
-    jwx = JWx(cty='JWT')
-    _msg = jwx._decode('eyJmb28iOiJiYXIifQ')
-    assert _msg == {'foo': 'bar'}
+    jwx = JWx(cty="JWT")
+    _msg = jwx._decode("eyJmb28iOiJiYXIifQ")
+    assert _msg == {"foo": "bar"}
 
 
 def test_extra_headers():
     jwx = JWx()
     headers = jwx.headers(jwk=JSON_RSA_PUB_KEY, alg="RS256")
-    assert set(headers.keys()) == {'jwk', 'alg'}
+    assert set(headers.keys()) == {"jwk", "alg"}

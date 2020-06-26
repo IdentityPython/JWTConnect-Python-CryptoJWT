@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License."""
 
-__author__ = 'quannguyen@google.com (Quan Nguyen)'
+__author__ = "quannguyen@google.com (Quan Nguyen)"
 
 import json
 
@@ -48,10 +48,10 @@ json_rsa_pub_key2 = r"""
   }"""
 
 # Test vector from https://tools.ietf.org/html/rfc7515#appendix-A.2
-rsa_token = 'eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.cC4hiUPoj9Eetdgtv3hF80EGrhuB__dzERat0XF9g2VtQgr9PJbu3XOiZj5RZmh7AAuHIm4Bh-0Qc_lF5YKt_O8W2Fp5jujGbds9uJdbF9CUAr7t1dnZcAcQjbKBYNX4BAynRFdiuB--f_nZLgrnbyTyWzO75vRK5h6xBArLIARNPvkSjtQBMHlb1L07Qe7K0GarZRmB_eSN9383LcOLn6_dO--xi12jzDwusC-eOkHWEsqtFZESc6BfI7noOPqvhJ1phCnvWh6IeYI2w9QOYEUipUTI8np6LbgGY9Fs98rqVt5AXLIhWkWywlVmtVrBp0igcN_IoypGlUPQGe77Rw'
+rsa_token = "eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.cC4hiUPoj9Eetdgtv3hF80EGrhuB__dzERat0XF9g2VtQgr9PJbu3XOiZj5RZmh7AAuHIm4Bh-0Qc_lF5YKt_O8W2Fp5jujGbds9uJdbF9CUAr7t1dnZcAcQjbKBYNX4BAynRFdiuB--f_nZLgrnbyTyWzO75vRK5h6xBArLIARNPvkSjtQBMHlb1L07Qe7K0GarZRmB_eSN9383LcOLn6_dO--xi12jzDwusC-eOkHWEsqtFZESc6BfI7noOPqvhJ1phCnvWh6IeYI2w9QOYEUipUTI8np6LbgGY9Fs98rqVt5AXLIhWkWywlVmtVrBp0igcN_IoypGlUPQGe77Rw"
 
 # Test vector from https://tools.ietf.org/html/rfc7515#appendix-A.3
-es256_ecdsa_token = 'eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q'
+es256_ecdsa_token = "eyJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSApmWQxfKTUJqPP3-Kg6NU1Q"
 
 es256_ecdsa_priv_key = r"""
   {
@@ -73,7 +73,7 @@ es256_ecdsa_pub_key = r"""
   }"""
 
 # Test vector from https://tools.ietf.org/html/rfc7515#appendix-A.4.
-es512_ecdsa_token = 'eyJhbGciOiJFUzUxMiJ9.UGF5bG9hZA.AdwMgeerwtHoh-l192l60hp9wAHZFVJbLfD_UxMi70cwnZOYaRI1bKPWROc-mZZqwqT2SI-KGDKB34XO0aw_7XdtAG8GaSwFKdCAPZgoXD2YBJZCPEX3xKpRwcdOO8KpEHwJjyqOgzDO7iKvU8vcnwNrmxYbSW9ERBXukOXolLzeO_Jn'
+es512_ecdsa_token = "eyJhbGciOiJFUzUxMiJ9.UGF5bG9hZA.AdwMgeerwtHoh-l192l60hp9wAHZFVJbLfD_UxMi70cwnZOYaRI1bKPWROc-mZZqwqT2SI-KGDKB34XO0aw_7XdtAG8GaSwFKdCAPZgoXD2YBJZCPEX3xKpRwcdOO8KpEHwJjyqOgzDO7iKvU8vcnwNrmxYbSW9ERBXukOXolLzeO_Jn"
 
 es512_ecdsa_priv_key = r"""
   {
@@ -103,52 +103,32 @@ json_hmac_key = r"""
   }"""
 
 # Test vector from https://tools.ietf.org/html/rfc7515#appendix-A.1
-hmac_token = 'eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk'
+hmac_token = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 
 # Key set containing multiple public keys.
-json_pub_keys = r"""{"keys":[""" + json_rsa_pub_key + ',' + es256_ecdsa_pub_key + r"""]}"""
+json_pub_keys = (
+    r"""{"keys":[""" + json_rsa_pub_key + "," + es256_ecdsa_pub_key + r"""]}"""
+)
 
 # The followings are our own tests.
 
-test_header_rsa = json.dumps(
-    {
-        'typ': 'JWT',
-        'alg': 'RS256'
-    }, separators=(',', ':'))
+test_header_rsa = json.dumps({"typ": "JWT", "alg": "RS256"}, separators=(",", ":"))
 
-test_header_ecdsa = json.dumps(
-    {
-        'typ': 'JWT',
-        'alg': 'ES256'
-    }, separators=(',', ':'))
+test_header_ecdsa = json.dumps({"typ": "JWT", "alg": "ES256"}, separators=(",", ":"))
 
-test_header_hmac = json.dumps(
-    {
-        'typ': 'JWT',
-        'alg': 'HS256'
-    }, separators=(',', ':'))
+test_header_hmac = json.dumps({"typ": "JWT", "alg": "HS256"}, separators=(",", ":"))
 
 test_payload = json.dumps(
-    {
-        'aud': 'aud1',
-        'sub': 'subject1',
-        'iss': 'issuer1',
-    },
-    separators=(',', ':'))
+    {"aud": "aud1", "sub": "subject1", "iss": "issuer1",}, separators=(",", ":")
+)
 
 test_header_ecdsa_kid1 = json.dumps(
-    {
-        'typ': 'JWT',
-        'alg': 'ES256',
-        'kid': 'kid1'
-    }, separators=(',', ':'))
+    {"typ": "JWT", "alg": "ES256", "kid": "kid1"}, separators=(",", ":")
+)
 
 test_header_ecdsa_kid2 = json.dumps(
-    {
-        'typ': 'JWT',
-        'alg': 'ES256',
-        'kid': 'kid2'
-    }, separators=(',', ':'))
+    {"typ": "JWT", "alg": "ES256", "kid": "kid2"}, separators=(",", ":")
+)
 
 test_json_ecdsa_priv_key_kid1 = r"""
   {
