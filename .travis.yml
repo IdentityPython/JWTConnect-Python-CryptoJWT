@@ -1,27 +1,27 @@
 sudo: false
 language: python
 python:
-- 3.6
-- 3.7
-- 3.8
-- pypy3
+  - 3.6
+  - 3.7
+  - 3.8
+  - pypy3
 addons:
   apt:
     packages:
     - 
 install:
-- pip install codecov
-- pip install tox
-- pip install tox-travis
-- pip install isort
-- test "$TRAVIS_PYTHON_VERSION" != "pypy3" && pip install black
+  - pip install codecov
+  - pip install tox
+  - pip install tox-travis
+  - pip install isort
+  - test "$TRAVIS_PYTHON_VERSION" != "pypy3" && pip install black
 script:
-- isort --check --recursive src tests
-- test "$TRAVIS_PYTHON_VERSION" != "pypy3" && black --check src tests
-- codecov --version
-- tox
+  - isort --check --recursive src tests
+  - test "$TRAVIS_PYTHON_VERSION" != "pypy3" && black --check src tests
+  - codecov --version
+  - tox
 after_success:
-- codecov
+  - codecov
 notifications:
   email: true
 deploy:
