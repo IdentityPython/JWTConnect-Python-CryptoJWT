@@ -7,7 +7,9 @@ import json
 import os
 import sys
 
-from cryptojwt.key_issuer import KeyIssuer
+from pygments import highlight
+from pygments.formatters.terminal import TerminalFormatter
+from pygments.lexers.data import JsonLexer
 
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
@@ -16,12 +18,10 @@ from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_issuer import KeyIssuer
 from cryptojwt.key_jar import KeyJar
-from pygments import highlight
-from pygments.formatters.terminal import TerminalFormatter
-from pygments.lexers.data import JsonLexer
 
-__author__ = 'roland'
+__author__ = "roland"
 
 """
 Tool to view, verify signature on and/or decrypt JSON Web Token.
@@ -54,7 +54,7 @@ def process(jwt, keys, quiet):
     if _jw:
         if not quiet:
             print("Encrypted JSON Web Token")
-            print('Headers: {}'.format(_jw.jwt.headers))
+            print("Headers: {}".format(_jw.jwt.headers))
         if keys:
             res = _jw.decrypt(keys=keys)
             json_object = json.loads(res)
@@ -72,38 +72,44 @@ def process(jwt, keys, quiet):
                 print(highlight(json_str, JsonLexer(), TerminalFormatter()))
             else:
                 print("Signed JSON Web Token")
-                print('Headers: {}'.format(_jw.jwt.headers))
+                print("Headers: {}".format(_jw.jwt.headers))
                 if keys:
                     res = _jw.verify_compact(keys=keys)
-                    print('Verified message: {}'.format(res))
+                    print("Verified message: {}".format(res))
                 else:
                     json_object = json.loads(_jw.jwt.part[1].decode("utf-8"))
                     json_str = json.dumps(json_object, indent=2)
-                    print('Unverified message: {}'.format(
-                        highlight(json_str, JsonLexer(), TerminalFormatter())))
+                    print(
+                        "Unverified message: {}".format(
+                            highlight(json_str, JsonLexer(), TerminalFormatter())
+                        )
+                    )
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', dest="rsa_file",
-                        help="File containing a RSA key")
-    parser.add_argument('-k', dest="hmac_key",
-                        help="If using a HMAC algorithm this is the key")
-    parser.add_argument('-i', dest="kid", help="key id")
-    parser.add_argument('-j', dest="jwk", help="JSON Web Key")
-    parser.add_argument('-J', dest="jwks", help="JSON Web Keys")
-    parser.add_argument('-u', dest="jwks_url", help="JSON Web Keys URL")
-    parser.add_argument('-f', dest="msg", help="The message")
-    parser.add_argument('-q', dest="quiet",
-                        help="Quiet mode -- only show the RAW but prettified JSON",
-                        action='store_true')
+    parser.add_argument("-r", dest="rsa_file", help="File containing a RSA key")
+    parser.add_argument(
+        "-k", dest="hmac_key", help="If using a HMAC algorithm this is the key"
+    )
+    parser.add_argument("-i", dest="kid", help="key id")
+    parser.add_argument("-j", dest="jwk", help="JSON Web Key")
+    parser.add_argument("-J", dest="jwks", help="JSON Web Keys")
+    parser.add_argument("-u", dest="jwks_url", help="JSON Web Keys URL")
+    parser.add_argument("-f", dest="msg", help="The message")
+    parser.add_argument(
+        "-q",
+        dest="quiet",
+        help="Quiet mode -- only show the RAW but prettified JSON",
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
     if args.kid:
         _kid = args.kid
     else:
-        _kid = ''
+        _kid = ""
 
     keys = []
     if args.rsa_file:

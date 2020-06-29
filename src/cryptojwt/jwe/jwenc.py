@@ -48,8 +48,9 @@ class JWEnc(SimpleJWT):
         if "alg" in self.headers and "enc" in self.headers:
             for typ in ["alg", "enc"]:
                 if self.headers[typ] not in SUPPORTED[typ]:
-                    logger.debug("Not supported %s algorithm: %s" % (
-                        typ, self.headers[typ]))
+                    logger.debug(
+                        "Not supported %s algorithm: %s" % (typ, self.headers[typ])
+                    )
                     return False
         else:
             return False

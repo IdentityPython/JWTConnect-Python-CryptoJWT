@@ -4,19 +4,14 @@ import json
 import ssl
 from typing import List
 
-from .utils import DIGEST_HASH
 from ..exception import UnsupportedAlgorithm
 from ..utils import as_bytes
 from ..utils import as_unicode
 from ..utils import b64e
 from ..utils import base64url_to_long
+from .utils import DIGEST_HASH
 
-USE = {
-    'sign': 'sig',
-    'decrypt': 'enc',
-    'encrypt': 'enc',
-    'verify': 'sig'
-}
+USE = {"sign": "sig", "decrypt": "enc", "encrypt": "enc", "verify": "sig"}
 
 
 class JWK(object):
@@ -27,13 +22,24 @@ class JWK(object):
     specified in RFC 7518 (https://tools.ietf.org/html/rfc7518).
 
     """
+
     members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
     longs: List[str] = []
     public_members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
-    required = ['kty']
+    required = ["kty"]
 
-    def __init__(self, kty="", alg="", use="", kid="", x5c=None,
-                 x5t="", x5u="", key_ops=None, **kwargs):
+    def __init__(
+        self,
+        kty="",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        key_ops=None,
+        **kwargs
+    ):
 
         self.extra_args = kwargs
 
@@ -47,23 +53,65 @@ class JWK(object):
             if not isinstance(alg, str):
                 alg = as_unicode(alg)
 
-            if use == 'enc':
-                if alg not in ["RSA1_5", "RSA-OAEP", "RSA-OAEP-256", "A128KW", "A192KW", "A256KW",
-                               "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
+            if use == "enc":
+                if alg not in [
+                    "RSA1_5",
+                    "RSA-OAEP",
+                    "RSA-OAEP-256",
+                    "A128KW",
+                    "A192KW",
+                    "A256KW",
+                    "ECDH-ES",
+                    "ECDH-ES+A128KW",
+                    "ECDH-ES+A192KW",
+                    "ECDH-ES+A256KW",
+                ]:
                     raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
-            elif use == 'sig':
+            elif use == "sig":
                 # The list comes from https://tools.ietf.org/html/rfc7518#page-6
                 # Should map against SIGNER_ALGS in cryptojwt.jws.jws
-                if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
-                               "RS512", "ES256", "ES384", "ES512", "PS256",
-                               "PS384", "PS512", "none"]:
+                if alg not in [
+                    "HS256",
+                    "HS384",
+                    "HS512",
+                    "RS256",
+                    "RS384",
+                    "RS512",
+                    "ES256",
+                    "ES384",
+                    "ES512",
+                    "PS256",
+                    "PS384",
+                    "PS512",
+                    "none",
+                ]:
                     raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
             else:  # potentially used both for encryption and signing
-                if alg not in ["HS256", "HS384", "HS512", "RS256", "RS384",
-                               "RS512", "ES256", "ES384", "ES512", "PS256",
-                               "PS384", "PS512", "none", "RSA1_5", "RSA-OAEP", "RSA-OAEP-256",
-                               "A128KW", "A192KW", "A256KW", "ECDH-ES", "ECDH-ES+A128KW",
-                               "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
+                if alg not in [
+                    "HS256",
+                    "HS384",
+                    "HS512",
+                    "RS256",
+                    "RS384",
+                    "RS512",
+                    "ES256",
+                    "ES384",
+                    "ES512",
+                    "PS256",
+                    "PS384",
+                    "PS512",
+                    "none",
+                    "RSA1_5",
+                    "RSA-OAEP",
+                    "RSA-OAEP-256",
+                    "A128KW",
+                    "A192KW",
+                    "A256KW",
+                    "ECDH-ES",
+                    "ECDH-ES+A128KW",
+                    "ECDH-ES+A192KW",
+                    "ECDH-ES+A256KW",
+                ]:
                     raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
         self.alg = alg
 
@@ -161,7 +209,7 @@ class JWK(object):
                 continue
 
             if isinstance(item, bytes):
-                item = item.decode('utf-8')
+                item = item.decode("utf-8")
                 setattr(self, param, item)
 
             try:
@@ -169,7 +217,7 @@ class JWK(object):
             except Exception:
                 return False
             else:
-                if [e for e in ['+', '/', '='] if e in item]:
+                if [e for e in ["+", "/", "="] if e in item]:
                     return False
 
         if self.kid:
@@ -226,7 +274,7 @@ class JWK(object):
                 if isinstance(_val, bytes):
                     _val = as_unicode(_val)
                 _se.append('"{}":{}'.format(elem, json.dumps(_val)))
-        _json = '{{{}}}'.format(','.join(_se))
+        _json = "{{{}}}".format(",".join(_se))
 
         return b64e(DIGEST_HASH[hash_function](_json))
 
@@ -235,7 +283,7 @@ class JWK(object):
         Construct a Key ID using the thumbprint method and add it to
         the key attributes.
         """
-        self.kid = b64e(self.thumbprint('SHA-256')).decode('utf8')
+        self.kid = b64e(self.thumbprint("SHA-256")).decode("utf8")
 
     def appropriate_for(self, usage, **kwargs):
         """
@@ -261,8 +309,13 @@ def pems_to_x5c(cert_chain):
     :return: List of strings
     """
 
-    return [as_unicode(v) for v in
-            [base64.b64encode(d) for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]]]
+    return [
+        as_unicode(v)
+        for v in [
+            base64.b64encode(d)
+            for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]
+        ]
+    ]
 
 
 def x5c_to_pems(x5c):
@@ -273,8 +326,10 @@ def x5c_to_pems(x5c):
     :return:
     """
 
-    return [ssl.DER_cert_to_PEM_cert(d) for d in
-            [base64.b64decode(x) for x in [as_bytes(y) for y in x5c]]]
+    return [
+        ssl.DER_cert_to_PEM_cert(d)
+        for d in [base64.b64decode(x) for x in [as_bytes(y) for y in x5c]]
+    ]
 
 
 def x5c_to_ders(x5c):
@@ -303,12 +358,12 @@ def certificate_fingerprint(der, hash="sha256"):
     else:
         raise UnsupportedAlgorithm(hash)
 
-    return ':'.join([fp[i:i + 2] for i in range(0, len(fp), 2)]).upper()
+    return ":".join([fp[i : i + 2] for i in range(0, len(fp), 2)]).upper()
 
 
-def calculate_x5t(der, hash='sha1'):
+def calculate_x5t(der, hash="sha1"):
     val = certificate_fingerprint(der, hash)
-    val = val.replace(':', '')
+    val = val.replace(":", "")
     return base64.b64encode(as_bytes(val))
 
 

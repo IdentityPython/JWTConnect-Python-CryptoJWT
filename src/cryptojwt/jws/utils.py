@@ -20,11 +20,11 @@ def left_hash(msg, func="HS256"):
     :param msg: The message over which the hash should be calculated
     :param func: Which hash function that was used for the ID token
     """
-    if func == 'HS256':
+    if func == "HS256":
         return as_unicode(b64e(sha256_digest(msg)[:16]))
-    elif func == 'HS384':
+    elif func == "HS384":
         return as_unicode(b64e(sha384_digest(msg)[:24]))
-    elif func == 'HS512':
+    elif func == "HS512":
         return as_unicode(b64e(sha512_digest(msg)[:32]))
 
 
@@ -32,6 +32,7 @@ def left_hash(msg, func="HS256"):
 #     b += b"\x00"
 #     return struct.pack(">L", len(b)) + b
 #
+
 
 def alg2keytype(alg):
     """
@@ -69,19 +70,25 @@ def parse_rsa_algorithm(algorithm):
     elif algorithm == "RS512":
         return hashes.SHA512(), padding.PKCS1v15()
     elif algorithm == "PS256":
-        return (hashes.SHA256(),
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA256()),
-                    salt_length=padding.PSS.MAX_LENGTH))
+        return (
+            hashes.SHA256(),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
+            ),
+        )
     elif algorithm == "PS384":
-        return (hashes.SHA384(),
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA384()),
-                    salt_length=padding.PSS.MAX_LENGTH))
+        return (
+            hashes.SHA384(),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA384()), salt_length=padding.PSS.MAX_LENGTH
+            ),
+        )
     elif algorithm == "PS512":
-        return (hashes.SHA512(),
-                padding.PSS(
-                    mgf=padding.MGF1(hashes.SHA512()),
-                    salt_length=padding.PSS.MAX_LENGTH))
+        return (
+            hashes.SHA512(),
+            padding.PSS(
+                mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH
+            ),
+        )
     else:
         raise UnsupportedAlgorithm("Unknown algorithm: {}".format(algorithm))

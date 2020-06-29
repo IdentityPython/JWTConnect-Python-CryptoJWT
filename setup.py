@@ -26,7 +26,7 @@ with open('src/cryptojwt/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
-tests_requires = ['responses', 'pytest']
+tests_requires = ['responses', 'pytest', 'isort', 'black']
 
 setup(
     name="cryptojwt",

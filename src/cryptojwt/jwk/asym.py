@@ -6,8 +6,21 @@ class AsymmetricKey(JWK):
     """
     JSON Web key representation of an Asymmetric key
     """
-    def __init__(self, kty="oct", alg="", use="", kid="",  x5c=None, x5t="",
-                 x5u="", k="", pub_key=None, priv_key=None, **kwargs):
+
+    def __init__(
+        self,
+        kty="oct",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        k="",
+        pub_key=None,
+        priv_key=None,
+        **kwargs
+    ):
         JWK.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.k = k
         self.pub_key = pub_key
@@ -26,9 +39,9 @@ class AsymmetricKey(JWK):
         try:
             _use = USE[usage]
         except KeyError:
-            raise ValueError('Unknown key usage')
+            raise ValueError("Unknown key usage")
         else:
-            if usage in ['sign', 'decrypt']:
+            if usage in ["sign", "decrypt"]:
                 if not self.use or _use == self.use:
                     if self.priv_key:
                         return self.priv_key

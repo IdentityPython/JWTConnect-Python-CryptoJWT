@@ -10,17 +10,16 @@ from typing import List
 
 from cryptojwt.exception import BadSyntax
 
-
 # ---------------------------------------------------------------------------
 # Helper functions
 
 
 def intarr2bin(arr):
-    return unhexlify(''.join(["%02x" % byte for byte in arr]))
+    return unhexlify("".join(["%02x" % byte for byte in arr]))
 
 
 def intarr2long(arr):
-    return int(''.join(["%02x" % byte for byte in arr]), 16)
+    return int("".join(["%02x" % byte for byte in arr]), 16)
 
 
 def intarr2str(arr):
@@ -41,10 +40,10 @@ def long_to_base64(n, mlen=0):
         _len = mlen - len(bys)
         if _len:
             bys = [0] * _len + bys
-    data = struct.pack('%sB' % len(bys), *bys)
+    data = struct.pack("%sB" % len(bys), *bys)
     if not len(data):
-        data = b'\x00'
-    s = base64.urlsafe_b64encode(data).rstrip(b'=')
+        data = b"\x00"
+    s = base64.urlsafe_b64encode(data).rstrip(b"=")
     return s.decode("ascii")
 
 
@@ -53,8 +52,8 @@ def base64_to_long(data):
         data = data.encode("ascii")
 
     # urlsafe_b64decode will happily convert b64encoded data
-    _d = base64.urlsafe_b64decode(as_bytes(data) + b'==')
-    return intarr2long(struct.unpack('%sB' % len(_d), _d))
+    _d = base64.urlsafe_b64decode(as_bytes(data) + b"==")
+    return intarr2long(struct.unpack("%sB" % len(_d), _d))
 
 
 def base64url_to_long(data):
@@ -66,15 +65,16 @@ def base64url_to_long(data):
     :return:
     """
     _data = as_bytes(data)
-    _d = base64.urlsafe_b64decode(_data + b'==')
+    _d = base64.urlsafe_b64decode(_data + b"==")
     # verify that it's base64url encoded and not just base64
     # that is no '+' and '/' characters and not trailing "="s.
-    if [e for e in [b'+', b'/', b'='] if e in _data]:
+    if [e for e in [b"+", b"/", b"="] if e in _data]:
         raise ValueError("Not base64url encoded")
-    return intarr2long(struct.unpack('%sB' % len(_d), _d))
+    return intarr2long(struct.unpack("%sB" % len(_d), _d))
 
 
 # =============================================================================
+
 
 def b64e(b):
     """Base64 encode some bytes.
@@ -180,14 +180,14 @@ def b64encode_item(item):
     elif isinstance(item, int):
         return b64e(item)
     else:
-        return b64e(json.dumps(bytes2str_conv(item),
-                               separators=(",", ":")).encode("utf-8"))
+        return b64e(
+            json.dumps(bytes2str_conv(item), separators=(",", ":")).encode("utf-8")
+        )
 
 
 def split_token(token):
     if not token.count(b"."):
-        raise BadSyntax(token,
-                        "expected token to contain at least one dot")
+        raise BadSyntax(token, "expected token to contain at least one dot")
     return tuple(token.split(b"."))
 
 
@@ -209,17 +209,17 @@ def deser(val):
 
 def modsplit(name):
     """Split importable"""
-    if ':' in name:
-        _part = name.split(':')
+    if ":" in name:
+        _part = name.split(":")
         if len(_part) != 2:
             raise ValueError("Syntax error: {s}")
         return _part[0], _part[1]
 
-    _part = name.split('.')
+    _part = name.split(".")
     if len(_part) < 2:
         raise ValueError("Syntax error: {s}")
 
-    return '.'.join(_part[:-1]), _part[-1]
+    return ".".join(_part[:-1]), _part[-1]
 
 
 def importer(name):
@@ -238,6 +238,7 @@ def qualified_name(cls):
 # -argument-alias
 # cudos to https://stackoverflow.com/users/2357112/user2357112-supports-monica
 
+
 def deprecated_alias(**aliases):
     def deco(f):
         @functools.wraps(f)
@@ -254,8 +255,10 @@ def rename_kwargs(func_name, kwargs, aliases):
     for alias, new in aliases.items():
         if alias in kwargs:
             if new in kwargs:
-                raise TypeError('{} received both {} and {}'.format(
-                    func_name, alias, new))
-            warnings.warn('{} is deprecated; use {}'.format(alias, new),
-                          DeprecationWarning)
+                raise TypeError(
+                    "{} received both {} and {}".format(func_name, alias, new)
+                )
+            warnings.warn(
+                "{} is deprecated; use {}".format(alias, new), DeprecationWarning
+            )
             kwargs[new] = kwargs.pop(alias)

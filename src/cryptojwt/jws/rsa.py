@@ -7,7 +7,7 @@ from .utils import parse_rsa_algorithm
 
 
 class RSASigner(Signer):
-    def __init__(self, algorithm='RS256'):
+    def __init__(self, algorithm="RS256"):
         (self.hash, self.padding) = parse_rsa_algorithm(algorithm)
 
     def sign(self, msg, key):
@@ -22,8 +22,7 @@ class RSASigner(Signer):
         """
 
         if not isinstance(key, rsa.RSAPrivateKey):
-            raise TypeError(
-                "The key must be an instance of rsa.RSAPrivateKey")
+            raise TypeError("The key must be an instance of rsa.RSAPrivateKey")
         sig = key.sign(msg, self.padding, self.hash)
         return sig
 
@@ -40,8 +39,7 @@ class RSASigner(Signer):
         """
 
         if not isinstance(key, rsa.RSAPublicKey):
-            raise TypeError(
-                "The public key must be an instance of RSAPublicKey")
+            raise TypeError("The public key must be an instance of RSAPublicKey")
         try:
             key.verify(signature, msg, self.padding, self.hash)
         except InvalidSignature as err:
