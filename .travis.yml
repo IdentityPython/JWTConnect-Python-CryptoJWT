@@ -7,7 +7,7 @@ python:
 addons:
   apt:
     packages:
-    - 
+    -
 install:
   - pip install codecov
   - pip install tox
@@ -27,7 +27,7 @@ deploy:
   provider: pypi
   on:
     tags: true
-  distributions: bdist_wheel
+  distributions: "sdist bdist_wheel"
   skip_existing: true
   username: __token__
   password:
