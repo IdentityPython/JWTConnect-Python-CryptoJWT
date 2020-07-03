@@ -2,10 +2,7 @@ import copy
 import json
 import os
 
-from cryptography import x509
 from cryptography.hazmat import backends
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
