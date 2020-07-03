@@ -764,13 +764,13 @@ class KeyBundle:
         return self
 
 
-def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
+def keybundle_from_local_file(filename, typ, usage=None, keytype="RSA"):
     """
     Create a KeyBundle based on the content in a local file.
 
     :param filename: Name of the file
     :param typ: Type of content
-    :param usage: What the key should be used for
+    :param usage: What the keys should be used for
     :param keytype: Type of key, e.g. "RSA", "EC". Only used with typ='der'
     :return: The created KeyBundle
     """
