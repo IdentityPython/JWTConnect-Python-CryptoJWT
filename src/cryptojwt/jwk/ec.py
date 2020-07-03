@@ -2,13 +2,15 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from .asym import AsymmetricKey
+from .x509 import import_public_key_from_pem_data
+from .x509 import import_public_key_from_pem_file
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..exception import UnsupportedECurve
 from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
-from .asym import AsymmetricKey
 
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
@@ -123,7 +125,7 @@ class ECKey(AsymmetricKey):
     required = ["kty", "crv", "x", "y"]
 
     def __init__(
-        self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs
+            self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs
     ):
         AsymmetricKey.__init__(self, kty, alg, use, kid, **kwargs)
         self.crv = crv
@@ -315,3 +317,32 @@ def new_ec_key(crv, kid="", **kwargs):
         _rk.add_kid()
 
     return _rk
+
+
+def import_public_ec_key_from_file(filename):
+    """
+    Read a public Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey instance
+    """
+    public_key = import_public_key_from_pem_file(filename)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError('Not a Elliptic Curve key')
+
+
+def import_ec_key(pem_data):
+    """
+    Extract an Elliptic Curve key from a PEM-encoded X.509 certificate
+
+    :param pem_data: Elliptic Curve key encoded in standard form
+    :return: ec.EllipticCurvePublicKey
+    """
+    public_key = import_public_key_from_pem_data(pem_data)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError('Not a Elliptic Curve key')

@@ -6,6 +6,7 @@ import os
 import time
 from functools import cmp_to_key
 
+from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
@@ -341,7 +342,7 @@ class KeyBundle:
         _kty = keytype.lower()
         if _kty in ["rsa", "ec"]:
             key_args["kty"] = _kty
-            _key = import_private_rsa_key_from_file(filename)
+            _key = import_private_key_from_pem_file(filename)
             key_args["priv_key"] = _key
             key_args["pub_key"] = _key.public_key()
         else:
