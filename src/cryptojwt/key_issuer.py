@@ -323,15 +323,20 @@ class KeyIssuer(object):
             lst = [key for key in lst if not key.alg or key.alg == alg]
 
         # if elliptic curve, have to check if I have a key of the right curve
-        if key_type and key_type.upper() == "EC" and alg:
-            name = "P-{}".format(alg[2:])  # the type
-            _lst = []
-            for key in lst:
-                if name != key.crv:
-                    continue
-                _lst.append(key)
-            lst = _lst
-
+        if key_type and key_type.upper() == "EC":
+            if alg:
+                name = "P-{}".format(alg[2:])  # the type
+                _lst = []
+                for key in lst:
+                    if name != key.crv:
+                        continue
+                    _lst.append(key)
+                lst = _lst
+            else:
+                _crv = kwargs.get('crv')
+                if _crv:
+                    _lst = [k for k in lst if k.crv == _crv]
+                    lst = _lst
         return lst
 
     def copy(self):
