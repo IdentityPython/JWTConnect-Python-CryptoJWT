@@ -457,7 +457,7 @@ def test_load_unknown_keytype():
     assert len(issuer.all_keys()) == 1
 
 
-JWK_FP = {"keys": [{"e": "AQAB", "kty": "RSA", "kid": "rsa1"},]}
+JWK_FP = {"keys": [{"e": "AQAB", "kty": "RSA", "kid": "rsa1"}]}
 
 
 def test_load_missing_key_parameter():

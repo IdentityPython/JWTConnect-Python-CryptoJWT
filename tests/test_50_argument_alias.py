@@ -55,9 +55,7 @@ class TestVerifyJWTKeys(object):
             {"type": "RSA", "use": ["sig"]},
         ]
 
-        skey = [
-            {"type": "RSA", "use": ["sig"]},
-        ]
+        skey = [{"type": "RSA", "use": ["sig"]}]
 
         # Alice has multiple keys
         self.alice_keyjar = build_keyjar(mkey)

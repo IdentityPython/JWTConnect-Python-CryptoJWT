@@ -438,7 +438,7 @@ def test_jws_mm():
 
 @pytest.mark.parametrize(
     "ec_func,alg",
-    [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512"),],
+    [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512")],
 )
 def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"

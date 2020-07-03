@@ -5,13 +5,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from . import JWK
-from .asym import AsymmetricKey
-from .x509 import der_cert
-from .x509 import import_private_key_from_pem_file
-from .x509 import import_public_key_from_pem_data
-from .x509 import import_public_key_from_pem_file
-from .x509 import x5t_calculation
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..exception import SerializationNotPossible
@@ -19,6 +12,13 @@ from ..exception import UnsupportedKeyType
 from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
+from . import JWK
+from .asym import AsymmetricKey
+from .x509 import der_cert
+from .x509 import import_private_key_from_pem_file
+from .x509 import import_public_key_from_pem_data
+from .x509 import import_public_key_from_pem_file
+from .x509 import x5t_calculation
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ def import_private_rsa_key_from_file(filename, passphrase=None):
     if isinstance(private_key, rsa.RSAPrivateKey):
         return private_key
     else:
-        return ValueError('Not a RSA key')
+        return ValueError("Not a RSA key")
 
 
 def import_public_rsa_key_from_file(filename):
@@ -88,7 +88,7 @@ def import_public_rsa_key_from_file(filename):
     if isinstance(public_key, rsa.RSAPublicKey):
         return public_key
     else:
-        return ValueError('Not a RSA key')
+        return ValueError("Not a RSA key")
 
 
 def import_rsa_key(pem_data):
@@ -102,7 +102,7 @@ def import_rsa_key(pem_data):
     if isinstance(public_key, rsa.RSAPublicKey):
         return public_key
     else:
-        return ValueError('Not a RSA key')
+        return ValueError("Not a RSA key")
 
 
 def import_rsa_key_from_cert_file(pem_file):
@@ -247,24 +247,24 @@ class RSAKey(AsymmetricKey):
     required = ["kty", "n", "e"]
 
     def __init__(
-            self,
-            kty="RSA",
-            alg="",
-            use="",
-            kid="",
-            x5c=None,
-            x5t="",
-            x5u="",
-            n="",
-            e="",
-            d="",
-            p="",
-            q="",
-            dp="",
-            dq="",
-            di="",
-            qi="",
-            **kwargs
+        self,
+        kty="RSA",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        n="",
+        e="",
+        d="",
+        p="",
+        q="",
+        dp="",
+        dq="",
+        di="",
+        qi="",
+        **kwargs
     ):
         AsymmetricKey.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.n = n

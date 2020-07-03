@@ -6,11 +6,11 @@ import os
 import time
 from functools import cmp_to_key
 
-from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 
 from .exception import JWKException
 from .exception import UnknownKeyType
@@ -40,11 +40,7 @@ LOGGER = logging.getLogger(__name__)
 #     raise excep(_err, 'application/json')
 
 # Make sure the keys are all uppercase
-K2C = {
-    "RSA": RSAKey,
-    "EC": ECKey,
-    "oct": SYMKey,
-}
+K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
 
 MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
 

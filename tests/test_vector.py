@@ -119,7 +119,7 @@ test_header_ecdsa = json.dumps({"typ": "JWT", "alg": "ES256"}, separators=(",", 
 test_header_hmac = json.dumps({"typ": "JWT", "alg": "HS256"}, separators=(",", ":"))
 
 test_payload = json.dumps(
-    {"aud": "aud1", "sub": "subject1", "iss": "issuer1",}, separators=(",", ":")
+    {"aud": "aud1", "sub": "subject1", "iss": "issuer1"}, separators=(",", ":")
 )
 
 test_header_ecdsa_kid1 = json.dumps(

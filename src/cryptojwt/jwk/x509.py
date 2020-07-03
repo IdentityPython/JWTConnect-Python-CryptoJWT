@@ -97,7 +97,7 @@ def load_x509_cert(url, httpc, spec2key, **get_args):
             if isinstance(public_key, rsa.RSAPublicKey):
                 return {"rsa": public_key}
             elif isinstance(public_key, ec.EllipticCurvePublicKey):
-                return {'ec': public_key}
+                return {"ec": public_key}
         else:
             raise Exception("HTTP Get error: %s" % r.status_code)
     except Exception as err:  # not a RSA key
@@ -119,4 +119,3 @@ def x5t_calculation(cert):
         der_cert = base64.b64decode(cert)
 
     return b64e(hashlib.sha1(der_cert).digest())
-

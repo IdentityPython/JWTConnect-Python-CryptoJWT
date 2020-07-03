@@ -543,7 +543,7 @@ def test_load_unknown_keytype():
     assert len(kj.get_issuer_keys("")) == 1
 
 
-JWK_FP = {"keys": [{"e": "AQAB", "kty": "RSA", "kid": "rsa1"},]}
+JWK_FP = {"keys": [{"e": "AQAB", "kty": "RSA", "kid": "rsa1"}]}
 
 
 def test_load_missing_key_parameter():
@@ -657,9 +657,7 @@ class TestVerifyJWTKeys(object):
             {"type": "RSA", "use": ["sig"]},
         ]
 
-        skey = [
-            {"type": "RSA", "use": ["sig"]},
-        ]
+        skey = [{"type": "RSA", "use": ["sig"]}]
 
         # Alice has multiple keys
         self.alice_keyjar = build_keyjar(mkey)
