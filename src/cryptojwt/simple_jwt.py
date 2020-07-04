@@ -3,10 +3,7 @@ import logging
 
 from cryptojwt.exception import HeaderError
 
-from .utils import as_unicode
-from .utils import b64d
-from .utils import b64encode_item
-from .utils import split_token
+from .utils import as_unicode, b64d, b64encode_item, split_token
 
 __author__ = "Roland Hedberg"
 

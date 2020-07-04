@@ -26,7 +26,7 @@ with open('src/cryptojwt/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
                         fd.read(), re.MULTILINE).group(1)
 
-tests_requires = ['responses', 'pytest', 'isort', 'black']
+tests_requires = ['responses', 'pytest', 'isort>=5.0.2', 'black']
 
 setup(
     name="cryptojwt",
@@ -53,7 +53,7 @@ setup(
     extras_require={
         'testing': tests_requires,
         'docs': ['Sphinx', 'sphinx-autobuild', 'alabaster'],
-        'quality': ['isort'],
+        'quality': ['isort>=5.0.2', 'black'],
     },
     scripts=glob.glob('script/*.py'),
     entry_points={

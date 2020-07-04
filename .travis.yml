@@ -12,12 +12,10 @@ addons:
       -
 install:
   - pip install codecov
-  - pip install tox
-  - pip install tox-travis
-  - pip install "isort>=5.0.2"
-  - pip install black
+  - pip install tox tox-travis
+  - pip install isort black
 script:
-  - isort --check --recursive src tests
+  - isort --check src tests
   - black --check src tests
   - codecov --version
   - tox

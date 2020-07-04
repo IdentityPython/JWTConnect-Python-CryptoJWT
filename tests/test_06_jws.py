@@ -7,28 +7,16 @@ import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from cryptojwt.exception import BadSignature
-from cryptojwt.exception import UnknownAlgorithm
-from cryptojwt.exception import WrongNumberOfParts
+from cryptojwt.exception import BadSignature, UnknownAlgorithm, WrongNumberOfParts
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
-from cryptojwt.jws.exception import FormatError
-from cryptojwt.jws.exception import NoSuitableSigningKeys
-from cryptojwt.jws.exception import SignerAlgError
-from cryptojwt.jws.jws import JWS
-from cryptojwt.jws.jws import SIGNER_ALGS
-from cryptojwt.jws.jws import JWSig
-from cryptojwt.jws.jws import factory
+from cryptojwt.jwk.rsa import RSAKey, import_private_rsa_key_from_file
+from cryptojwt.jws.exception import FormatError, NoSuitableSigningKeys, SignerAlgError
+from cryptojwt.jws.jws import JWS, SIGNER_ALGS, JWSig, factory
 from cryptojwt.jws.rsa import RSASigner
-from cryptojwt.jws.utils import left_hash
-from cryptojwt.jws.utils import parse_rsa_algorithm
+from cryptojwt.jws.utils import left_hash, parse_rsa_algorithm
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.utils import b64d
-from cryptojwt.utils import b64d_enc_dec
-from cryptojwt.utils import b64e
-from cryptojwt.utils import intarr2bin
+from cryptojwt.utils import b64d, b64d_enc_dec, b64e, intarr2bin
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 

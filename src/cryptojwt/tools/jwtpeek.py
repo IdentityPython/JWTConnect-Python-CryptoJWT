@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # Thanks to @rohe Roland Hedberg for most of the lines in this script :).
-
 import argparse
 import json
 import os
@@ -14,8 +13,7 @@ from pygments.lexers.data import JsonLexer
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_rsa_key
+from cryptojwt.jwk.rsa import RSAKey, import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_issuer import KeyIssuer

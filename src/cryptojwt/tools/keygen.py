@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
 """JSON Web Key (JWK) Generator"""
-
 import argparse
 import json
 import os
 import sys
 
-from cryptojwt.jwk.ec import NIST2SEC
-from cryptojwt.jwk.ec import new_ec_key
+from cryptojwt.jwk.ec import NIST2SEC, new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.utils import b64e

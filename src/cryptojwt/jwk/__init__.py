@@ -5,10 +5,7 @@ import ssl
 from typing import List
 
 from ..exception import UnsupportedAlgorithm
-from ..utils import as_bytes
-from ..utils import as_unicode
-from ..utils import b64e
-from ..utils import base64url_to_long
+from ..utils import as_bytes, as_unicode, b64e, base64url_to_long
 from .utils import DIGEST_HASH
 
 USE = {"sign": "sig", "decrypt": "enc", "encrypt": "enc", "verify": "sig"}

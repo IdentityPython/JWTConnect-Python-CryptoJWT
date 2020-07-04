@@ -1,6 +1,5 @@
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives import hmac
+from cryptography.hazmat.primitives import hashes, hmac
 
 from ..exception import Unsupported
 from . import Signer

@@ -1,14 +1,10 @@
 # import struct
-
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from ..exception import UnsupportedAlgorithm
-from ..jwk.hmac import sha256_digest
-from ..jwk.hmac import sha384_digest
-from ..jwk.hmac import sha512_digest
-from ..utils import as_unicode
-from ..utils import b64e
+from ..jwk.hmac import sha256_digest, sha384_digest, sha512_digest
+from ..utils import as_unicode, b64e
 
 
 def left_hash(msg, func="HS256"):
