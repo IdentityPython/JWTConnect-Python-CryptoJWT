@@ -1,5 +1,6 @@
 sudo: false
 language: python
+cache: pip
 python:
   - 3.6
   - 3.7
@@ -8,7 +9,7 @@ python:
 addons:
   apt:
     packages:
-    -
+      -
 install:
   - pip install codecov
   - pip install tox
