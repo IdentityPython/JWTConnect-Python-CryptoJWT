@@ -1,23 +1,15 @@
 import json
 import logging
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from requests import request
 
-from .exception import IssuerNotFound
-from .exception import KeyIOError
-from .exception import UnknownKeyType
-from .exception import UpdateFailed
+from .exception import IssuerNotFound, KeyIOError, UnknownKeyType, UpdateFailed
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
-from .key_issuer import KeyIssuer
-from .key_issuer import build_keyissuer
-from .key_issuer import init_key_issuer
-from .utils import deprecated_alias
-from .utils import importer
-from .utils import qualified_name
+from .key_issuer import KeyIssuer, build_keyissuer, init_key_issuer
+from .utils import deprecated_alias, importer, qualified_name
 
 __author__ = "Roland Hedberg"
 

@@ -6,12 +6,14 @@ from ..jwk.hmac import SYMKey
 from ..jwk.jwk import key_from_jwk_dict
 from ..jwk.rsa import RSAKey
 from ..jwx import JWx
-from .exception import DecryptionFailed
-from .exception import NoSuitableDecryptionKey
-from .exception import NoSuitableECDHKey
-from .exception import NoSuitableEncryptionKey
-from .exception import NotSupportedAlgorithm
-from .exception import WrongEncryptionAlgorithm
+from .exception import (
+    DecryptionFailed,
+    NoSuitableDecryptionKey,
+    NoSuitableECDHKey,
+    NoSuitableEncryptionKey,
+    NotSupportedAlgorithm,
+    WrongEncryptionAlgorithm,
+)
 from .jwe_ec import JWE_EC
 from .jwe_hmac import JWE_SYM
 from .jwe_rsa import JWE_RSA

@@ -11,19 +11,17 @@ import requests
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
 
-from .exception import JWKException
-from .exception import UnknownKeyType
-from .exception import UnsupportedAlgorithm
-from .exception import UnsupportedECurve
-from .exception import UpdateFailed
-from .jwk.ec import ECKey
-from .jwk.ec import new_ec_key
+from .exception import (
+    JWKException,
+    UnknownKeyType,
+    UnsupportedAlgorithm,
+    UnsupportedECurve,
+    UpdateFailed,
+)
+from .jwk.ec import ECKey, new_ec_key
 from .jwk.hmac import SYMKey
-from .jwk.jwk import dump_jwk
-from .jwk.jwk import import_jwk
-from .jwk.rsa import RSAKey
-from .jwk.rsa import import_private_rsa_key_from_file
-from .jwk.rsa import new_rsa_key
+from .jwk.jwk import dump_jwk, import_jwk
+from .jwk.rsa import RSAKey, import_private_rsa_key_from_file, new_rsa_key
 from .utils import as_unicode
 
 __author__ = "Roland Hedberg"

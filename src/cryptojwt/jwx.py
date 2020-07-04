@@ -9,12 +9,8 @@ from cryptojwt.key_bundle import KeyBundle
 
 from .exception import HeaderError
 from .jwk.jwk import key_from_jwk_dict
-from .jwk.rsa import RSAKey
-from .jwk.rsa import import_rsa_key
-from .jwk.rsa import load_x509_cert
-from .utils import as_bytes
-from .utils import as_unicode
-from .utils import b64d
+from .jwk.rsa import RSAKey, import_rsa_key, load_x509_cert
+from .utils import as_bytes, as_unicode, b64d
 
 LOGGER = logging.getLogger(__name__)
 

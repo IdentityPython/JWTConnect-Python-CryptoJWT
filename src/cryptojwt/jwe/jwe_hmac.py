@@ -2,14 +2,11 @@ import logging
 import zlib
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
-from cryptography.hazmat.primitives.keywrap import aes_key_wrap
+from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
 
-from ..exception import MissingKey
-from ..exception import WrongNumberOfParts
+from ..exception import MissingKey, WrongNumberOfParts
 from ..jwk.hmac import SYMKey
-from ..utils import as_bytes
-from ..utils import intarr2str
+from ..utils import as_bytes, intarr2str
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 

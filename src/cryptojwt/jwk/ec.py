@@ -2,12 +2,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from ..exception import DeSerializationNotPossible
-from ..exception import JWKESTException
-from ..exception import UnsupportedECurve
-from ..utils import as_unicode
-from ..utils import deser
-from ..utils import long_to_base64
+from ..exception import DeSerializationNotPossible, JWKESTException, UnsupportedECurve
+from ..utils import as_unicode, deser, long_to_base64
 from .asym import AsymmetricKey
 
 # This is used to translate between the curve representation in
