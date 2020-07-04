@@ -333,7 +333,7 @@ class KeyIssuer(object):
                     _lst.append(key)
                 lst = _lst
             else:
-                _crv = kwargs.get('crv')
+                _crv = kwargs.get("crv")
                 if _crv:
                     _lst = [k for k in lst if k.crv == _crv]
                     lst = _lst
