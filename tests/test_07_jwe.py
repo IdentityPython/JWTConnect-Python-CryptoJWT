@@ -2,6 +2,7 @@
 import array
 import hashlib
 import os
+import random
 import string
 import sys
 
@@ -35,11 +36,6 @@ from cryptojwt.utils import as_bytes, b64e
 
 __author__ = "rohe0002"
 
-try:
-    from random import SystemRandom as rnd
-except ImportError:
-    import random as rnd
-
 
 def rndstr(size=16):
     """
@@ -49,7 +45,7 @@ def rndstr(size=16):
     :return: string
     """
     _basech = string.ascii_letters + string.digits
-    return "".join([rnd.choice(_basech) for _ in range(size)])
+    return "".join([random.choice(_basech) for _ in range(size)])
 
 
 def intarr2bytes(arr):
