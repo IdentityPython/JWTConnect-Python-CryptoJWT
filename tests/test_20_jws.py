@@ -10,8 +10,7 @@ from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jws.jws import JWS
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.utils import as_bytes
-from cryptojwt.utils import as_unicode
+from cryptojwt.utils import as_bytes, as_unicode
 
 sys.path.insert(0, ". ")
 

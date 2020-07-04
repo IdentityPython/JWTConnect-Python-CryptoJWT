@@ -10,23 +10,22 @@ import requests
 import responses
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.ec import new_ec_key
+from cryptojwt.jwk.ec import ECKey, new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
-from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_bundle import build_key_bundle
-from cryptojwt.key_bundle import dump_jwks
-from cryptojwt.key_bundle import init_key
-from cryptojwt.key_bundle import key_diff
-from cryptojwt.key_bundle import key_gen
-from cryptojwt.key_bundle import key_rollover
-from cryptojwt.key_bundle import keybundle_from_local_file
-from cryptojwt.key_bundle import rsa_init
-from cryptojwt.key_bundle import unique_keys
-from cryptojwt.key_bundle import update_key_bundle
+from cryptojwt.jwk.rsa import RSAKey, import_rsa_key_from_cert_file, new_rsa_key
+from cryptojwt.key_bundle import (
+    KeyBundle,
+    build_key_bundle,
+    dump_jwks,
+    init_key,
+    key_diff,
+    key_gen,
+    key_rollover,
+    keybundle_from_local_file,
+    rsa_init,
+    unique_keys,
+    update_key_bundle,
+)
 
 __author__ = "Roland Hedberg"
 

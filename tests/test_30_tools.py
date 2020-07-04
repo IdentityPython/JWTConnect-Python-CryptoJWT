@@ -1,9 +1,9 @@
 import json
 import os
 
-import cryptojwt.tools.keyconv as keyconv
 from cryptojwt.jwk import JWK
 from cryptojwt.jwx import key_from_jwk_dict
+from cryptojwt.tools import keyconv as keyconv
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 

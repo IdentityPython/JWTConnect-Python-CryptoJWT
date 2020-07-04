@@ -7,11 +7,8 @@ import responses
 
 from cryptojwt.exception import JWKESTException
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_bundle import keybundle_from_local_file
-from cryptojwt.key_issuer import KeyIssuer
-from cryptojwt.key_issuer import build_keyissuer
-from cryptojwt.key_issuer import init_key_issuer
+from cryptojwt.key_bundle import KeyBundle, keybundle_from_local_file
+from cryptojwt.key_issuer import KeyIssuer, build_keyissuer, init_key_issuer
 
 __author__ = "Roland Hedberg"
 

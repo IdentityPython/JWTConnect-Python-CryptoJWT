@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 from __future__ import print_function
 
 import base64
@@ -13,34 +12,36 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
-from cryptojwt.exception import DeSerializationNotPossible
-from cryptojwt.exception import UnsupportedAlgorithm
-from cryptojwt.exception import WrongUsage
-from cryptojwt.jwk import JWK
-from cryptojwt.jwk import calculate_x5t
-from cryptojwt.jwk import certificate_fingerprint
-from cryptojwt.jwk import pem_hash
-from cryptojwt.jwk import pems_to_x5c
-from cryptojwt.jwk.ec import NIST2SEC
-from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.hmac import new_sym_key
-from cryptojwt.jwk.hmac import sha256_digest
-from cryptojwt.jwk.jwk import dump_jwk
-from cryptojwt.jwk.jwk import import_jwk
-from cryptojwt.jwk.jwk import jwk_wrap
-from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
-from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
-from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
-from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.utils import as_bytes
-from cryptojwt.utils import as_unicode
-from cryptojwt.utils import b64e
-from cryptojwt.utils import base64_to_long
-from cryptojwt.utils import base64url_to_long
-from cryptojwt.utils import long2intarr
+from cryptojwt.exception import (
+    DeSerializationNotPossible,
+    UnsupportedAlgorithm,
+    WrongUsage,
+)
+from cryptojwt.jwk import (
+    JWK,
+    calculate_x5t,
+    certificate_fingerprint,
+    pem_hash,
+    pems_to_x5c,
+)
+from cryptojwt.jwk.ec import NIST2SEC, ECKey
+from cryptojwt.jwk.hmac import SYMKey, new_sym_key, sha256_digest
+from cryptojwt.jwk.jwk import dump_jwk, import_jwk, jwk_wrap, key_from_jwk_dict
+from cryptojwt.jwk.rsa import (
+    RSAKey,
+    import_private_rsa_key_from_file,
+    import_public_rsa_key_from_file,
+    import_rsa_key_from_cert_file,
+    new_rsa_key,
+)
+from cryptojwt.utils import (
+    as_bytes,
+    as_unicode,
+    b64e,
+    base64_to_long,
+    base64url_to_long,
+    long2intarr,
+)
 
 __author__ = "Roland Hedberg"
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
