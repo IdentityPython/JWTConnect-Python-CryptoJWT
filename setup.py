@@ -53,7 +53,7 @@ setup(
     extras_require={
         'testing': tests_requires,
         'docs': ['Sphinx', 'sphinx-autobuild', 'alabaster'],
-        'quality': ['isort'],
+        'quality': ['isort>=5.0.2', 'black'],
     },
     scripts=glob.glob('script/*.py'),
     entry_points={
