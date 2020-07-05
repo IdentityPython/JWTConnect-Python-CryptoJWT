@@ -62,6 +62,20 @@ def import_public_key_from_pem_data(pem_data):
     return cert.public_key()
 
 
+def import_public_key_from_cert_file(filename):
+    """
+    Read a public key from a certificate file.
+
+    :param filename: The name of the file
+    :return: A public key instance
+    """
+    with open(filename, "rb") as key_file:
+        cert = x509.load_pem_x509_certificate(
+            key_file.read(), backend=default_backend()
+        )
+    return cert.public_key()
+
+
 def der_cert(der_data):
     """
     Load a DER encoded certificate
