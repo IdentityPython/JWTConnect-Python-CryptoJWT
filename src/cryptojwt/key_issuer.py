@@ -137,6 +137,7 @@ class KeyIssuer(object):
             self.add_url(item, **kwargs)
         else:
             self.add_symmetric(item, **kwargs)
+        return self
 
     def all_keys(self):
         """
@@ -236,19 +237,18 @@ class KeyIssuer(object):
                 )
             )
 
-    def import_jwks_as_json(self, jwks, issuer_id):
+    def import_jwks_as_json(self, jwks):
         """
         Imports all the keys that are represented in a JWKS expressed as a
         JSON object
 
         :param jwks: JSON representation of a JWKS
-        :param issuer_id: Who 'owns' the JWKS
         """
         return self.import_jwks(json.loads(jwks))
 
-    def import_jwks_from_file(self, filename, issuer_id):
+    def import_jwks_from_file(self, filename):
         with open(filename) as jwks_file:
-            self.import_jwks_as_json(jwks_file.read(), issuer_id)
+            self.import_jwks_as_json(jwks_file.read())
 
     def remove_outdated(self, when=0):
         """
@@ -333,7 +333,7 @@ class KeyIssuer(object):
                     _lst.append(key)
                 lst = _lst
             else:
-                _crv = kwargs.get('crv')
+                _crv = kwargs.get("crv")
                 if _crv:
                     _lst = [k for k in lst if k.crv == _crv]
                     lst = _lst
