@@ -1,5 +1,6 @@
 sudo: false
 language: python
+cache: pip
 python:
   - 3.6
   - 3.7
@@ -8,18 +9,16 @@ python:
 addons:
   apt:
     packages:
-    -
+      -
 install:
   - pip install codecov
-  - pip install tox
-  - pip install tox-travis
-  - pip install isort
-  - pip install black
+  - pip install tox tox-travis
+  - pip install isort black
 script:
-  - isort --check --recursive src tests
-  - black --check src tests
   - codecov --version
   - tox
+  - isort --check -sl -p cryptojwt -rc src tests
+  - black --check src tests
 after_success:
   - codecov
 notifications:

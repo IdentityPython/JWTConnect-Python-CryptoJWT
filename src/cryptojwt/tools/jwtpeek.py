@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # Thanks to @rohe Roland Hedberg for most of the lines in this script :).
-
 import argparse
 import json
 import os
