@@ -17,7 +17,7 @@ install:
 script:
   - codecov --version
   - tox
-  - isort --check -sl -p cryptojwt -rc src tests
+  - isort --check src tests
   - black --check src tests
 after_success:
   - codecov
