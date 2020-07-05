@@ -23,7 +23,8 @@ from .rsa import RSASigner
 from .utils import alg2keytype
 
 try:
-    from builtins import object, str
+    from builtins import object
+    from builtins import str
 except ImportError:
     pass
 

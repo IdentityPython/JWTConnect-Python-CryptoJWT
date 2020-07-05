@@ -15,7 +15,9 @@ from .utils import b64encode_item
 from .utils import split_token
 
 try:
-    from builtins import hex, str, zip
+    from builtins import hex
+    from builtins import str
+    from builtins import zip
 except ImportError:
     pass
 
