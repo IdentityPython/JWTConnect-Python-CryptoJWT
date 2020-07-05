@@ -12,8 +12,8 @@ from cryptography.hazmat.primitives import serialization
 
 from cryptojwt.jwk import JWK
 from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.ec import import_private_key_from_file
-from cryptojwt.jwk.ec import import_public_key_from_file
+from cryptojwt.jwk.ec import import_private_ec_key_from_file
+from cryptojwt.jwk.ec import import_public_ec_key_from_file
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
@@ -52,9 +52,9 @@ def pem2ec(
 ) -> JWK:
     """Convert EC key from PEM to JWK"""
     if private:
-        key = import_private_key_from_file(filename, passphrase)
+        key = import_private_ec_key_from_file(filename, passphrase)
     else:
-        key = import_public_key_from_file(filename)
+        key = import_public_ec_key_from_file(filename)
     jwk = ECKey(kid=kid)
     jwk.load_key(key)
     return jwk
