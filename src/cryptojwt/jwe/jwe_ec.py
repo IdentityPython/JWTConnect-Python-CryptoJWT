@@ -190,8 +190,7 @@ class JWE_EC(JWEKey):
         """
         Produces a JWE as defined in RFC7516 using an Elliptic curve key
 
-        :param key: *Not used>, only there to present the same API as
-            JWE_RSA and JWE_SYM
+        :param key: *Not used*, only there to present the same API as JWE_RSA and JWE_SYM
         :param iv: Initialization vector
         :param cek: Content master key
         :param kwargs: Extra keyword arguments

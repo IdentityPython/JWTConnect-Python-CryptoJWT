@@ -423,7 +423,7 @@ class RSAKey(AsymmetricKey):
 
     def load(self, filename):
         """
-        Load a RSA key from a file. Once we have the key do a serialization.
+        Load a RSA key from a PEM encoded file. Once we have the key do a serialization.
 
         :param filename: File name
         """
