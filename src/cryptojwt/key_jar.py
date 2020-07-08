@@ -602,6 +602,9 @@ class KeyJar(object):
 
         _iss = _payload.get("iss") or kwargs.get("iss") or ""
 
+        if not _iss:
+            _iss = kwargs.get('issuer')
+
         if _iss:
             # First extend the key jar iff allowed
             if "jku" in jwt.headers and _iss:
@@ -619,7 +622,8 @@ class KeyJar(object):
 
             if _key_type == "oct":
                 keys.extend(self.get(key_use="sig", issuer_id="", key_type=_key_type))
-        else:  # No issuer, just use all keys I have
+        else:
+            # No issuer, just use all keys I have
             keys = self.get(key_use="sig", issuer_id="", key_type=_key_type)
 
         # Only want the appropriate keys.
