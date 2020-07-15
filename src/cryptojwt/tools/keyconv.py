@@ -10,17 +10,13 @@ from typing import Optional
 from cryptography.hazmat.primitives import serialization
 
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk.ec import (
-    ECKey,
-    import_private_key_from_file,
-    import_public_key_from_file,
-)
+from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import import_private_ec_key_from_file
+from cryptojwt.jwk.ec import import_public_ec_key_from_file
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import (
-    RSAKey,
-    import_private_rsa_key_from_file,
-    import_public_rsa_key_from_file,
-)
+from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwx import key_from_jwk_dict
 
 
@@ -55,9 +51,9 @@ def pem2ec(
 ) -> JWK:
     """Convert EC key from PEM to JWK"""
     if private:
-        key = import_private_key_from_file(filename, passphrase)
+        key = import_private_ec_key_from_file(filename, passphrase)
     else:
-        key = import_public_key_from_file(filename)
+        key = import_public_ec_key_from_file(filename)
     jwk = ECKey(kid=kid)
     jwk.load_key(key)
     return jwk
@@ -119,10 +115,7 @@ def pem2jwk(
 
 
 def export_jwk(
-    jwk: JWK,
-    private: bool = False,
-    encrypt: bool = False,
-    passphrase: Optional[str] = None,
+    jwk: JWK, private: bool = False, encrypt: bool = False, passphrase: Optional[str] = None,
 ) -> bytes:
     """Export JWK as PEM/bin"""
 
@@ -165,9 +158,7 @@ def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) 
         print(json.dumps(serialized, indent=4))
 
 
-def output_bytes(
-    data: bytes, binary: bool = False, filename: Optional[str] = None
-) -> None:
+def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = None) -> None:
     """Output data to file"""
     if filename is not None:
         with open(filename, mode="wb") as file:
@@ -185,15 +176,11 @@ def main():
 
     parser.add_argument("--kid", dest="kid", metavar="key_id", help="Key ID")
     parser.add_argument("--kty", dest="kty", metavar="type", help="Key type")
-    parser.add_argument(
-        "--private", dest="private", action="store_true", help="Output private key"
-    )
+    parser.add_argument("--private", dest="private", action="store_true", help="Output private key")
     parser.add_argument(
         "--encrypt", dest="encrypt", action="store_true", help="Encrypt private key"
     )
-    parser.add_argument(
-        "--output", dest="output", metavar="filename", help="Output file name"
-    )
+    parser.add_argument("--output", dest="output", metavar="filename", help="Output file name")
     parser.add_argument("filename", metavar="filename", nargs=1, help="filename")
     args = parser.parse_args()
 

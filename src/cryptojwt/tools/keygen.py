@@ -6,7 +6,8 @@ import json
 import os
 import sys
 
-from cryptojwt.jwk.ec import NIST2SEC, new_ec_key
+from cryptojwt.jwk.ec import NIST2SEC
+from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.utils import b64e
@@ -21,12 +22,8 @@ def main():
     """ Main function"""
     parser = argparse.ArgumentParser(description="JSON Web Key (JWK) Generator")
 
-    parser.add_argument(
-        "--kty", dest="kty", metavar="type", help="Key type", required=True
-    )
-    parser.add_argument(
-        "--size", dest="keysize", type=int, metavar="size", help="Key size"
-    )
+    parser.add_argument("--kty", dest="kty", metavar="type", help="Key type", required=True)
+    parser.add_argument("--size", dest="keysize", type=int, metavar="size", help="Key size")
     parser.add_argument(
         "--crv",
         dest="crv",
@@ -49,9 +46,7 @@ def main():
     if args.kty.upper() == "RSA":
         if args.keysize is None:
             args.keysize = DEFAULT_RSA_KEYSIZE
-        jwk = new_rsa_key(
-            public_exponent=args.rsa_exp, key_size=args.keysize, kid=args.kid
-        )
+        jwk = new_rsa_key(public_exponent=args.rsa_exp, key_size=args.keysize, kid=args.kid)
     elif args.kty.upper() == "EC":
         if args.crv not in NIST2SEC:
             print("Unknown curve: {0}".format(args.crv), file=sys.stderr)

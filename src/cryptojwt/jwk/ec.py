@@ -1,10 +1,16 @@
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from ..exception import DeSerializationNotPossible, JWKESTException, UnsupportedECurve
-from ..utils import as_unicode, deser, long_to_base64
+from ..exception import DeSerializationNotPossible
+from ..exception import JWKESTException
+from ..exception import UnsupportedECurve
+from ..utils import as_unicode
+from ..utils import deser
+from ..utils import long_to_base64
 from .asym import AsymmetricKey
+from .x509 import import_private_key_from_pem_file
+from .x509 import import_public_key_from_pem_data
+from .x509 import import_public_key_from_pem_file
 
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
@@ -53,43 +59,9 @@ def ec_construct_private(num):
     :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance.
     """
-    pub_ecpn = ec.EllipticCurvePublicNumbers(
-        num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]()
-    )
+    pub_ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]())
     priv_ecpn = ec.EllipticCurvePrivateNumbers(num["d"], pub_ecpn)
     return priv_ecpn.private_key(default_backend())
-
-
-def import_private_key_from_file(filename, passphrase=None):
-    """
-    Read a private Elliptic Curve key from a PEM file.
-
-    :param filename: The name of the file
-    :param passphrase: A pass phrase to use to unpack the PEM file.
-    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
-        instance
-    """
-    with open(filename, "rb") as key_file:
-        private_key = serialization.load_pem_private_key(
-            key_file.read(), password=passphrase, backend=default_backend()
-        )
-
-    return private_key
-
-
-def import_public_key_from_file(filename):
-    """
-    Read a public Elliptic Curve key from a PEM file.
-
-    :param filename: The name of the file
-    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
-        instance
-    """
-    with open(filename, "rb") as key_file:
-        public_key = serialization.load_pem_public_key(
-            key_file.read(), backend=default_backend()
-        )
-    return public_key
 
 
 class ECKey(AsymmetricKey):
@@ -118,9 +90,7 @@ class ECKey(AsymmetricKey):
     # required attributes
     required = ["kty", "crv", "x", "y"]
 
-    def __init__(
-        self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs
-    ):
+    def __init__(self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs):
         AsymmetricKey.__init__(self, kty, alg, use, kid, **kwargs)
         self.crv = crv
         self.x = x
@@ -244,7 +214,7 @@ class ECKey(AsymmetricKey):
 
         :param filename: File name
         """
-        return self.load_key(import_private_key_from_file(filename))
+        return self.load_key(import_private_ec_key_from_file(filename))
 
     def decryption_key(self):
         """
@@ -311,3 +281,53 @@ def new_ec_key(crv, kid="", **kwargs):
         _rk.add_kid()
 
     return _rk
+
+
+def import_public_ec_key_from_file(filename):
+    """
+    Read a public Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey instance
+    """
+    public_key = import_public_key_from_pem_file(filename)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError("Not a Elliptic Curve key")
+
+
+def import_private_ec_key_from_file(filename, passphrase=None):
+    """
+    Read a private Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        instance
+    """
+    private_key = import_private_key_from_pem_file(filename, passphrase)
+    if isinstance(private_key, ec.EllipticCurvePrivateKey):
+        return private_key
+    else:
+        return ValueError("Not a private Elliptic Curve key")
+
+
+def import_ec_key(pem_data):
+    """
+    Extract an Elliptic Curve key from a PEM-encoded X.509 certificate
+
+    :param pem_data: Elliptic Curve key encoded in standard form
+    :return: ec.EllipticCurvePublicKey
+    """
+    public_key = import_public_key_from_pem_data(pem_data)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError("Not a Elliptic Curve key")
+
+
+def import_ec_key_from_cert_file(pem_file):
+    with open(pem_file, "r") as cert_file:
+        return import_ec_key(cert_file.read())

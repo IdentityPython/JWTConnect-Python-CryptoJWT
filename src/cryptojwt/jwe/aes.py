@@ -3,11 +3,15 @@ from struct import pack
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hmac
-from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.padding import PKCS7
 
-from ..exception import MissingKey, Unsupported, VerificationError
+from ..exception import MissingKey
+from ..exception import Unsupported
+from ..exception import VerificationError
 from . import Encrypter
 from .exception import UnsupportedBitLength
 from .utils import get_keys_seclen_dgst
@@ -51,9 +55,7 @@ class AES_CBCEncrypter(Encrypter):
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key, iv)
 
-        cipher = Cipher(
-            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
         encryptor = cipher.encryptor()
 
         pmsg = self.padder.update(msg)
@@ -76,9 +78,7 @@ class AES_CBCEncrypter(Encrypter):
         if comp_tag != tag:
             raise VerificationError("AES-CBC HMAC")
 
-        cipher = Cipher(
-            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
         decryptor = cipher.decryptor()
 
         ctext = decryptor.update(msg)

@@ -13,7 +13,8 @@ from pygments.lexers.data import JsonLexer
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.rsa import RSAKey, import_rsa_key
+from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.rsa import import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_issuer import KeyIssuer
@@ -87,9 +88,7 @@ def process(jwt, keys, quiet):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", dest="rsa_file", help="File containing a RSA key")
-    parser.add_argument(
-        "-k", dest="hmac_key", help="If using a HMAC algorithm this is the key"
-    )
+    parser.add_argument("-k", dest="hmac_key", help="If using a HMAC algorithm this is the key")
     parser.add_argument("-i", dest="kid", help="key id")
     parser.add_argument("-j", dest="jwk", help="JSON Web Key")
     parser.add_argument("-J", dest="jwks", help="JSON Web Keys")

@@ -4,7 +4,9 @@ from math import ceil
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.hashes import SHA256, SHA384, SHA512
+from cryptography.hazmat.primitives.hashes import SHA256
+from cryptography.hazmat.primitives.hashes import SHA384
+from cryptography.hazmat.primitives.hashes import SHA512
 
 from ..utils import b64e
 

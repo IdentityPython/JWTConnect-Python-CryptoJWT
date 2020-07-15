@@ -2,11 +2,14 @@ import logging
 import zlib
 
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
+from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
+from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 
-from ..exception import MissingKey, WrongNumberOfParts
+from ..exception import MissingKey
+from ..exception import WrongNumberOfParts
 from ..jwk.hmac import SYMKey
-from ..utils import as_bytes, intarr2str
+from ..utils import as_bytes
+from ..utils import intarr2str
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 
@@ -58,9 +61,7 @@ class JWE_SYM(JWEKey):
 
         _enc = self["enc"]
         _auth_data = jwe.b64_encode_header()
-        ctxt, tag, cek = self.enc_setup(
-            _enc, _msg, auth_data=_auth_data, key=cek, iv=iv
-        )
+        ctxt, tag, cek = self.enc_setup(_enc, _msg, auth_data=_auth_data, key=cek, iv=iv)
         return jwe.pack(parts=[jek, iv, ctxt, tag])
 
     def decrypt(self, token, key=None, cek=None):

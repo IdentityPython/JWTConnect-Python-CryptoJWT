@@ -1,15 +1,20 @@
 import json
 import logging
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 from requests import request
 
-from .exception import IssuerNotFound, KeyIOError, UnknownKeyType, UpdateFailed
+from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
-from .key_issuer import KeyIssuer, build_keyissuer, init_key_issuer
-from .utils import deprecated_alias, importer, qualified_name
+from .key_issuer import KeyIssuer
+from .key_issuer import build_keyissuer
+from .key_issuer import init_key_issuer
+from .utils import deprecated_alias
+from .utils import importer
+from .utils import qualified_name
 
 __author__ = "Roland Hedberg"
 
@@ -28,7 +33,7 @@ class KeyJar(object):
         httpc=None,
         httpc_params=None,
         storage_conf=None,
-        abstract_storage_cls=None,
+        storage_factory=None,
     ):
         """
         KeyJar init function
@@ -40,17 +45,17 @@ class KeyJar(object):
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
         :param storage_conf: Storage configuration
-        :param abstract_storage_cls: Storage class. The only demand on a storage class is that it
-            should behave like a dictionary.
+        :param storage_factory: A function that given the storage configuration (storage_conf)
+            will return an instance that can store information.
         :return: Keyjar instance
         """
 
         if storage_conf is None:
             self._issuers = {}
         else:
-            if not abstract_storage_cls:
-                raise ValueError("Missing storage class specification")
-            self._issuers = abstract_storage_cls(storage_conf)
+            if not storage_factory:
+                raise ValueError("Missing storage factory specification")
+            self._issuers = storage_factory(storage_conf)
 
         self.storage_conf = storage_conf
         self.spec2key = {}
@@ -418,11 +423,7 @@ class KeyJar(object):
 
         if _keys:
             _issuer = self.return_issuer(issuer_id=issuer_id)
-            _issuer.add(
-                self.keybundle_cls(
-                    _keys, httpc=self.httpc, httpc_params=self.httpc_params
-                )
-            )
+            _issuer.add(self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params))
             self[issuer_id] = _issuer
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
@@ -563,9 +564,7 @@ class KeyJar(object):
             except KeyError:
                 nki = {}
 
-            keys = self._add_key(
-                keys, _aud, "enc", _key_type, _kid, nki, allow_missing_kid
-            )
+            keys = self._add_key(keys, _aud, "enc", _key_type, _kid, nki, allow_missing_kid)
 
         # Only want the appropriate keys.
         keys = [k for k in keys if k.appropriate_for("decrypt")]
@@ -594,6 +593,9 @@ class KeyJar(object):
 
         _iss = _payload.get("iss") or kwargs.get("iss") or ""
 
+        if not _iss:
+            _iss = kwargs.get("issuer")
+
         if _iss:
             # First extend the key jar iff allowed
             if "jku" in jwt.headers and _iss:
@@ -605,13 +607,12 @@ class KeyJar(object):
                     except KeyError:
                         pass
 
-            keys = self._add_key(
-                [], _iss, "sig", _key_type, _kid, nki, allow_missing_kid
-            )
+            keys = self._add_key([], _iss, "sig", _key_type, _kid, nki, allow_missing_kid)
 
             if _key_type == "oct":
                 keys.extend(self.get(key_use="sig", issuer_id="", key_type=_key_type))
-        else:  # No issuer, just use all keys I have
+        else:
+            # No issuer, just use all keys I have
             keys = self.get(key_use="sig", issuer_id="", key_type=_key_type)
 
         # Only want the appropriate keys.
@@ -717,7 +718,7 @@ class KeyJar(object):
 
 
 def build_keyjar(
-    key_conf, kid_template="", keyjar=None, issuer_id="", storage_conf=None
+    key_conf, kid_template="", keyjar=None, issuer_id="", storage_conf=None, storage_factory=None
 ):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
@@ -758,6 +759,8 @@ def build_keyjar(
     :param keyjar: If an KeyJar instance the new keys are added to this key jar.
     :param issuer_id: The default owner of the keys in the key jar.
     :param storage_conf: Storage configuration
+    :param storage_factory: A function that given the configuration can instantiate a Storage
+        instance.
     :return: A KeyJar instance
     """
 
@@ -766,7 +769,7 @@ def build_keyjar(
         return None
 
     if keyjar is None:
-        keyjar = KeyJar(storage_conf=storage_conf)
+        keyjar = KeyJar(storage_conf=storage_conf, storage_factory=storage_factory)
 
     keyjar[issuer_id] = _issuer
 
@@ -781,7 +784,7 @@ def init_key_jar(
     issuer_id="",
     read_only=True,
     storage_conf=None,
-    abstract_storage_cls=None,
+    storage_factory=None,
 ):
     """
     A number of cases here:
@@ -819,22 +822,20 @@ def init_key_jar(
     :param key_defs: A definition of what keys should be created if they are not already available
     :param issuer_id: The owner of the keys
     :param read_only: This function should not attempt to write anything to a file system.
+    :param storage_conf: Configuration information for the storage
+    :param storage_factory: A function that given the configuration can instantiate a Storage
+        instance.
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
     _issuer = init_key_issuer(
-        public_path=public_path,
-        private_path=private_path,
-        key_defs=key_defs,
-        read_only=read_only,
+        public_path=public_path, private_path=private_path, key_defs=key_defs, read_only=read_only,
     )
 
     if _issuer is None:
         raise ValueError("Could not find any keys")
 
-    keyjar = KeyJar(
-        storage_conf=storage_conf, abstract_storage_cls=abstract_storage_cls
-    )
+    keyjar = KeyJar(storage_conf=storage_conf, storage_factory=storage_factory)
     keyjar[issuer_id] = _issuer
     return keyjar
 

@@ -3,7 +3,8 @@ import os
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.jwk.wrap import unwrap_key, wrap_key
+from cryptojwt.jwk.wrap import unwrap_key
+from cryptojwt.jwk.wrap import wrap_key
 
 __author__ = "jschlyter"
 

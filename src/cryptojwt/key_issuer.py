@@ -6,8 +6,12 @@ from requests import request
 
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
-from .key_bundle import KeyBundle, build_key_bundle, key_diff, update_key_bundle
-from .utils import importer, qualified_name
+from .key_bundle import KeyBundle
+from .key_bundle import build_key_bundle
+from .key_bundle import key_diff
+from .key_bundle import update_key_bundle
+from .utils import importer
+from .utils import qualified_name
 
 __author__ = "Roland Hedberg"
 
@@ -82,9 +86,7 @@ class KeyIssuer(object):
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
             _params["verify"] = False
-            kb = self.keybundle_cls(
-                source=url, httpc=self.httpc, httpc_params=_params, **kwargs
-            )
+            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=_params, **kwargs)
         else:
             kb = self.keybundle_cls(
                 source=url, httpc=self.httpc, httpc_params=self.httpc_params, **kwargs
@@ -110,9 +112,7 @@ class KeyIssuer(object):
             self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key}]))
         else:
             for use in usage:
-                self._bundles.append(
-                    self.keybundle_cls([{"kty": "oct", "key": key, "use": use}])
-                )
+                self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key, "use": use}]))
 
     def add_kb(self, kb):
         """
@@ -126,13 +126,12 @@ class KeyIssuer(object):
         if isinstance(item, KeyBundle):
             self.add_kb(item)
         elif (
-            item.startswith("http://")
-            or item.startswith("file://")
-            or item.startswith("https://")
+            item.startswith("http://") or item.startswith("file://") or item.startswith("https://")
         ):
             self.add_url(item, **kwargs)
         else:
             self.add_symmetric(item, **kwargs)
+        return self
 
     def all_keys(self):
         """
@@ -227,24 +226,21 @@ class KeyIssuer(object):
             raise ValueError("Not a proper JWKS")
         else:
             self._bundles.append(
-                self.keybundle_cls(
-                    _keys, httpc=self.httpc, httpc_params=self.httpc_params
-                )
+                self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params)
             )
 
-    def import_jwks_as_json(self, jwks, issuer_id):
+    def import_jwks_as_json(self, jwks):
         """
         Imports all the keys that are represented in a JWKS expressed as a
         JSON object
 
         :param jwks: JSON representation of a JWKS
-        :param issuer_id: Who 'owns' the JWKS
         """
         return self.import_jwks(json.loads(jwks))
 
-    def import_jwks_from_file(self, filename, issuer_id):
+    def import_jwks_from_file(self, filename):
         with open(filename) as jwks_file:
-            self.import_jwks_as_json(jwks_file.read(), issuer_id)
+            self.import_jwks_as_json(jwks_file.read())
 
     def remove_outdated(self, when=0):
         """
@@ -319,15 +315,20 @@ class KeyIssuer(object):
             lst = [key for key in lst if not key.alg or key.alg == alg]
 
         # if elliptic curve, have to check if I have a key of the right curve
-        if key_type and key_type.upper() == "EC" and alg:
-            name = "P-{}".format(alg[2:])  # the type
-            _lst = []
-            for key in lst:
-                if name != key.crv:
-                    continue
-                _lst.append(key)
-            lst = _lst
-
+        if key_type and key_type.upper() == "EC":
+            if alg:
+                name = "P-{}".format(alg[2:])  # the type
+                _lst = []
+                for key in lst:
+                    if name != key.crv:
+                        continue
+                    _lst.append(key)
+                lst = _lst
+            else:
+                _crv = kwargs.get("crv")
+                if _crv:
+                    _lst = [k for k in lst if k.crv == _crv]
+                    lst = _lst
         return lst
 
     def copy(self):

@@ -8,40 +8,38 @@ import struct
 from collections import Counter
 
 import pytest
-from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.ec import generate_private_key
 
-from cryptojwt.exception import (
-    DeSerializationNotPossible,
-    UnsupportedAlgorithm,
-    WrongUsage,
-)
-from cryptojwt.jwk import (
-    JWK,
-    calculate_x5t,
-    certificate_fingerprint,
-    pem_hash,
-    pems_to_x5c,
-)
-from cryptojwt.jwk.ec import NIST2SEC, ECKey
-from cryptojwt.jwk.hmac import SYMKey, new_sym_key, sha256_digest
-from cryptojwt.jwk.jwk import dump_jwk, import_jwk, jwk_wrap, key_from_jwk_dict
-from cryptojwt.jwk.rsa import (
-    RSAKey,
-    import_private_rsa_key_from_file,
-    import_public_rsa_key_from_file,
-    import_rsa_key_from_cert_file,
-    new_rsa_key,
-)
-from cryptojwt.utils import (
-    as_bytes,
-    as_unicode,
-    b64e,
-    base64_to_long,
-    base64url_to_long,
-    long2intarr,
-)
+from cryptojwt.exception import DeSerializationNotPossible
+from cryptojwt.exception import UnsupportedAlgorithm
+from cryptojwt.exception import WrongUsage
+from cryptojwt.jwk import JWK
+from cryptojwt.jwk import calculate_x5t
+from cryptojwt.jwk import certificate_fingerprint
+from cryptojwt.jwk import pem_hash
+from cryptojwt.jwk import pems_to_x5c
+from cryptojwt.jwk.ec import ECKey
+from cryptojwt.jwk.ec import new_ec_key
+from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.hmac import sha256_digest
+from cryptojwt.jwk.jwk import dump_jwk
+from cryptojwt.jwk.jwk import import_jwk
+from cryptojwt.jwk.jwk import jwk_wrap
+from cryptojwt.jwk.jwk import key_from_jwk_dict
+from cryptojwt.jwk.rsa import RSAKey
+from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
+from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
+from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
+from cryptojwt.jwk.rsa import new_rsa_key
+from cryptojwt.jwk.x509 import import_public_key_from_pem_file
+from cryptojwt.utils import as_bytes
+from cryptojwt.utils import as_unicode
+from cryptojwt.utils import b64e
+from cryptojwt.utils import base64_to_long
+from cryptojwt.utils import base64url_to_long
+from cryptojwt.utils import long2intarr
 
 __author__ = "Roland Hedberg"
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -192,32 +190,36 @@ def test_import_export_eckey():
     assert _eq(list(_key.keys()), ["y", "x", "d", "crv", "kty"])
 
 
+def test_new_ec_key():
+    ec_key = new_ec_key("P-256")
+    assert isinstance(ec_key, ECKey)
+
+
 def test_create_eckey():
-    ec_key = generate_private_key(NIST2SEC["P-256"], default_backend())
-    ec = ECKey(priv_key=ec_key)
+    ec = new_ec_key("P-256")
     exp_key = ec.serialize()
-    assert _eq(list(exp_key.keys()), ["y", "x", "crv", "kty"])
+    assert _eq(list(exp_key.keys()), ["y", "x", "crv", "kty", "kid"])
 
 
 def test_cmp_neq_ec():
-    ec_key = generate_private_key(NIST2SEC["P-256"], default_backend())
-    _key1 = ECKey(priv_key=ec_key)
+    ec_key = new_ec_key("P-256")
+    _key1 = ECKey(priv_key=ec_key.priv_key)
     _key2 = ECKey(**ECKEY)
 
     assert _key1 != _key2
 
 
 def test_cmp_eq_ec():
-    ec_key = generate_private_key(NIST2SEC["P-256"], default_backend())
-    _key1 = ECKey(priv_key=ec_key)
-    _key2 = ECKey(priv_key=ec_key)
+    ec_key = new_ec_key("P-256")
+    _key1 = ECKey(priv_key=ec_key.priv_key)
+    _key2 = ECKey(priv_key=ec_key.priv_key)
 
     assert _key1 == _key2
 
 
 def test_get_key():
-    ec_key = generate_private_key(NIST2SEC["P-256"], default_backend())
-    asym_private_key = ECKey(priv_key=ec_key)
+    ec_key = new_ec_key("P-256")
+    asym_private_key = ECKey(priv_key=ec_key.priv_key)
     asym_public_key = ECKey(pub_key=asym_private_key.pub_key)
     key = SYMKey(key="mekmitasdigoatfo", kid="xyzzy")
 
@@ -387,9 +389,7 @@ def test_encryption_key():
     )[:16]
     assert as_unicode(b64e(ek)) == "yf_UUkAFZ8Pn_prxPPgu9w"
 
-    sk = SYMKey(
-        key="YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY"
-    )
+    sk = SYMKey(key="YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY")
     _enc = sk.encryption_key(alg="A128KW")
     _v = as_unicode(b64e(_enc))
     assert _v == as_unicode(b64e(ek))
@@ -677,8 +677,7 @@ def test_certificate_fingerprint():
 
     res = certificate_fingerprint(der)
     assert (
-        res
-        == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
+        res == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
         ":80:8B:55:49:F1:48"
     )
 
@@ -690,10 +689,6 @@ def test_certificate_fingerprint():
 
     with pytest.raises(UnsupportedAlgorithm):
         certificate_fingerprint(der, "foo")
-
-
-# def test_generate_and_store_rsa_key():
-#     priv_key = generate_and_store_rsa_key(filename=full_path('temp_rsa.key'))
 
 
 def test_x5t_calculation():
@@ -708,3 +703,13 @@ def test_x5t_calculation():
         x5t_s256
         == b"MDFERkYxRDQ1RjIxN0IyRTNBQTJEOENBMTM0QzQxNjYwM0ExRUYzRTdCNUU4QjY5MDQ1RTgwOEI1NTQ5RjE0OA=="
     )
+
+
+@pytest.mark.parametrize(
+    "filename,key_type",
+    [("ec-public.pem", ec.EllipticCurvePublicKey), ("rsa-public.pem", rsa.RSAPublicKey),],
+)
+def test_import_public_key_from_pem_file(filename, key_type):
+    _file = full_path(filename)
+    pub_key = import_public_key_from_pem_file(_file)
+    assert isinstance(pub_key, key_type)

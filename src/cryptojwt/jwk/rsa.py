@@ -1,21 +1,24 @@
 import base64
-import hashlib
 import logging
 
-from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from ..exception import (
-    DeSerializationNotPossible,
-    JWKESTException,
-    SerializationNotPossible,
-    UnsupportedKeyType,
-)
-from ..utils import as_unicode, b64e, deser, long_to_base64
+from ..exception import DeSerializationNotPossible
+from ..exception import JWKESTException
+from ..exception import SerializationNotPossible
+from ..exception import UnsupportedKeyType
+from ..utils import as_unicode
+from ..utils import deser
+from ..utils import long_to_base64
 from . import JWK
 from .asym import AsymmetricKey
+from .x509 import der_cert
+from .x509 import import_private_key_from_pem_file
+from .x509 import import_public_key_from_pem_data
+from .x509 import import_public_key_from_pem_file
+from .x509 import x5t_calculation
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +69,11 @@ def import_private_rsa_key_from_file(filename, passphrase=None):
     :return: A
         cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey instance
     """
-    with open(filename, "rb") as key_file:
-        private_key = serialization.load_pem_private_key(
-            key_file.read(), password=passphrase, backend=default_backend()
-        )
-    return private_key
+    private_key = import_private_key_from_pem_file(filename, passphrase)
+    if isinstance(private_key, rsa.RSAPrivateKey):
+        return private_key
+    else:
+        return ValueError("Not a RSA key")
 
 
 def import_public_rsa_key_from_file(filename):
@@ -79,14 +82,13 @@ def import_public_rsa_key_from_file(filename):
 
     :param filename: The name of the file
     :param passphrase: A pass phrase to use to unpack the PEM file.
-    :return: A
-        cryptography.hazmat.primitives.asymmetric.rsa.RSAPublicKey instance
+    :return: A cryptography.hazmat.primitives.asymmetric.rsa.RSAPublicKey instance
     """
-    with open(filename, "rb") as key_file:
-        public_key = serialization.load_pem_public_key(
-            key_file.read(), backend=default_backend()
-        )
-    return public_key
+    public_key = import_public_key_from_pem_file(filename)
+    if isinstance(public_key, rsa.RSAPublicKey):
+        return public_key
+    else:
+        return ValueError("Not a RSA key")
 
 
 def import_rsa_key(pem_data):
@@ -96,12 +98,11 @@ def import_rsa_key(pem_data):
     :param pem_data: RSA key encoded in standard form
     :return: rsa.RSAPublicKey instance
     """
-    if not pem_data.startswith(PREFIX):
-        pem_data = bytes("{}\n{}\n{}".format(PREFIX, pem_data, POSTFIX), "utf-8")
+    public_key = import_public_key_from_pem_data(pem_data)
+    if isinstance(public_key, rsa.RSAPublicKey):
+        return public_key
     else:
-        pem_data = bytes(pem_data, "utf-8")
-    cert = x509.load_pem_x509_certificate(pem_data, default_backend())
-    return cert.public_key()
+        return ValueError("Not a RSA key")
 
 
 def import_rsa_key_from_cert_file(pem_file):
@@ -181,46 +182,6 @@ def rsa_construct_private(numbers):
     return rprivn.private_key(default_backend())
 
 
-def der_cert(der_data):
-    """
-    Load a DER encoded certificate
-
-    :param der_data: DER-encoded certificate
-    :return: A cryptography.x509.certificate instance
-    """
-    if isinstance(der_data, str):
-        der_data = bytes(der_data, "utf-8")
-    return x509.load_der_x509_certificate(der_data, default_backend())
-
-
-def load_x509_cert(url, httpc, spec2key, **get_args):
-    """
-    Get and transform a X509 cert into a key.
-
-    :param url: Where the X509 cert can be found
-    :param httpc: HTTP client to use for fetching
-    :param spec2key: A dictionary over keys already seen
-    :param get_args: Extra key word arguments to the HTTP GET request
-    :return: List of 2-tuples (keytype, key)
-    """
-    try:
-        r = httpc("GET", url, allow_redirects=True, **get_args)
-        if r.status_code == 200:
-            cert = str(r.text)
-            try:
-                public_key = spec2key[cert]  # If I've already seen it
-            except KeyError:
-                public_key = import_rsa_key(cert)
-                spec2key[cert] = public_key
-            if isinstance(public_key, rsa.RSAPublicKey):
-                return {"rsa": public_key}
-        else:
-            raise Exception("HTTP Get error: %s" % r.status_code)
-    except Exception as err:  # not a RSA key
-        logger.warning("Can't load key: %s" % err)
-        return []
-
-
 def cmp_public_numbers(pn1, pn2):
     """
     Compare 2 sets of public numbers. These is a way to compare
@@ -252,22 +213,6 @@ def cmp_private_numbers(pn1, pn2):
         if getattr(pn1, param) != getattr(pn2, param):
             return False
     return True
-
-
-def x5t_calculation(cert):
-    """
-    base64url-encoded SHA-1 thumbprint (a.k.a. digest) of the DER
-    encoding of an X.509 certificate.
-
-    :param cert: DER encoded X.509 certificate
-    :return: x5t value
-    """
-    if isinstance(cert, str):
-        der_cert = base64.b64decode(cert.encode("ascii"))
-    else:
-        der_cert = base64.b64decode(cert)
-
-    return b64e(hashlib.sha1(der_cert).digest())
 
 
 class RSAKey(AsymmetricKey):
@@ -400,9 +345,7 @@ class RSAKey(AsymmetricKey):
 
             if self.pub_key:
                 if not rsa_eq(self.pub_key, _cert_chain[0].public_key()):
-                    raise ValueError(
-                        "key described by components and key in x5c not equal"
-                    )
+                    raise ValueError("key described by components and key in x5c not equal")
             else:
                 self.pub_key = _cert_chain[0].public_key()
 
@@ -478,7 +421,7 @@ class RSAKey(AsymmetricKey):
 
     def load(self, filename):
         """
-        Load a RSA key from a file. Once we have the key do a serialization.
+        Load a RSA key from a PEM encoded file. Once we have the key do a serialization.
 
         :param filename: File name
         """

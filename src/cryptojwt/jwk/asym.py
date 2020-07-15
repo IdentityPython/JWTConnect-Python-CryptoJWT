@@ -1,4 +1,5 @@
-from . import JWK, USE
+from . import JWK
+from . import USE
 
 
 class AsymmetricKey(JWK):

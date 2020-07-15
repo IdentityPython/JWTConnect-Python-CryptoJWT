@@ -3,7 +3,8 @@ import zlib
 
 from ..utils import as_bytes
 from . import SUPPORTED
-from .exception import NotSupportedAlgorithm, ParameterError
+from .exception import NotSupportedAlgorithm
+from .exception import ParameterError
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 from .rsa import RSAEncrypter
@@ -80,9 +81,7 @@ class JWE_RSA(JWEKey):
         except KeyError:
             _auth_data = jwe.b64_encode_header()
 
-        ctxt, tag, key = self.enc_setup(
-            _enc, _msg, key=cek, iv=iv, auth_data=_auth_data
-        )
+        ctxt, tag, key = self.enc_setup(_enc, _msg, key=cek, iv=iv, auth_data=_auth_data)
         return jwe.pack(parts=[jwe_enc_key, iv, ctxt, tag])
 
     def decrypt(self, token, key, cek=None):

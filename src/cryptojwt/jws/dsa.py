@@ -1,13 +1,13 @@
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric.utils import (
-    decode_dss_signature,
-    encode_dss_signature,
-)
-from cryptography.utils import int_from_bytes, int_to_bytes
+from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
+from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
+from cryptography.utils import int_from_bytes
+from cryptography.utils import int_to_bytes
 
-from ..exception import BadSignature, Unsupported
+from ..exception import BadSignature
+from ..exception import Unsupported
 from . import Signer
 
 
@@ -38,9 +38,7 @@ class ECDSASigner(Signer):
         """
 
         if not isinstance(key, ec.EllipticCurvePrivateKey):
-            raise TypeError(
-                "The private key must be an instance of " "ec.EllipticCurvePrivateKey"
-            )
+            raise TypeError("The private key must be an instance of " "ec.EllipticCurvePrivateKey")
 
         self._cross_check(key.public_key())
         num_bits = key.curve.key_size
@@ -62,9 +60,7 @@ class ECDSASigner(Signer):
         :return: True
         """
         if not isinstance(key, ec.EllipticCurvePublicKey):
-            raise TypeError(
-                "The public key must be an instance of " "ec.EllipticCurvePublicKey"
-            )
+            raise TypeError("The public key must be an instance of " "ec.EllipticCurvePublicKey")
         self._cross_check(key)
 
         num_bits = key.curve.key_size

@@ -15,9 +15,7 @@ DEFAULT_WRAP_PARAMS = {
 }
 
 
-def wrap_key(
-    key: JWK, wrapping_key: JWK, wrap_params: dict = DEFAULT_WRAP_PARAMS
-) -> str:
+def wrap_key(key: JWK, wrapping_key: JWK, wrap_params: dict = DEFAULT_WRAP_PARAMS) -> str:
     message = json.dumps(key.serialize(private=True)).encode()
     try:
         enc_params = wrap_params[wrapping_key.kty]

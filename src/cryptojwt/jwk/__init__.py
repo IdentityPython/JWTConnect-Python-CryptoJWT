@@ -5,7 +5,10 @@ import ssl
 from typing import List
 
 from ..exception import UnsupportedAlgorithm
-from ..utils import as_bytes, as_unicode, b64e, base64url_to_long
+from ..utils import as_bytes
+from ..utils import as_unicode
+from ..utils import b64e
+from ..utils import base64url_to_long
 from .utils import DIGEST_HASH
 
 USE = {"sign": "sig", "decrypt": "enc", "encrypt": "enc", "verify": "sig"}
@@ -26,16 +29,7 @@ class JWK(object):
     required = ["kty"]
 
     def __init__(
-        self,
-        kty="",
-        alg="",
-        use="",
-        kid="",
-        x5c=None,
-        x5t="",
-        x5u="",
-        key_ops=None,
-        **kwargs
+        self, kty="", alg="", use="", kid="", x5c=None, x5t="", x5u="", key_ops=None, **kwargs
     ):
 
         self.extra_args = kwargs
@@ -308,10 +302,7 @@ def pems_to_x5c(cert_chain):
 
     return [
         as_unicode(v)
-        for v in [
-            base64.b64encode(d)
-            for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]
-        ]
+        for v in [base64.b64encode(d) for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]]
     ]
 
 

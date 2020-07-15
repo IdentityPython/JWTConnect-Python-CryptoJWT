@@ -10,18 +10,21 @@ import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 
-from .exception import (
-    JWKException,
-    UnknownKeyType,
-    UnsupportedAlgorithm,
-    UnsupportedECurve,
-    UpdateFailed,
-)
-from .jwk.ec import ECKey, new_ec_key
+from .exception import JWKException
+from .exception import UnknownKeyType
+from .exception import UnsupportedAlgorithm
+from .exception import UnsupportedECurve
+from .exception import UpdateFailed
+from .jwk.ec import ECKey
+from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
-from .jwk.jwk import dump_jwk, import_jwk
-from .jwk.rsa import RSAKey, import_private_rsa_key_from_file, new_rsa_key
+from .jwk.jwk import dump_jwk
+from .jwk.jwk import import_jwk
+from .jwk.rsa import RSAKey
+from .jwk.rsa import import_private_rsa_key_from_file
+from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
 
 __author__ = "Roland Hedberg"
@@ -37,11 +40,7 @@ LOGGER = logging.getLogger(__name__)
 #     raise excep(_err, 'application/json')
 
 # Make sure the keys are all uppercase
-K2C = {
-    "RSA": RSAKey,
-    "EC": ECKey,
-    "oct": SYMKey,
-}
+K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
 
 MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
 
@@ -339,13 +338,11 @@ class KeyBundle:
         _kty = keytype.lower()
         if _kty in ["rsa", "ec"]:
             key_args["kty"] = _kty
-            _key = import_private_rsa_key_from_file(filename)
+            _key = import_private_key_from_pem_file(filename)
             key_args["priv_key"] = _key
             key_args["pub_key"] = _key.public_key()
         else:
-            raise NotImplementedError(
-                "No support for DER decoding of key type {}".format(_kty)
-            )
+            raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
 
         if not keyusage:
             key_args["use"] = ["enc", "sig"]
@@ -405,13 +402,9 @@ class KeyBundle:
 
         else:
             LOGGER.warning(
-                "HTTP status %d reading remote JWKS from %s",
-                _http_resp.status_code,
-                self.source,
+                "HTTP status %d reading remote JWKS from %s", _http_resp.status_code, self.source,
             )
-            raise UpdateFailed(
-                REMOTE_FAILED.format(self.source, _http_resp.status_code)
-            )
+            raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
         self.last_updated = time.time()
         return True
 
@@ -427,9 +420,7 @@ class KeyBundle:
         # Check if the content type is the right one.
         try:
             if response.headers["Content-Type"] != "application/json":
-                LOGGER.warning(
-                    "Wrong Content_type (%s)", response.headers["Content-Type"]
-                )
+                LOGGER.warning("Wrong Content_type (%s)", response.headers["Content-Type"])
         except KeyError:
             pass
 
@@ -765,13 +756,13 @@ class KeyBundle:
         return self
 
 
-def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
+def keybundle_from_local_file(filename, typ, usage=None, keytype="RSA"):
     """
     Create a KeyBundle based on the content in a local file.
 
     :param filename: Name of the file
     :param typ: Type of content
-    :param usage: What the key should be used for
+    :param usage: What the keys should be used for
     :param keytype: Type of key, e.g. "RSA", "EC". Only used with typ='der'
     :return: The created KeyBundle
     """
@@ -780,9 +771,7 @@ def keybundle_from_local_file(filename, typ, usage, keytype="RSA"):
     if typ.lower() == "jwks":
         _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
     elif typ.lower() == "der":
-        _bundle = KeyBundle(
-            source=filename, fileformat="der", keyusage=usage, keytype=keytype
-        )
+        _bundle = KeyBundle(source=filename, fileformat="der", keyusage=usage, keytype=keytype)
     else:
         raise UnknownKeyType("Unsupported key type")
 
@@ -802,9 +791,7 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
     keys = []
     for _bundle in kbl:
         if symmetric_too:
-            keys.extend(
-                [k.serialize(private) for k in _bundle.keys() if not k.inactive_since]
-            )
+            keys.extend([k.serialize(private) for k in _bundle.keys() if not k.inactive_since])
         else:
             keys.extend(
                 [

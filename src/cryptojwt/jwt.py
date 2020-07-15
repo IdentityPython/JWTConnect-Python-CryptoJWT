@@ -5,7 +5,8 @@ import uuid
 from datetime import datetime
 from json import JSONDecodeError
 
-from .exception import HeaderError, VerificationError
+from .exception import HeaderError
+from .exception import VerificationError
 from .jwe.jwe import JWE
 from .jwe.jwe import factory as jwe_factory
 from .jwe.utils import alg2keytype as jwe_alg2keytype

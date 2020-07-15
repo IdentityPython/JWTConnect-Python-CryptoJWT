@@ -2,14 +2,20 @@ import struct
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.keywrap import aes_key_unwrap, aes_key_wrap
+from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
+from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 
-from ..jwk.ec import NIST2SEC, ECKey
-from ..utils import as_bytes, as_unicode, b64d, b64e
+from ..jwk.ec import NIST2SEC
+from ..jwk.ec import ECKey
+from ..utils import as_bytes
+from ..utils import as_unicode
+from ..utils import b64d
+from ..utils import b64e
 from . import KEY_LEN
 from .jwekey import JWEKey
 from .jwenc import JWEnc
-from .utils import concat_sha256, get_random_bytes
+from .utils import concat_sha256
+from .utils import get_random_bytes
 
 
 def ecdh_derive_key(key, epk, apu, apv, alg, dk_len):
@@ -81,9 +87,7 @@ class JWE_EC(JWEKey):
         try:
             _epk = kwargs["epk"]
         except KeyError:
-            _epk = ec.generate_private_key(
-                NIST2SEC[as_unicode(key.crv)], default_backend()
-            )
+            _epk = ec.generate_private_key(NIST2SEC[as_unicode(key.crv)], default_backend())
             epk = ECKey().load_key(_epk.public_key())
         else:
             if isinstance(_epk, ec.EllipticCurvePrivateKey):
@@ -110,15 +114,11 @@ class JWE_EC(JWEKey):
             except KeyError:
                 raise ValueError("Unknown key length for algorithm %s" % self.enc)
 
-            cek = ecdh_derive_key(
-                _epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len
-            )
+            cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
             _pre, _post = self.alg.split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(
-                _epk, key.pub_key, apu, apv, str(_post).encode(), klen
-            )
+            kek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(_post).encode(), klen)
             cek = self._generate_key(self.enc, cek=cek)
             encrypted_key = aes_key_wrap(kek, cek, default_backend())
         else:
@@ -157,12 +157,7 @@ class JWE_EC(JWEKey):
                 raise Exception("Unknown key length for algorithm")
 
             self.cek = ecdh_derive_key(
-                key,
-                epubkey.pub_key,
-                apu,
-                apv,
-                str(self.headers["enc"]).encode(),
-                dk_len,
+                key, epubkey.pub_key, apu, apv, str(self.headers["enc"]).encode(), dk_len,
             )
         elif self.headers["alg"] in [
             "ECDH-ES+A128KW",
@@ -171,9 +166,7 @@ class JWE_EC(JWEKey):
         ]:
             _pre, _post = self.headers["alg"].split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(
-                key, epubkey.pub_key, apu, apv, str(_post).encode(), klen
-            )
+            kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
             self.cek = aes_key_unwrap(kek, token.encrypted_key(), default_backend())
         else:
             raise Exception("Unsupported algorithm %s" % self.headers["alg"])
@@ -184,8 +177,7 @@ class JWE_EC(JWEKey):
         """
         Produces a JWE as defined in RFC7516 using an Elliptic curve key
 
-        :param key: *Not used>, only there to present the same API as
-            JWE_RSA and JWE_SYM
+        :param key: *Not used*, only there to present the same API as JWE_RSA and JWE_SYM
         :param iv: Initialization vector
         :param cek: Content master key
         :param kwargs: Extra keyword arguments

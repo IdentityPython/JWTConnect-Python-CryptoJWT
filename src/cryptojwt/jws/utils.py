@@ -3,8 +3,11 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
 from ..exception import UnsupportedAlgorithm
-from ..jwk.hmac import sha256_digest, sha384_digest, sha512_digest
-from ..utils import as_unicode, b64e
+from ..jwk.hmac import sha256_digest
+from ..jwk.hmac import sha384_digest
+from ..jwk.hmac import sha512_digest
+from ..utils import as_unicode
+from ..utils import b64e
 
 
 def left_hash(msg, func="HS256"):
@@ -68,23 +71,17 @@ def parse_rsa_algorithm(algorithm):
     elif algorithm == "PS256":
         return (
             hashes.SHA256(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
         )
     elif algorithm == "PS384":
         return (
             hashes.SHA384(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA384()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA384()), salt_length=padding.PSS.MAX_LENGTH),
         )
     elif algorithm == "PS512":
         return (
             hashes.SHA512(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH),
         )
     else:
         raise UnsupportedAlgorithm("Unknown algorithm: {}".format(algorithm))

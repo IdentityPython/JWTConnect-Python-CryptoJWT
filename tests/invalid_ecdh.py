@@ -1,6 +1,7 @@
 import pytest
 
-from cryptojwt.jwe import JWE_EC, factory
+from cryptojwt.jwe import JWE_EC
+from cryptojwt.jwe import factory
 from cryptojwt.jwk import ECKey
 
 JWK = {
