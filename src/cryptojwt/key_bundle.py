@@ -342,9 +342,7 @@ class KeyBundle:
             key_args["priv_key"] = _key
             key_args["pub_key"] = _key.public_key()
         else:
-            raise NotImplementedError(
-                "No support for DER decoding of key type {}".format(_kty)
-            )
+            raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
 
         if not keyusage:
             key_args["use"] = ["enc", "sig"]
@@ -404,13 +402,9 @@ class KeyBundle:
 
         else:
             LOGGER.warning(
-                "HTTP status %d reading remote JWKS from %s",
-                _http_resp.status_code,
-                self.source,
+                "HTTP status %d reading remote JWKS from %s", _http_resp.status_code, self.source,
             )
-            raise UpdateFailed(
-                REMOTE_FAILED.format(self.source, _http_resp.status_code)
-            )
+            raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
         self.last_updated = time.time()
         return True
 
@@ -426,9 +420,7 @@ class KeyBundle:
         # Check if the content type is the right one.
         try:
             if response.headers["Content-Type"] != "application/json":
-                LOGGER.warning(
-                    "Wrong Content_type (%s)", response.headers["Content-Type"]
-                )
+                LOGGER.warning("Wrong Content_type (%s)", response.headers["Content-Type"])
         except KeyError:
             pass
 
@@ -779,9 +771,7 @@ def keybundle_from_local_file(filename, typ, usage=None, keytype="RSA"):
     if typ.lower() == "jwks":
         _bundle = KeyBundle(source=filename, fileformat="jwks", keyusage=usage)
     elif typ.lower() == "der":
-        _bundle = KeyBundle(
-            source=filename, fileformat="der", keyusage=usage, keytype=keytype
-        )
+        _bundle = KeyBundle(source=filename, fileformat="der", keyusage=usage, keytype=keytype)
     else:
         raise UnknownKeyType("Unsupported key type")
 
@@ -801,9 +791,7 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
     keys = []
     for _bundle in kbl:
         if symmetric_too:
-            keys.extend(
-                [k.serialize(private) for k in _bundle.keys() if not k.inactive_since]
-            )
+            keys.extend([k.serialize(private) for k in _bundle.keys() if not k.inactive_since])
         else:
             keys.extend(
                 [

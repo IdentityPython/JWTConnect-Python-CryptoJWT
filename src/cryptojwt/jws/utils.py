@@ -71,23 +71,17 @@ def parse_rsa_algorithm(algorithm):
     elif algorithm == "PS256":
         return (
             hashes.SHA256(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=padding.PSS.MAX_LENGTH),
         )
     elif algorithm == "PS384":
         return (
             hashes.SHA384(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA384()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA384()), salt_length=padding.PSS.MAX_LENGTH),
         )
     elif algorithm == "PS512":
         return (
             hashes.SHA512(),
-            padding.PSS(
-                mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH
-            ),
+            padding.PSS(mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH),
         )
     else:
         raise UnsupportedAlgorithm("Unknown algorithm: {}".format(algorithm))

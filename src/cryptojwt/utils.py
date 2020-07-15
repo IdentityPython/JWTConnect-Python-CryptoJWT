@@ -180,9 +180,7 @@ def b64encode_item(item):
     elif isinstance(item, int):
         return b64e(item)
     else:
-        return b64e(
-            json.dumps(bytes2str_conv(item), separators=(",", ":")).encode("utf-8")
-        )
+        return b64e(json.dumps(bytes2str_conv(item), separators=(",", ":")).encode("utf-8"))
 
 
 def split_token(token):
@@ -255,10 +253,6 @@ def rename_kwargs(func_name, kwargs, aliases):
     for alias, new in aliases.items():
         if alias in kwargs:
             if new in kwargs:
-                raise TypeError(
-                    "{} received both {} and {}".format(func_name, alias, new)
-                )
-            warnings.warn(
-                "{} is deprecated; use {}".format(alias, new), DeprecationWarning
-            )
+                raise TypeError("{} received both {} and {}".format(func_name, alias, new))
+            warnings.warn("{} is deprecated; use {}".format(alias, new), DeprecationWarning)
             kwargs[new] = kwargs.pop(alias)

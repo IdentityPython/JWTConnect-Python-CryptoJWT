@@ -29,16 +29,7 @@ class JWK(object):
     required = ["kty"]
 
     def __init__(
-        self,
-        kty="",
-        alg="",
-        use="",
-        kid="",
-        x5c=None,
-        x5t="",
-        x5u="",
-        key_ops=None,
-        **kwargs
+        self, kty="", alg="", use="", kid="", x5c=None, x5t="", x5u="", key_ops=None, **kwargs
     ):
 
         self.extra_args = kwargs
@@ -311,10 +302,7 @@ def pems_to_x5c(cert_chain):
 
     return [
         as_unicode(v)
-        for v in [
-            base64.b64encode(d)
-            for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]
-        ]
+        for v in [base64.b64encode(d) for d in [ssl.PEM_cert_to_DER_cert(c) for c in cert_chain]]
     ]
 
 

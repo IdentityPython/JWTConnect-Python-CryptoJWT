@@ -26,16 +26,10 @@ def full_path(local_file):
 # k2 = import_private_rsa_key_from_file(full_path('size2048.key'))
 
 kb1 = KeyBundle(
-    source="file://{}".format(full_path("rsa.key")),
-    fileformat="der",
-    keyusage="sig",
-    kid="1",
+    source="file://{}".format(full_path("rsa.key")), fileformat="der", keyusage="sig", kid="1",
 )
 kb2 = KeyBundle(
-    source="file://{}".format(full_path("size2048.key")),
-    fileformat="der",
-    keyusage="enc",
-    kid="2",
+    source="file://{}".format(full_path("size2048.key")), fileformat="der", keyusage="enc", kid="2",
 )
 
 ALICE_KEY_JAR = KeyJar()
@@ -43,10 +37,7 @@ ALICE_KEY_JAR.add_kb(ALICE, kb1)
 ALICE_KEY_JAR.add_kb(ALICE, kb2)
 
 kb3 = KeyBundle(
-    source="file://{}".format(full_path("server.key")),
-    fileformat="der",
-    keyusage="enc",
-    kid="3",
+    source="file://{}".format(full_path("server.key")), fileformat="der", keyusage="enc", kid="3",
 )
 
 BOB_KEY_JAR = KeyJar()

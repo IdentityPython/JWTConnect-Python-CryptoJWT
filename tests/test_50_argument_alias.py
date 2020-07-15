@@ -68,9 +68,7 @@ class TestVerifyJWTKeys(object):
         self.alice_keyjar.import_jwks(self.bob_keyjar.export_jwks(issuer="Bob"), "Bob")
 
         # To Bob's keyjar add Alice's public keys
-        self.bob_keyjar.import_jwks(
-            self.alice_keyjar.export_jwks(issuer="Alice"), "Alice"
-        )
+        self.bob_keyjar.import_jwks(self.alice_keyjar.export_jwks(issuer="Alice"), "Alice")
 
         _jws = JWS('{"aud": "Bob", "iss": "Alice"}', alg="RS256")
         sig_key = self.alice_keyjar.get_signing_key("rsa", owner="Alice")[0]
@@ -81,16 +79,11 @@ class TestVerifyJWTKeys(object):
         self.sjwt_b = _jws.sign_compact([sig_key])
 
     def test_no_kid_multiple_keys_no_kid_issuer(self):
-        a_kids = [
-            k.kid
-            for k in self.alice_keyjar.get_verify_key(owner="Alice", key_type="RSA")
-        ]
+        a_kids = [k.kid for k in self.alice_keyjar.get_verify_key(owner="Alice", key_type="RSA")]
         no_kid_issuer = {"Alice": a_kids}
         _jwt = factory(self.sjwt_a)
         _jwt.jwt.headers["kid"] = ""
-        keys = self.bob_keyjar.get_jwt_verify_keys(
-            _jwt.jwt, no_kid_issuer=no_kid_issuer
-        )
+        keys = self.bob_keyjar.get_jwt_verify_keys(_jwt.jwt, no_kid_issuer=no_kid_issuer)
         assert len(keys) == 3
 
     def test_aud(self):
@@ -105,9 +98,7 @@ class TestVerifyJWTKeys(object):
 
         _jwt = factory(_sjwt)
 
-        keys = self.bob_keyjar.get_jwt_verify_keys(
-            _jwt.jwt, no_kid_issuer=no_kid_issuer
-        )
+        keys = self.bob_keyjar.get_jwt_verify_keys(_jwt.jwt, no_kid_issuer=no_kid_issuer)
         assert len(keys) == 1
 
 
@@ -130,9 +121,7 @@ def test_init_key_jar_dump_private():
             os.unlink(_file)
 
     # New set of keys, JWKSs with keys and public written to file
-    _keyjar = init_key_jar(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC, owner="https://example.com"
-    )
+    _keyjar = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC, owner="https://example.com")
     assert list(_keyjar.owners()) == ["https://example.com"]
 
     # JWKS will be read from disc, not created new
@@ -155,9 +144,7 @@ def test_init_key_jar_update():
     )
     assert list(_keyjar_1.owners()) == ["https://example.com"]
 
-    _keyjar_2 = init_key_jar(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE
-    )
+    _keyjar_2 = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE)
 
     # Both should contain the same RSA key
     rsa1 = _keyjar_1.get_signing_key("RSA", "https://example.com")
@@ -181,10 +168,7 @@ def test_init_key_jar_update():
     assert len(_keyjar_3.get_signing_key("EC")) == 1
 
     _keyjar_4 = init_key_jar(
-        private_path=PRIVATE_FILE,
-        key_defs=KEYSPEC_2,
-        public_path=PUBLIC_FILE,
-        read_only=False,
+        private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE, read_only=False,
     )
 
     # Now it should

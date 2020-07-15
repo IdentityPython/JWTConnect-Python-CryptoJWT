@@ -56,9 +56,7 @@ class SimpleJWT(object):
             else:
                 if not _ok:
                     raise HeaderError(
-                        'Expected "{}" to be "{}", was "{}"'.format(
-                            key, val, self.headers[key]
-                        )
+                        'Expected "{}" to be "{}", was "{}"'.format(key, val, self.headers[key])
                     )
 
         return self

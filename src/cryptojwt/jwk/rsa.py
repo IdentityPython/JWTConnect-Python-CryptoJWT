@@ -345,9 +345,7 @@ class RSAKey(AsymmetricKey):
 
             if self.pub_key:
                 if not rsa_eq(self.pub_key, _cert_chain[0].public_key()):
-                    raise ValueError(
-                        "key described by components and key in x5c not equal"
-                    )
+                    raise ValueError("key described by components and key in x5c not equal")
             else:
                 self.pub_key = _cert_chain[0].public_key()
 

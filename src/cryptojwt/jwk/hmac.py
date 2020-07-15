@@ -46,17 +46,7 @@ class SYMKey(JWK):
     required = ["k", "kty"]
 
     def __init__(
-        self,
-        kty="oct",
-        alg="",
-        use="",
-        kid="",
-        x5c=None,
-        x5t="",
-        x5u="",
-        k="",
-        key="",
-        **kwargs
+        self, kty="oct", alg="", use="", kid="", x5c=None, x5t="", x5u="", k="", key="", **kwargs
     ):
         JWK.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.k = k

@@ -106,9 +106,7 @@ json_hmac_key = r"""
 hmac_token = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ.dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
 
 # Key set containing multiple public keys.
-json_pub_keys = (
-    r"""{"keys":[""" + json_rsa_pub_key + "," + es256_ecdsa_pub_key + r"""]}"""
-)
+json_pub_keys = r"""{"keys":[""" + json_rsa_pub_key + "," + es256_ecdsa_pub_key + r"""]}"""
 
 # The followings are our own tests.
 

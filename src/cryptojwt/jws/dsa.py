@@ -38,9 +38,7 @@ class ECDSASigner(Signer):
         """
 
         if not isinstance(key, ec.EllipticCurvePrivateKey):
-            raise TypeError(
-                "The private key must be an instance of " "ec.EllipticCurvePrivateKey"
-            )
+            raise TypeError("The private key must be an instance of " "ec.EllipticCurvePrivateKey")
 
         self._cross_check(key.public_key())
         num_bits = key.curve.key_size
@@ -62,9 +60,7 @@ class ECDSASigner(Signer):
         :return: True
         """
         if not isinstance(key, ec.EllipticCurvePublicKey):
-            raise TypeError(
-                "The public key must be an instance of " "ec.EllipticCurvePublicKey"
-            )
+            raise TypeError("The public key must be an instance of " "ec.EllipticCurvePublicKey")
         self._cross_check(key)
 
         num_bits = key.curve.key_size

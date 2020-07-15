@@ -17,8 +17,8 @@ install:
 script:
   - codecov --version
   - tox
-  - isort -sl --check src tests
-  - black --check src tests
+  - isort --check src tests
+  - black -l 100 --check src tests
 after_success:
   - codecov
 notifications:

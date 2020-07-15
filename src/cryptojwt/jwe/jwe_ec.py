@@ -87,9 +87,7 @@ class JWE_EC(JWEKey):
         try:
             _epk = kwargs["epk"]
         except KeyError:
-            _epk = ec.generate_private_key(
-                NIST2SEC[as_unicode(key.crv)], default_backend()
-            )
+            _epk = ec.generate_private_key(NIST2SEC[as_unicode(key.crv)], default_backend())
             epk = ECKey().load_key(_epk.public_key())
         else:
             if isinstance(_epk, ec.EllipticCurvePrivateKey):
@@ -116,15 +114,11 @@ class JWE_EC(JWEKey):
             except KeyError:
                 raise ValueError("Unknown key length for algorithm %s" % self.enc)
 
-            cek = ecdh_derive_key(
-                _epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len
-            )
+            cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
             _pre, _post = self.alg.split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(
-                _epk, key.pub_key, apu, apv, str(_post).encode(), klen
-            )
+            kek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(_post).encode(), klen)
             cek = self._generate_key(self.enc, cek=cek)
             encrypted_key = aes_key_wrap(kek, cek, default_backend())
         else:
@@ -163,12 +157,7 @@ class JWE_EC(JWEKey):
                 raise Exception("Unknown key length for algorithm")
 
             self.cek = ecdh_derive_key(
-                key,
-                epubkey.pub_key,
-                apu,
-                apv,
-                str(self.headers["enc"]).encode(),
-                dk_len,
+                key, epubkey.pub_key, apu, apv, str(self.headers["enc"]).encode(), dk_len,
             )
         elif self.headers["alg"] in [
             "ECDH-ES+A128KW",
@@ -177,9 +166,7 @@ class JWE_EC(JWEKey):
         ]:
             _pre, _post = self.headers["alg"].split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(
-                key, epubkey.pub_key, apu, apv, str(_post).encode(), klen
-            )
+            kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
             self.cek = aes_key_unwrap(kek, token.encrypted_key(), default_backend())
         else:
             raise Exception("Unsupported algorithm %s" % self.headers["alg"])

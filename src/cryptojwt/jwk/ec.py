@@ -59,9 +59,7 @@ def ec_construct_private(num):
     :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance.
     """
-    pub_ecpn = ec.EllipticCurvePublicNumbers(
-        num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]()
-    )
+    pub_ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]())
     priv_ecpn = ec.EllipticCurvePrivateNumbers(num["d"], pub_ecpn)
     return priv_ecpn.private_key(default_backend())
 
@@ -92,9 +90,7 @@ class ECKey(AsymmetricKey):
     # required attributes
     required = ["kty", "crv", "x", "y"]
 
-    def __init__(
-        self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs
-    ):
+    def __init__(self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs):
         AsymmetricKey.__init__(self, kty, alg, use, kid, **kwargs)
         self.crv = crv
         self.x = x

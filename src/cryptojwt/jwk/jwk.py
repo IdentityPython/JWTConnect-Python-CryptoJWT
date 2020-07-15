@@ -56,9 +56,7 @@ def ensure_params(kty, provided, required):
     """Ensure all required parameters are present in dictionary"""
     if not required <= provided:
         missing = required - provided
-        raise MissingValue(
-            "Missing properties for kty={}, {}".format(kty, str(list(missing)))
-        )
+        raise MissingValue("Missing properties for kty={}, {}".format(kty, str(list(missing))))
 
 
 def key_from_jwk_dict(jwk_dict, private=None):
@@ -95,9 +93,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
         else:
             # Ecdsa public key.
             ec_pub_numbers = ec.EllipticCurvePublicNumbers(
-                base64url_to_long(_jwk_dict["x"]),
-                base64url_to_long(_jwk_dict["y"]),
-                curve,
+                base64url_to_long(_jwk_dict["x"]), base64url_to_long(_jwk_dict["y"]), curve,
             )
             _jwk_dict["pub_key"] = ec_pub_numbers.public_key(backends.default_backend())
         return ECKey(**_jwk_dict)
@@ -134,14 +130,10 @@ def key_from_jwk_dict(jwk_dict, private=None):
             rsa_priv_numbers = rsa.RSAPrivateNumbers(
                 p_long, q_long, d_long, dp_long, dq_long, qi_long, rsa_pub_numbers
             )
-            _jwk_dict["priv_key"] = rsa_priv_numbers.private_key(
-                backends.default_backend()
-            )
+            _jwk_dict["priv_key"] = rsa_priv_numbers.private_key(backends.default_backend())
             _jwk_dict["pub_key"] = _jwk_dict["priv_key"].public_key()
         else:
-            _jwk_dict["pub_key"] = rsa_pub_numbers.public_key(
-                backends.default_backend()
-            )
+            _jwk_dict["pub_key"] = rsa_pub_numbers.public_key(backends.default_backend())
 
         if _jwk_dict["kty"] != "RSA":
             raise WrongKeyType('"{}" should have been "RSA"'.format(_jwk_dict["kty"]))

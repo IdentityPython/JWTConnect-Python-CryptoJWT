@@ -86,9 +86,7 @@ class KeyIssuer(object):
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
             _params["verify"] = False
-            kb = self.keybundle_cls(
-                source=url, httpc=self.httpc, httpc_params=_params, **kwargs
-            )
+            kb = self.keybundle_cls(source=url, httpc=self.httpc, httpc_params=_params, **kwargs)
         else:
             kb = self.keybundle_cls(
                 source=url, httpc=self.httpc, httpc_params=self.httpc_params, **kwargs
@@ -114,9 +112,7 @@ class KeyIssuer(object):
             self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key}]))
         else:
             for use in usage:
-                self._bundles.append(
-                    self.keybundle_cls([{"kty": "oct", "key": key, "use": use}])
-                )
+                self._bundles.append(self.keybundle_cls([{"kty": "oct", "key": key, "use": use}]))
 
     def add_kb(self, kb):
         """
@@ -130,9 +126,7 @@ class KeyIssuer(object):
         if isinstance(item, KeyBundle):
             self.add_kb(item)
         elif (
-            item.startswith("http://")
-            or item.startswith("file://")
-            or item.startswith("https://")
+            item.startswith("http://") or item.startswith("file://") or item.startswith("https://")
         ):
             self.add_url(item, **kwargs)
         else:
@@ -232,9 +226,7 @@ class KeyIssuer(object):
             raise ValueError("Not a proper JWKS")
         else:
             self._bundles.append(
-                self.keybundle_cls(
-                    _keys, httpc=self.httpc, httpc_params=self.httpc_params
-                )
+                self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params)
             )
 
     def import_jwks_as_json(self, jwks):

@@ -490,18 +490,14 @@ def test_ecdh_enc_setup_enk_eckey():
 def test_ecdh_setup_iv():
     jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
     iv0 = rndstr(16)
-    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(
-        plain, iv=iv0, key=eck_bob
-    )
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, iv=iv0, key=eck_bob)
     assert iv == iv0
 
 
 def test_ecdh_setup_cek():
     jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
     cek0 = as_bytes(rndstr(16))
-    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(
-        plain, cek=cek0, key=eck_bob
-    )
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, cek=cek0, key=eck_bob)
     assert cek == cek0
 
 

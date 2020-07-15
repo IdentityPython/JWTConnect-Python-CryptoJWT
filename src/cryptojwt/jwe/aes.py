@@ -55,9 +55,7 @@ class AES_CBCEncrypter(Encrypter):
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key, iv)
 
-        cipher = Cipher(
-            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
         encryptor = cipher.encryptor()
 
         pmsg = self.padder.update(msg)
@@ -80,9 +78,7 @@ class AES_CBCEncrypter(Encrypter):
         if comp_tag != tag:
             raise VerificationError("AES-CBC HMAC")
 
-        cipher = Cipher(
-            algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend()
-        )
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
         decryptor = cipher.decryptor()
 
         ctext = decryptor.update(msg)

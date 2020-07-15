@@ -350,10 +350,7 @@ def test_a_1_1a():
 
 
 def test_a_1_1b():
-    payload = (
-        b'{"iss":"joe",\r\n "exp":1300819380,'
-        b'\r\n "http://example.com/is_root":true}'
-    )
+    payload = b'{"iss":"joe",\r\n "exp":1300819380,' b'\r\n "http://example.com/is_root":true}'
     val = b64e(payload)
     assert val == (
         b"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9"
@@ -365,10 +362,7 @@ def test_a_1_1c():
     hmac = intarr2bin(HMAC_KEY)
     signer = SIGNER_ALGS["HS256"]
     header = b'{"typ":"JWT",\r\n "alg":"HS256"}'
-    payload = (
-        b'{"iss":"joe",\r\n "exp":1300819380,'
-        b'\r\n "http://example.com/is_root":true}'
-    )
+    payload = b'{"iss":"joe",\r\n "exp":1300819380,' b'\r\n "http://example.com/is_root":true}'
     sign_input = b64e(header) + b"." + b64e(payload)
     sig = signer.sign(sign_input, hmac)
     assert b64e(sig) == b"dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
@@ -437,8 +431,7 @@ def test_jws_mm():
 
 
 @pytest.mark.parametrize(
-    "ec_func,alg",
-    [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512")],
+    "ec_func,alg", [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512")],
 )
 def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"
@@ -574,9 +567,7 @@ def test_signer_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(
-        header1=u"header1 is protected", header2="header2 is protected too", a=1
-    )
+    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
 
     exp_protected = protected.copy()
@@ -600,9 +591,7 @@ def test_verify_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(
-        header1=u"header1 is protected", header2="header2 is protected too", a=1
-    )
+    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
     protectedHeader, enc_payload, sig = _jwt.split(".")
     data = dict(
@@ -634,9 +623,7 @@ def test_sign_json():
     assert b64d_enc_dec(jwt["payload"]) == payload
     assert len(jwt["signatures"]) == 1
     assert jwt["signatures"][0]["header"] == unprotected_headers
-    assert (
-        json.loads(b64d_enc_dec(jwt["signatures"][0]["protected"])) == protected_headers
-    )
+    assert json.loads(b64d_enc_dec(jwt["signatures"][0]["protected"])) == protected_headers
 
 
 def test_verify_json():
@@ -667,9 +654,7 @@ def test_sign_json_dont_include_empty_unprotected_headers():
     )
     json_jws = json.loads(_jwt)
     assert "header" not in json_jws["signatures"][0]
-    jws_protected_headers = json.loads(
-        b64d_enc_dec(json_jws["signatures"][0]["protected"])
-    )
+    jws_protected_headers = json.loads(b64d_enc_dec(json_jws["signatures"][0]["protected"]))
     assert set(protected_headers.items()).issubset(set(jws_protected_headers.items()))
 
 
@@ -680,9 +665,7 @@ def test_sign_json_dont_include_empty_protected_headers():
         headers=[(None, unprotected_headers)], keys=[key]
     )
     json_jws = json.loads(_jwt)
-    jws_protected_headers = json.loads(
-        b64d_enc_dec(json_jws["signatures"][0]["protected"])
-    )
+    jws_protected_headers = json.loads(b64d_enc_dec(json_jws["signatures"][0]["protected"]))
     assert jws_protected_headers == {"alg": "ES256"}
     jws_unprotected_headers = json_jws["signatures"][0]["header"]
     assert unprotected_headers == jws_unprotected_headers
@@ -723,9 +706,7 @@ def test_sign_json_dont_flatten_if_multiple_signatures():
     key = ECKey().load_key(P256())
     unprotected_headers = {"foo": "bar"}
     _jwt = JWS(msg="hello world", alg="ES256").sign_json(
-        headers=[(None, unprotected_headers), (None, {"abc": "xyz"})],
-        keys=[key],
-        flatten=True,
+        headers=[(None, unprotected_headers), (None, {"abc": "xyz"})], keys=[key], flatten=True,
     )
     assert "signatures" in json.loads(_jwt)
 
@@ -820,9 +801,7 @@ def test_alg_keys_no_keys():
 
 
 def test_unknown_alg():
-    jws = JWS(
-        msg="Please take a moment to register today", jwk=JWKS_b["keys"][0], alg="RS768"
-    )
+    jws = JWS(msg="Please take a moment to register today", jwk=JWKS_b["keys"][0], alg="RS768")
 
     with pytest.raises(UnknownAlgorithm):
         jws.sign_compact()

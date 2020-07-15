@@ -10,10 +10,7 @@ def _eq(l1, l2):
 def test_pack_jwt():
     _jwt = SimpleJWT(**{"alg": "none", "cty": "jwt"})
     jwt = _jwt.pack(
-        parts=[
-            {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True},
-            "",
-        ]
+        parts=[{"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}, "",]
     )
 
     p = jwt.split(".")
@@ -41,10 +38,7 @@ def test_pack_unpack():
     assert _eq(out_payload.keys(), ["iss", "exp", "http://example.com/is_root"])
     assert out_payload["iss"] == payload["iss"]
     assert out_payload["exp"] == payload["exp"]
-    assert (
-        out_payload["http://example.com/is_root"]
-        == payload["http://example.com/is_root"]
-    )
+    assert out_payload["http://example.com/is_root"] == payload["http://example.com/is_root"]
 
 
 def test_pack_with_headers():

@@ -115,10 +115,7 @@ def pem2jwk(
 
 
 def export_jwk(
-    jwk: JWK,
-    private: bool = False,
-    encrypt: bool = False,
-    passphrase: Optional[str] = None,
+    jwk: JWK, private: bool = False, encrypt: bool = False, passphrase: Optional[str] = None,
 ) -> bytes:
     """Export JWK as PEM/bin"""
 
@@ -161,9 +158,7 @@ def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) 
         print(json.dumps(serialized, indent=4))
 
 
-def output_bytes(
-    data: bytes, binary: bool = False, filename: Optional[str] = None
-) -> None:
+def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = None) -> None:
     """Output data to file"""
     if filename is not None:
         with open(filename, mode="wb") as file:
@@ -181,15 +176,11 @@ def main():
 
     parser.add_argument("--kid", dest="kid", metavar="key_id", help="Key ID")
     parser.add_argument("--kty", dest="kty", metavar="type", help="Key type")
-    parser.add_argument(
-        "--private", dest="private", action="store_true", help="Output private key"
-    )
+    parser.add_argument("--private", dest="private", action="store_true", help="Output private key")
     parser.add_argument(
         "--encrypt", dest="encrypt", action="store_true", help="Encrypt private key"
     )
-    parser.add_argument(
-        "--output", dest="output", metavar="filename", help="Output file name"
-    )
+    parser.add_argument("--output", dest="output", metavar="filename", help="Output file name")
     parser.add_argument("filename", metavar="filename", nargs=1, help="filename")
     args = parser.parse_args()
 

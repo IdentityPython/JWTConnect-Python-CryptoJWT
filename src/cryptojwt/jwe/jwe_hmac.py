@@ -61,9 +61,7 @@ class JWE_SYM(JWEKey):
 
         _enc = self["enc"]
         _auth_data = jwe.b64_encode_header()
-        ctxt, tag, cek = self.enc_setup(
-            _enc, _msg, auth_data=_auth_data, key=cek, iv=iv
-        )
+        ctxt, tag, cek = self.enc_setup(_enc, _msg, auth_data=_auth_data, key=cek, iv=iv)
         return jwe.pack(parts=[jek, iv, ctxt, tag])
 
     def decrypt(self, token, key=None, cek=None):

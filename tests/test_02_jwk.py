@@ -389,9 +389,7 @@ def test_encryption_key():
     )[:16]
     assert as_unicode(b64e(ek)) == "yf_UUkAFZ8Pn_prxPPgu9w"
 
-    sk = SYMKey(
-        key="YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY"
-    )
+    sk = SYMKey(key="YzE0MjgzNmRlODI5Yzg2MGYyZTRjNGE0NTZlMzBkZDRiNzJkNDA5MzUzNjM0ODkzM2E2MDk3ZWY")
     _enc = sk.encryption_key(alg="A128KW")
     _v = as_unicode(b64e(_enc))
     assert _v == as_unicode(b64e(ek))
@@ -679,8 +677,7 @@ def test_certificate_fingerprint():
 
     res = certificate_fingerprint(der)
     assert (
-        res
-        == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
+        res == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
         ":80:8B:55:49:F1:48"
     )
 
@@ -710,10 +707,7 @@ def test_x5t_calculation():
 
 @pytest.mark.parametrize(
     "filename,key_type",
-    [
-        ("ec-public.pem", ec.EllipticCurvePublicKey),
-        ("rsa-public.pem", rsa.RSAPublicKey),
-    ],
+    [("ec-public.pem", ec.EllipticCurvePublicKey), ("rsa-public.pem", rsa.RSAPublicKey),],
 )
 def test_import_public_key_from_pem_file(filename, key_type):
     _file = full_path(filename)

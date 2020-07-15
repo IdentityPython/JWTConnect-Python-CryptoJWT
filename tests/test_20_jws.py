@@ -149,9 +149,7 @@ def test_jws_ecdsa_verifier_with_rfc_es256():
 
     # Use phase
     assert verifier.verify_compact(test_vector.es256_ecdsa_token, [key])
-    for modified_token in modify_token(
-        test_vector.es256_ecdsa_token, ["ES384", "ES512"]
-    ):
+    for modified_token in modify_token(test_vector.es256_ecdsa_token, ["ES384", "ES512"]):
         with pytest.raises(JWKESTException):
             verifier.verify_compact(modified_token, [key])
 
@@ -163,9 +161,7 @@ def test_jws_ecdsa_verifier_with_rfc_es512():
 
     # Use phase
     assert verifier.verify_compact(test_vector.es512_ecdsa_token, [key])
-    for modified_token in modify_token(
-        test_vector.es512_ecdsa_token, ["ES256", "ES512"]
-    ):
+    for modified_token in modify_token(test_vector.es512_ecdsa_token, ["ES256", "ES512"]):
         with pytest.raises(JWKESTException):
             verifier.verify_compact(modified_token, [key])
 
@@ -173,9 +169,7 @@ def test_jws_ecdsa_verifier_with_rfc_es512():
 def test_jws_ecdsa_signer_verifier_es256():
     # Sign
     priv_key = key_from_jwk_dict(json.loads(test_vector.es256_ecdsa_priv_key))
-    signer = JWS(
-        msg=test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa)
-    )
+    signer = JWS(msg=test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa))
     signed_token = signer.sign_compact([priv_key])
 
     # Verify
@@ -202,9 +196,7 @@ def test_jws_verifier_with_multiple_keys():
 
     verifier = JWS(alg="ES256")
     assert verifier.verify_compact(test_vector.es256_ecdsa_token, keys)
-    for modified_token in modify_token(
-        test_vector.es256_ecdsa_token, ["ES384", "ES512"]
-    ):
+    for modified_token in modify_token(test_vector.es256_ecdsa_token, ["ES384", "ES512"]):
         with pytest.raises(JWKESTException):
             verifier.verify_compact(modified_token, keys)
 
@@ -213,15 +205,11 @@ def test_jws_verifier_with_kid():
     # Sign
     priv_key = key_from_jwk_dict(json.loads(test_vector.test_json_ecdsa_priv_key_kid1))
 
-    signer = JWS(
-        test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa_kid1)
-    )
+    signer = JWS(test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa_kid1))
     signed_token_kid1 = signer.sign_compact([priv_key])
 
     priv_key = key_from_jwk_dict(json.loads(test_vector.test_json_ecdsa_priv_key_kid2))
-    signer = JWS(
-        test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa_kid2)
-    )
+    signer = JWS(test_vector.test_payload, **json.loads(test_vector.test_header_ecdsa_kid2))
     signed_token_kid2 = signer.sign_compact([priv_key])
 
     # Verify
