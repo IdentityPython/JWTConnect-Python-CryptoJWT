@@ -25,15 +25,14 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(
-        self,
-        ca_certs=None,
-        verify_ssl=True,
-        keybundle_cls=KeyBundle,
-        remove_after=3600,
-        httpc=None,
-        httpc_params=None,
-        storage_conf=None,
-        storage_factory=None,
+            self,
+            ca_certs=None,
+            verify_ssl=True,
+            keybundle_cls=KeyBundle,
+            remove_after=3600,
+            httpc=None,
+            httpc_params=None,
+            storage=None,
     ):
         """
         KeyJar init function
@@ -44,20 +43,15 @@ class KeyJar(object):
         :param remove_after: How long keys marked as inactive will remain in the key Jar.
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
-        :param storage_conf: Storage configuration
-        :param storage_factory: A function that given the storage configuration (storage_conf)
-            will return an instance that can store information.
+        :param storage: An instance that can store information. It basically look like dictionary.
         :return: Keyjar instance
         """
 
-        if storage_conf is None:
+        if storage is None:
             self._issuers = {}
         else:
-            if not storage_factory:
-                raise ValueError("Missing storage factory specification")
-            self._issuers = storage_factory(storage_conf)
+            self._issuers = storage
 
-        self.storage_conf = storage_conf
         self.spec2key = {}
         self.ca_certs = ca_certs
         self.keybundle_cls = keybundle_cls
@@ -392,7 +386,7 @@ class KeyJar(object):
                     k.serialize(private)
                     for k in kb.keys()
                     if k.inactive_since == 0
-                    and (usage is None or (hasattr(k, "use") and k.use == usage))
+                       and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
             )
         return {"keys": keys}
@@ -478,14 +472,14 @@ class KeyJar(object):
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def _add_key(
-        self,
-        keys,
-        issuer_id,
-        use,
-        key_type="",
-        kid="",
-        no_kid_issuer=None,
-        allow_missing_kid=False,
+            self,
+            keys,
+            issuer_id,
+            use,
+            key_type="",
+            kid="",
+            no_kid_issuer=None,
+            allow_missing_kid=False,
     ):
 
         _issuer = self._get_issuer(issuer_id)
@@ -621,18 +615,14 @@ class KeyJar(object):
 
     def copy(self):
         """
-        Make deep copy of this key jar.
+        Make deep copy of the content of this key jar.
+
+        Note that if this key jar uses an external storage module the copy will not.
 
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
-        if self.storage_conf:
-            _conf = self.storage_conf.get("KeyJar")
-            if _conf:
-                _label = self.storage_conf.get("label")
-                if _label:
-                    self.storage_conf["KeyJar"]["label"] = "{}.copy".format(_label)
 
-        kj = KeyJar(storage_conf=self.storage_conf)
+        kj = KeyJar()
         for _id, _issuer in self._issuers.items():
             _issuer_copy = KeyIssuer()
             _issuer_copy.set([kb.copy() for kb in _issuer])
@@ -653,7 +643,6 @@ class KeyJar(object):
         """
 
         info = {
-            # 'storage_conf': self.storage_conf,
             "spec2key": self.spec2key,
             "ca_certs": self.ca_certs,
             "keybundle_cls": qualified_name(self.keybundle_cls),
@@ -676,7 +665,6 @@ class KeyJar(object):
         :param info: A dictionary with the information
         :return:
         """
-        # self.storage_conf = info['storage_conf']
         self.spec2key = info["spec2key"]
         self.ca_certs = info["ca_certs"]
         self.keybundle_cls = importer(info["keybundle_cls"])
@@ -718,7 +706,7 @@ class KeyJar(object):
 
 
 def build_keyjar(
-    key_conf, kid_template="", keyjar=None, issuer_id="", storage_conf=None, storage_factory=None
+        key_conf, kid_template="", keyjar=None, issuer_id="", storage=None
 ):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
@@ -758,9 +746,7 @@ def build_keyjar(
         kid_template is given then the built-in function add_kid() will be used.
     :param keyjar: If an KeyJar instance the new keys are added to this key jar.
     :param issuer_id: The default owner of the keys in the key jar.
-    :param storage_conf: Storage configuration
-    :param storage_factory: A function that given the configuration can instantiate a Storage
-        instance.
+    :param storage: A Storage instance.
     :return: A KeyJar instance
     """
 
@@ -769,7 +755,7 @@ def build_keyjar(
         return None
 
     if keyjar is None:
-        keyjar = KeyJar(storage_conf=storage_conf, storage_factory=storage_factory)
+        keyjar = KeyJar(storage=storage)
 
     keyjar[issuer_id] = _issuer
 
@@ -778,13 +764,12 @@ def build_keyjar(
 
 @deprecated_alias(issuer="issuer_id", owner="issuer_id")
 def init_key_jar(
-    public_path="",
-    private_path="",
-    key_defs="",
-    issuer_id="",
-    read_only=True,
-    storage_conf=None,
-    storage_factory=None,
+        public_path="",
+        private_path="",
+        key_defs="",
+        issuer_id="",
+        read_only=True,
+        storage=None,
 ):
     """
     A number of cases here:
@@ -822,9 +807,7 @@ def init_key_jar(
     :param key_defs: A definition of what keys should be created if they are not already available
     :param issuer_id: The owner of the keys
     :param read_only: This function should not attempt to write anything to a file system.
-    :param storage_conf: Configuration information for the storage
-    :param storage_factory: A function that given the configuration can instantiate a Storage
-        instance.
+    :param storage: A Storage instance.
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
@@ -835,7 +818,7 @@ def init_key_jar(
     if _issuer is None:
         raise ValueError("Could not find any keys")
 
-    keyjar = KeyJar(storage_conf=storage_conf, storage_factory=storage_factory)
+    keyjar = KeyJar(storage=storage)
     keyjar[issuer_id] = _issuer
     return keyjar
 
