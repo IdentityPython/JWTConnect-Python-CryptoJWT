@@ -25,14 +25,14 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(
-            self,
-            ca_certs=None,
-            verify_ssl=True,
-            keybundle_cls=KeyBundle,
-            remove_after=3600,
-            httpc=None,
-            httpc_params=None,
-            storage=None,
+        self,
+        ca_certs=None,
+        verify_ssl=True,
+        keybundle_cls=KeyBundle,
+        remove_after=3600,
+        httpc=None,
+        httpc_params=None,
+        storage=None,
     ):
         """
         KeyJar init function
@@ -386,7 +386,7 @@ class KeyJar(object):
                     k.serialize(private)
                     for k in kb.keys()
                     if k.inactive_since == 0
-                       and (usage is None or (hasattr(k, "use") and k.use == usage))
+                    and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
             )
         return {"keys": keys}
@@ -472,14 +472,14 @@ class KeyJar(object):
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def _add_key(
-            self,
-            keys,
-            issuer_id,
-            use,
-            key_type="",
-            kid="",
-            no_kid_issuer=None,
-            allow_missing_kid=False,
+        self,
+        keys,
+        issuer_id,
+        use,
+        key_type="",
+        kid="",
+        no_kid_issuer=None,
+        allow_missing_kid=False,
     ):
 
         _issuer = self._get_issuer(issuer_id)
@@ -705,9 +705,7 @@ class KeyJar(object):
 # =============================================================================
 
 
-def build_keyjar(
-        key_conf, kid_template="", keyjar=None, issuer_id="", storage=None
-):
+def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=None):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
     an existing KeyJar based on a key specification.
@@ -764,12 +762,7 @@ def build_keyjar(
 
 @deprecated_alias(issuer="issuer_id", owner="issuer_id")
 def init_key_jar(
-        public_path="",
-        private_path="",
-        key_defs="",
-        issuer_id="",
-        read_only=True,
-        storage=None,
+    public_path="", private_path="", key_defs="", issuer_id="", read_only=True, storage=None,
 ):
     """
     A number of cases here:
