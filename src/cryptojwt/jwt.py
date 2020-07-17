@@ -16,7 +16,7 @@ from .jws.jws import factory as jws_factory
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .utils import as_unicode
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def utc_time_sans_frac():
     return int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds())
 
 
-def pick_key(keys, use, alg='', key_type='', kid=''):
+def pick_key(keys, use, alg="", key_type="", kid=""):
     """
     Based on given set of criteria pick out the keys that fulfill them from a
     given set of keys.
@@ -45,7 +45,7 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
     """
     res = []
     if not key_type:
-        if use == 'sig':
+        if use == "sig":
             key_type = jws_alg2keytype(alg)
         else:
             key_type = jwe_alg2keytype(alg)
@@ -60,9 +60,9 @@ def pick_key(keys, use, alg='', key_type='', kid=''):
         if key.kid and kid and key.kid != kid:
             continue
 
-        if key.alg == '' and alg:
-            if key_type == 'EC':
-                if key.crv != 'P-{}'.format(alg[2:]):
+        if key.alg == "" and alg:
+            if key_type == "EC":
+                if key.crv != "P-{}".format(alg[2:]):
                     continue
         elif alg and key.alg != alg:
             continue
@@ -75,12 +75,25 @@ class JWT:
     jwt_parameters = ["iss", "sub", "aud", "exp", "nbf", "iat", "jti"]
 
     """The basic JSON Web Token class."""
-    def __init__(self, key_jar=None, iss='', lifetime=0,
-                 sign=True, sign_alg='RS256', encrypt=False,
-                 enc_enc="A128CBC-HS256", enc_alg="RSA1_5", msg_cls=None,
-                 iss2msg_cls=None, skew=15,
-                 allowed_sign_algs=None, allowed_enc_algs=None,
-                 allowed_enc_encs=None, zip=''):
+
+    def __init__(
+        self,
+        key_jar=None,
+        iss="",
+        lifetime=0,
+        sign=True,
+        sign_alg="RS256",
+        encrypt=False,
+        enc_enc="A128CBC-HS256",
+        enc_alg="RSA1_5",
+        msg_cls=None,
+        iss2msg_cls=None,
+        skew=15,
+        allowed_sign_algs=None,
+        allowed_enc_algs=None,
+        allowed_enc_encs=None,
+        zip="",
+    ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
         self.lifetime = lifetime  # default life time of the signature
@@ -118,26 +131,26 @@ class JWT:
         """
         return self.key_jar.owners
 
-    def my_keys(self, issuer_id='', use='sig'):
+    def my_keys(self, issuer_id="", use="sig"):
         _k = self.key_jar.get(use, issuer_id=issuer_id)
-        if issuer_id != '':
+        if issuer_id != "":
             try:
-                _k.extend(self.key_jar.get(use, issuer_id=''))
+                _k.extend(self.key_jar.get(use, issuer_id=""))
             except KeyError:
                 pass
         return _k
 
-    def _encrypt(self, payload, recv, cty='JWT', zip=''):
+    def _encrypt(self, payload, recv, cty="JWT", zip=""):
         kwargs = {"alg": self.enc_alg, "enc": self.enc_enc}
 
         if cty:
             kwargs["cty"] = cty
         if zip:
-            kwargs['zip'] = zip
+            kwargs["zip"] = zip
 
         # use the clients public key for encryption
         _jwe = JWE(payload, **kwargs)
-        return _jwe.encrypt(self.receiver_keys(recv, 'enc'), context="public")
+        return _jwe.encrypt(self.receiver_keys(recv, "enc"), context="public")
 
     @staticmethod
     def put_together_aud(recv, aud=None):
@@ -166,17 +179,17 @@ class JWT:
 
         :return: A dictionary with claims and values
         """
-        argv = {'iss': self.iss, 'iat': utc_time_sans_frac()}
+        argv = {"iss": self.iss, "iat": utc_time_sans_frac()}
         if self.lifetime:
-            argv['exp'] = argv['iat'] + self.lifetime
+            argv["exp"] = argv["iat"] + self.lifetime
 
         _aud = self.put_together_aud(recv, aud)
         if _aud:
-            argv['aud'] = _aud
+            argv["aud"] = _aud
 
         return argv
 
-    def pack_key(self, issuer_id='', kid=''):
+    def pack_key(self, issuer_id="", kid=""):
         """
         Find a key to be used for signing the Json Web Token
 
@@ -184,15 +197,14 @@ class JWT:
         :param kid: Key ID
         :return: One key
         """
-        keys = pick_key(self.my_keys(issuer_id, 'sig'), 'sig', alg=self.alg,
-                        kid=kid)
+        keys = pick_key(self.my_keys(issuer_id, "sig"), "sig", alg=self.alg, kid=kid)
 
         if not keys:
-            raise NoSuitableSigningKeys('kid={}'.format(kid))
+            raise NoSuitableSigningKeys("kid={}".format(kid))
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid='', issuer_id='', recv='', aud=None, **kwargs):
+    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
@@ -210,25 +222,25 @@ class JWT:
         _args.update(self.pack_init(recv, aud))
 
         try:
-            _encrypt = kwargs['encrypt']
+            _encrypt = kwargs["encrypt"]
         except KeyError:
             _encrypt = self.encrypt
         else:
-            del kwargs['encrypt']
+            del kwargs["encrypt"]
 
         if self.with_jti:
             try:
-                _jti = kwargs['jti']
+                _jti = kwargs["jti"]
             except KeyError:
                 _jti = uuid.uuid4().hex
 
-            _args['jti'] = _jti
+            _args["jti"] = _jti
 
         if not issuer_id and self.iss:
             issuer_id = self.iss
 
         if self.sign:
-            if self.alg != 'none':
+            if self.alg != "none":
                 _key = self.pack_key(issuer_id, kid)
                 # _args['kid'] = _key.kid
             else:
@@ -241,7 +253,7 @@ class JWT:
 
         if _encrypt:
             if not self.sign:
-                return self._encrypt(_sjwt, recv, cty='json', zip=self.zip)
+                return self._encrypt(_sjwt, recv, cty="json", zip=self.zip)
 
             return self._encrypt(_sjwt, recv, zip=self.zip)
         else:
@@ -305,9 +317,9 @@ class JWT:
         # Check if it's an encrypted JWT
         darg = {}
         if self.allowed_enc_encs:
-            darg['enc'] = self.allowed_enc_encs
+            darg["enc"] = self.allowed_enc_encs
         if self.allowed_enc_algs:
-            darg['alg'] = self.allowed_enc_algs
+            darg["alg"] = self.allowed_enc_algs
         try:
             _decryptor = jwe_factory(token, **darg)
         except (KeyError, HeaderError):
@@ -319,15 +331,15 @@ class JWT:
             _jwe_header = _decryptor.jwt.headers
             # Try to find out if the information encrypted was a signed JWT
             try:
-                _content_type = _decryptor.jwt.headers['cty']
+                _content_type = _decryptor.jwt.headers["cty"]
             except KeyError:
-                _content_type = ''
+                _content_type = ""
         else:
-            _content_type = 'jwt'
+            _content_type = "jwt"
             _info = token
 
         # If I have reason to believe the information I have is a signed JWT
-        if _content_type.lower() == 'jwt':
+        if _content_type.lower() == "jwt":
             # Check that is a signed JWT
             if self.allowed_sign_algs:
                 _verifier = jws_factory(_info, alg=self.allowed_sign_algs)
@@ -359,14 +371,14 @@ class JWT:
         else:
             try:
                 # try to find a issuer specific message class
-                _msg_cls = self.iss2msg_cls[_info['iss']]
+                _msg_cls = self.iss2msg_cls[_info["iss"]]
             except KeyError:
                 _msg_cls = None
 
         if _msg_cls:
-            vp_args = {'skew': self.skew}
+            vp_args = {"skew": self.skew}
             if self.iss:
-                vp_args['aud'] = self.iss
+                vp_args["aud"] = self.iss
             _info = self.verify_profile(_msg_cls, _info, **vp_args)
             _info.jwe_header = _jwe_header
             _info.jws_header = _jws_header

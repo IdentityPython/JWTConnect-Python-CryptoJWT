@@ -34,10 +34,15 @@ def ecdh_derive_key(key, epk, apu, apv, alg, dk_len):
     shared_key = key.exchange(ec.ECDH(), epk)
     # Derive the key
     # AlgorithmID || PartyUInfo || PartyVInfo || SuppPubInfo
-    otherInfo = struct.pack("!I", len(alg)) + bytes(alg) + \
-                struct.pack("!I", len(apu)) + apu + \
-                struct.pack("!I", len(apv)) + apv + \
-                struct.pack("!I", dk_len)
+    otherInfo = (
+        struct.pack("!I", len(alg))
+        + bytes(alg)
+        + struct.pack("!I", len(apu))
+        + apu
+        + struct.pack("!I", len(apv))
+        + apv
+        + struct.pack("!I", dk_len)
+    )
     return concat_sha256(shared_key, dk_len, otherInfo)
 
 
@@ -48,9 +53,9 @@ class JWE_EC(JWEKey):
     def __init__(self, msg=None, with_digest=False, **kwargs):
         JWEKey.__init__(self, msg, with_digest, **kwargs)
         self.msg_valid = False
-        self.auth_data = b''
+        self.auth_data = b""
 
-    def enc_setup(self, msg, key=None, auth_data=b'', **kwargs):
+    def enc_setup(self, msg, key=None, auth_data=b"", **kwargs):
         """
 
         :param msg: Message to be encrypted
@@ -80,10 +85,9 @@ class JWE_EC(JWEKey):
         # epk is either an Elliptic curve key instance or a JWK description of
         # one. This key belongs to the entity on the other side.
         try:
-            _epk = kwargs['epk']
+            _epk = kwargs["epk"]
         except KeyError:
-            _epk = ec.generate_private_key(NIST2SEC[as_unicode(key.crv)],
-                                           default_backend())
+            _epk = ec.generate_private_key(NIST2SEC[as_unicode(key.crv)], default_backend())
             epk = ECKey().load_key(_epk.public_key())
         else:
             if isinstance(_epk, ec.EllipticCurvePrivateKey):
@@ -94,17 +98,13 @@ class JWE_EC(JWEKey):
             else:
                 raise ValueError("epk of a type I can't handle")
 
-        params = {
-            "apu": b64e(apu),
-            "apv": b64e(apv),
-            "epk": epk.serialize(False)
-        }
+        params = {"apu": b64e(apu), "apv": b64e(apv), "epk": epk.serialize(False)}
 
         cek = iv = None
-        if 'cek' in kwargs and kwargs['cek']:
-            cek = kwargs['cek']
-        if 'iv' in kwargs and kwargs['iv']:
-            iv = kwargs['iv']
+        if "cek" in kwargs and kwargs["cek"]:
+            cek = kwargs["cek"]
+        if "iv" in kwargs and kwargs["iv"]:
+            iv = kwargs["iv"]
 
         iv = self._generate_iv(self.enc, iv=iv)
 
@@ -112,16 +112,13 @@ class JWE_EC(JWEKey):
             try:
                 dk_len = KEY_LEN[self.enc]
             except KeyError:
-                raise ValueError(
-                    "Unknown key length for algorithm %s" % self.enc)
+                raise ValueError("Unknown key length for algorithm %s" % self.enc)
 
-            cek = ecdh_derive_key(_epk, key.pub_key, apu, apv,
-                                  str(self.enc).encode(), dk_len)
+            cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
             _pre, _post = self.alg.split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(_epk, key.pub_key, apu, apv,
-                                  str(_post).encode(), klen)
+            kek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(_post).encode(), klen)
             cek = self._generate_key(self.enc, cek=cek)
             encrypted_key = aes_key_wrap(kek, cek, default_backend())
         else:
@@ -144,8 +141,7 @@ class JWE_EC(JWEKey):
 
         # Handle EPK / Curve
         if "epk" not in self.headers or "crv" not in self.headers["epk"]:
-            raise Exception(
-                "Ephemeral Public Key Missing in ECDH-ES Computation")
+            raise Exception("Ephemeral Public Key Missing in ECDH-ES Computation")
 
         epubkey = ECKey(**self.headers["epk"])
         apu = apv = ""
@@ -160,17 +156,18 @@ class JWE_EC(JWEKey):
             except KeyError:
                 raise Exception("Unknown key length for algorithm")
 
-            self.cek = ecdh_derive_key(key, epubkey.pub_key, apu, apv,
-                                       str(self.headers["enc"]).encode(),
-                                       dk_len)
-        elif self.headers["alg"] in ["ECDH-ES+A128KW", "ECDH-ES+A192KW",
-                                     "ECDH-ES+A256KW"]:
-            _pre, _post = self.headers['alg'].split("+")
+            self.cek = ecdh_derive_key(
+                key, epubkey.pub_key, apu, apv, str(self.headers["enc"]).encode(), dk_len,
+            )
+        elif self.headers["alg"] in [
+            "ECDH-ES+A128KW",
+            "ECDH-ES+A192KW",
+            "ECDH-ES+A256KW",
+        ]:
+            _pre, _post = self.headers["alg"].split("+")
             klen = int(_post[1:4])
-            kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv,
-                                  str(_post).encode(), klen)
-            self.cek = aes_key_unwrap(kek, token.encrypted_key(),
-                                      default_backend())
+            kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
+            self.cek = aes_key_unwrap(kek, token.encrypted_key(), default_backend())
         else:
             raise Exception("Unsupported algorithm %s" % self.headers["alg"])
 
@@ -180,8 +177,7 @@ class JWE_EC(JWEKey):
         """
         Produces a JWE as defined in RFC7516 using an Elliptic curve key
 
-        :param key: *Not used>, only there to present the same API as
-            JWE_RSA and JWE_SYM
+        :param key: *Not used*, only there to present the same API as JWE_RSA and JWE_SYM
         :param iv: Initialization vector
         :param cek: Content master key
         :param kwargs: Extra keyword arguments
@@ -195,20 +191,20 @@ class JWE_EC(JWEKey):
         except KeyError:
             pass
 
-        if 'params' in kwargs:
-            if 'apu' in kwargs['params']:
-                _args['apu'] = kwargs['params']['apu']
-            if 'apv' in kwargs['params']:
-                _args['apv'] = kwargs['params']['apv']
-            if 'epk' in kwargs['params']:
-                _args['epk'] = kwargs['params']['epk']
+        if "params" in kwargs:
+            if "apu" in kwargs["params"]:
+                _args["apu"] = kwargs["params"]["apu"]
+            if "apv" in kwargs["params"]:
+                _args["apv"] = kwargs["params"]["apv"]
+            if "epk" in kwargs["params"]:
+                _args["epk"] = kwargs["params"]["epk"]
 
         jwe = JWEnc(**_args)
         ctxt, tag, cek = super(JWE_EC, self).enc_setup(
-            self["enc"], _msg, auth_data=jwe.b64_encode_header(), key=cek,
-            iv=iv)
-        if 'encrypted_key' in kwargs:
-            return jwe.pack(parts=[kwargs['encrypted_key'], iv, ctxt, tag])
+            self["enc"], _msg, auth_data=jwe.b64_encode_header(), key=cek, iv=iv
+        )
+        if "encrypted_key" in kwargs:
+            return jwe.pack(parts=[kwargs["encrypted_key"], iv, ctxt, tag])
         return jwe.pack(parts=[iv, ctxt, tag])
 
     def decrypt(self, token=None, **kwargs):
@@ -221,10 +217,14 @@ class JWE_EC(JWEKey):
         if not self.cek:
             raise Exception("Content Encryption Key is Not Yet Set")
 
-        msg = super(JWE_EC, self)._decrypt(self.headers["enc"], self.cek,
-                                           self.ctxt,
-                                           auth_data=jwe.b64part[0],
-                                           iv=self.iv, tag=self.tag)
+        msg = super(JWE_EC, self)._decrypt(
+            self.headers["enc"],
+            self.cek,
+            self.ctxt,
+            auth_data=jwe.b64part[0],
+            iv=self.iv,
+            tag=self.tag,
+        )
         self.msg = msg
         self.msg_valid = True
         return msg

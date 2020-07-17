@@ -34,7 +34,7 @@ def sha512_digest(msg):
 
 
 DIGEST_HASH = {
-    'SHA-256': sha256_digest,
-    'SHA-384': sha384_digest,
-    'SHA-512': sha512_digest
+    "SHA-256": sha256_digest,
+    "SHA-384": sha384_digest,
+    "SHA-512": sha512_digest,
 }

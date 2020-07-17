@@ -1,6 +1,6 @@
 from cryptojwt.simple_jwt import SimpleJWT
 
-__author__ = 'roland'
+__author__ = "roland"
 
 
 def _eq(l1, l2):
@@ -9,17 +9,17 @@ def _eq(l1, l2):
 
 def test_pack_jwt():
     _jwt = SimpleJWT(**{"alg": "none", "cty": "jwt"})
-    jwt = _jwt.pack(parts=[{"iss": "joe", "exp": 1300819380,
-                            "http://example.com/is_root": True}, ""])
+    jwt = _jwt.pack(
+        parts=[{"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}, "",]
+    )
 
-    p = jwt.split('.')
+    p = jwt.split(".")
     assert len(p) == 3
 
 
 def test_unpack_pack():
     _jwt = SimpleJWT(**{"alg": "none"})
-    payload = {"iss": "joe", "exp": 1300819380,
-               "http://example.com/is_root": True}
+    payload = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}
     jwt = _jwt.pack(parts=[payload, ""])
     repacked = SimpleJWT().unpack(jwt).pack()
 
@@ -28,8 +28,7 @@ def test_unpack_pack():
 
 def test_pack_unpack():
     _jwt = SimpleJWT(**{"alg": "none"})
-    payload = {"iss": "joe", "exp": 1300819380,
-               "http://example.com/is_root": True}
+    payload = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}
     jwt = _jwt.pack(parts=[payload, ""])
 
     _jwt2 = SimpleJWT().unpack(jwt)
@@ -39,8 +38,7 @@ def test_pack_unpack():
     assert _eq(out_payload.keys(), ["iss", "exp", "http://example.com/is_root"])
     assert out_payload["iss"] == payload["iss"]
     assert out_payload["exp"] == payload["exp"]
-    assert out_payload["http://example.com/is_root"] == payload[
-        "http://example.com/is_root"]
+    assert out_payload["http://example.com/is_root"] == payload["http://example.com/is_root"]
 
 
 def test_pack_with_headers():
@@ -51,8 +49,7 @@ def test_pack_with_headers():
 
 def test_unpack_str():
     _jwt = SimpleJWT(**{"alg": "none"})
-    payload = {"iss": "joe", "exp": 1300819380,
-               "http://example.com/is_root": True}
+    payload = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}
     jwt = _jwt.pack(parts=[payload, ""])
 
     _jwt2 = SimpleJWT().unpack(jwt)

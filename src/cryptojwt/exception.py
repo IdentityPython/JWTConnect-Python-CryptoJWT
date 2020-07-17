@@ -40,7 +40,15 @@ class BadType(Invalid):
 
 
 class MissingKey(JWKESTException):
-    """ No usable key """
+    """No usable key"""
+
+
+class KeyNotFound(KeyError):
+    """Key not found"""
+
+
+class IssuerNotFound(KeyError):
+    """Issuer not found"""
 
 
 class KeyIOError(Exception):

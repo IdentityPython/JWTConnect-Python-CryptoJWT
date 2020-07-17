@@ -1,30 +1,33 @@
 sudo: false
 language: python
+cache: pip
 python:
-- 3.6
-- 3.7
-- 3.8
-- pypy3
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9-dev
 addons:
   apt:
     packages:
-    - 
+      -
 install:
-- pip install codecov
-- pip install tox
-- pip install tox-travis
+  - pip install codecov
+  - pip install tox tox-travis
+  - pip install isort black
 script:
-- codecov --version
-- tox
+  - codecov --version
+  - tox
+  - isort --check src tests
+  - black -l 100 --check src tests
 after_success:
-- codecov
+  - codecov
 notifications:
   email: true
 deploy:
   provider: pypi
   on:
     tags: true
-  distributions: bdist_wheel
+  distributions: "sdist bdist_wheel"
   skip_existing: true
   username: __token__
   password:

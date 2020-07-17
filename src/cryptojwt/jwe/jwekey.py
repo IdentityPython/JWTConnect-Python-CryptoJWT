@@ -37,7 +37,7 @@ class JWEKey(JWx):
     def alg2keytype(self, alg):
         return alg2keytype(alg)
 
-    def enc_setup(self, enc_alg, msg, auth_data=b'', key=None, iv=""):
+    def enc_setup(self, enc_alg, msg, auth_data=b"", key=None, iv=""):
         """ Encrypt JWE content.
 
         :param enc_alg: The JWE "enc" value specifying the encryption algorithm
@@ -61,7 +61,7 @@ class JWEKey(JWx):
         return ctx, tag, aes.key
 
     @staticmethod
-    def _decrypt(enc, key, ctxt, iv, tag, auth_data=b''):
+    def _decrypt(enc, key, ctxt, iv, tag, auth_data=b""):
         """ Decrypt JWE content.
 
         :param enc: The JWE "enc" value specifying the encryption algorithm

@@ -3,9 +3,10 @@ import os
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.jwk.wrap import wrap_key, unwrap_key
+from cryptojwt.jwk.wrap import unwrap_key
+from cryptojwt.jwk.wrap import wrap_key
 
-__author__ = 'jschlyter'
+__author__ = "jschlyter"
 
 WRAPPING_KEYS = [
     SYMKey(use="enc", key=os.urandom(32)),
@@ -28,6 +29,7 @@ def test_wrap_default():
             wrapped_key = wrap_key(key, wrapping_key)
             unwrapped_key = unwrap_key(wrapped_key, [wrapping_key])
             assert key == unwrapped_key
+
 
 def test_wrap_params():
     wrap_params = {

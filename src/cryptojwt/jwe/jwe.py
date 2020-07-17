@@ -20,15 +20,29 @@ from .utils import alg2keytype
 
 logger = logging.getLogger(__name__)
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 
 KEY_ERR = "Could not find any suitable encryption key for alg='{}'"
 
 
 class JWE(JWx):
-    args = ["alg", "enc", "epk", "zip", "jku", "jwk", "x5u", "x5t",
-            "x5c", "kid", "typ", "cty", "apu", "crit"]
+    args = [
+        "alg",
+        "enc",
+        "epk",
+        "zip",
+        "jku",
+        "jwk",
+        "x5u",
+        "x5t",
+        "x5c",
+        "kid",
+        "typ",
+        "cty",
+        "apu",
+        "crit",
+    ]
 
     """
     :param msg: The message
@@ -62,7 +76,7 @@ class JWE(JWx):
 
     def encrypt(self, keys=None, cek="", iv="", **kwargs):
         """
-        Encrypt a payload
+        Encrypt a payload.
 
         :param keys: A set of possibly usable keys
         :param cek: Content master key
@@ -91,7 +105,8 @@ class JWE(JWx):
         else:  # _alg.startswith("ECDH-ES"):
             encrypter = JWE_EC(**self._dict)
             cek, encrypted_key, iv, params, eprivk = encrypter.enc_setup(
-                self.msg, key=keys[0], **self._dict)
+                self.msg, key=keys[0], **self._dict
+            )
             kwargs["encrypted_key"] = encrypted_key
             kwargs["params"] = params
 
@@ -114,12 +129,11 @@ class JWE(JWx):
 
             try:
                 token = encrypter.encrypt(key=_key, **kwargs)
-                self["cek"] = encrypter.cek if 'cek' in encrypter else None
+                self["cek"] = encrypter.cek if "cek" in encrypter else None
             except TypeError as err:
                 raise err
             else:
-                logger.debug(
-                    "Encrypted message using key with kid={}".format(key.kid))
+                logger.debug("Encrypted message using key with kid={}".format(key.kid))
                 return token
 
         # logger.error("Could not find any suitable encryption key")
@@ -133,7 +147,7 @@ class JWE(JWx):
         elif self.jwt:
             _jwe = self.jwt
         else:
-            raise ValueError('Nothing to decrypt')
+            raise ValueError("Nothing to decrypt")
 
         _alg = _jwe.headers["alg"]
         if alg and alg != _alg:
@@ -146,7 +160,7 @@ class JWE(JWx):
             keys = self.pick_keys(self._get_keys(), use="enc", alg=_alg)
 
         try:
-            keys.append(key_from_jwk_dict(_jwe.headers['jwk']))
+            keys.append(key_from_jwk_dict(_jwe.headers["jwk"]))
         except KeyError:
             pass
 
@@ -172,7 +186,7 @@ class JWE(JWx):
         if cek:
             try:
                 msg = decrypter.decrypt(_jwe, cek=cek)
-                self["cek"] = decrypter.cek if 'cek' in decrypter else None
+                self["cek"] = decrypter.cek if "cek" in decrypter else None
             except (KeyError, DecryptionFailed):
                 pass
             else:
@@ -187,22 +201,20 @@ class JWE(JWx):
 
             try:
                 msg = decrypter.decrypt(_jwe, _key)
-                self["cek"] = decrypter.cek if 'cek' in decrypter else None
+                self["cek"] = decrypter.cek if "cek" in decrypter else None
             except (KeyError, DecryptionFailed):
                 pass
             else:
-                logger.debug(
-                    "Decrypted message using key with kid=%s" % key.kid)
+                logger.debug("Decrypted message using key with kid=%s" % key.kid)
                 return msg
 
-        raise DecryptionFailed(
-            "No available key that could decrypt the message")
+        raise DecryptionFailed("No available key that could decrypt the message")
 
     def alg2keytype(self, alg):
         return alg2keytype(alg)
 
 
-def factory(token, alg='', enc=''):
+def factory(token, alg="", enc=""):
     try:
         _jwt = JWEnc().unpack(token, alg=alg, enc=enc)
     except KeyError:

@@ -6,18 +6,19 @@ import requests
 
 from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
+
 from .exception import HeaderError
 from .jwk.jwk import key_from_jwk_dict
 from .jwk.rsa import RSAKey
 from .jwk.rsa import import_rsa_key
-from .jwk.rsa import load_x509_cert
+from .jwk.x509 import load_x509_cert
 from .utils import as_bytes
 from .utils import as_unicode
 from .utils import b64d
 
 LOGGER = logging.getLogger(__name__)
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 
 class JWx:
@@ -46,8 +47,8 @@ class JWx:
     :param kwargs: Extra header parameters
     :return: A class instance
     """
-    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty",
-            "crit"]
+
+    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty", "crit"]
 
     def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
         self.msg = msg
@@ -73,21 +74,21 @@ class JWx:
 
                 if key == "jwk":
                     self._set_jwk(_val)
-                    self._jwk = self._dict['jwk']
+                    self._jwk = self._dict["jwk"]
                 elif key == "x5c":
                     self._dict["x5c"] = _val
                     _pub_key = import_rsa_key(_val)
                     self._jwk = RSAKey(pub_key=_pub_key).to_dict()
                 elif key == "jku":
                     self._jwks = KeyBundle(source=_val, httpc=self.httpc)
-                    self._dict['jku'] = _val
+                    self._dict["jku"] = _val
                 elif "x5u" in self:
                     try:
                         _spec = load_x509_cert(self["x5u"], self.httpc, {})
-                        self._jwk = RSAKey(pub_key=_spec['rsa']).to_dict()
+                        self._jwk = RSAKey(pub_key=_spec["rsa"]).to_dict()
                     except Exception:
                         # ca_chain = load_x509_cert_chain(self["x5u"])
-                        raise ValueError('x5u')
+                        raise ValueError("x5u")
                 else:
                     self._dict[key] = _val
 
@@ -101,9 +102,9 @@ class JWx:
             _j = key_from_jwk_dict(_val)
             self._dict["jwk"] = _val
         elif isinstance(val, JWK):
-            self._dict['jwk'] = val.to_dict()
+            self._dict["jwk"] = val.to_dict()
         else:
-            raise ValueError('JWK must be a string a JSON object or a JWK instance')
+            raise ValueError("JWK must be a string a JSON object or a JWK instance")
 
     def __contains__(self, item):
         return item in self._dict
@@ -129,7 +130,7 @@ class JWx:
             header["jwk"] = self["jwk"]
         else:
             try:
-                _jwk = kwargs['jwk']
+                _jwk = kwargs["jwk"]
             except KeyError:
                 pass
             else:
@@ -137,12 +138,12 @@ class JWx:
                     header["jwk"] = _jwk.serialize()  # JWK instance
                 except AttributeError:
                     if isinstance(_jwk, dict):
-                        header['jwk'] = _jwk  # dictionary
+                        header["jwk"] = _jwk  # dictionary
                     else:
                         _d = json.loads(_jwk)  # JSON
                         # Verify that it's a valid JWK
                         _k = key_from_jwk_dict(_d)
-                        header['jwk'] = _d
+                        header["jwk"] = _d
 
     def headers(self, **kwargs):
         """Return the JWE/JWS header."""
@@ -196,11 +197,15 @@ class JWx:
         _k = self.alg2keytype(alg)
         if _k is None:
             LOGGER.error("Unknown algorithm '%s'", alg)
-            raise ValueError('Unknown cryptography algorithm')
+            raise ValueError("Unknown cryptography algorithm")
 
         LOGGER.debug("Picking key by key type=%s", _k)
-        _kty = [_k.lower(), _k.upper(), _k.lower().encode("utf-8"),
-                _k.upper().encode("utf-8")]
+        _kty = [
+            _k.lower(),
+            _k.upper(),
+            _k.lower().encode("utf-8"),
+            _k.upper().encode("utf-8"),
+        ]
         _keys = [k for k in keys if k.kty in _kty]
         try:
             _kid = self["kid"]
@@ -214,8 +219,7 @@ class JWx:
 
         pkey = []
         for _key in _keys:
-            LOGGER.debug(
-                "Picked: kid:%s, use:%s, kty:%s", _key.kid, _key.use, _key.kty)
+            LOGGER.debug("Picked: kid:%s, use:%s, kty:%s", _key.kid, _key.use, _key.kty)
             if _kid:
                 if _kid != _key.kid:
                     continue

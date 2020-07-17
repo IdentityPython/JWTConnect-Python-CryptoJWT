@@ -4,16 +4,25 @@ KEY_LEN = {
     "A256GCM": 256,
     "A128CBC-HS256": 256,
     "A192CBC-HS384": 384,
-    "A256CBC-HS512": 512
+    "A256CBC-HS512": 512,
 }
 
 KEY_LEN_BYTES = dict([(s, int(n / 8)) for s, n in KEY_LEN.items()])
 
 SUPPORTED = {
-    "alg": ["RSA1_5", "RSA-OAEP", "RSA-OAEP-256", "A128KW", "A192KW", "A256KW",
-            "ECDH-ES", "ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"],
-    "enc": ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512",
-            "A128GCM", "A192GCM", "A256GCM"],
+    "alg": [
+        "RSA1_5",
+        "RSA-OAEP",
+        "RSA-OAEP-256",
+        "A128KW",
+        "A192KW",
+        "A256KW",
+        "ECDH-ES",
+        "ECDH-ES+A128KW",
+        "ECDH-ES+A192KW",
+        "ECDH-ES+A256KW",
+    ],
+    "enc": ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512", "A128GCM", "A192GCM", "A256GCM",],
 }
 
 

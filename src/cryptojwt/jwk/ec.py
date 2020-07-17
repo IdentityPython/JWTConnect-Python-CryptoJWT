@@ -1,5 +1,4 @@
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from ..exception import DeSerializationNotPossible
@@ -9,21 +8,24 @@ from ..utils import as_unicode
 from ..utils import deser
 from ..utils import long_to_base64
 from .asym import AsymmetricKey
+from .x509 import import_private_key_from_pem_file
+from .x509 import import_public_key_from_pem_data
+from .x509 import import_public_key_from_pem_file
 
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
 NIST2SEC = {
-    'B-571': ec.SECT571R1,
-    'K-571': ec.SECT571K1,
-    'K-409': ec.SECT409K1,
-    'K-283': ec.SECT283K1,
-    'K-233': ec.SECT233K1,
-    'K-163': ec.SECT163K1,
-    'P-521': ec.SECP521R1,
-    'P-384': ec.SECP384R1,
-    'P-256': ec.SECP256R1,
-    'P-224': ec.SECP224R1,
-    'P-192': ec.SECP192R1,
+    "B-571": ec.SECT571R1,
+    "K-571": ec.SECT571K1,
+    "K-409": ec.SECT409K1,
+    "K-283": ec.SECT283K1,
+    "K-233": ec.SECT233K1,
+    "K-163": ec.SECT163K1,
+    "P-521": ec.SECP521R1,
+    "P-384": ec.SECP384R1,
+    "P-256": ec.SECP256R1,
+    "P-224": ec.SECP224R1,
+    "P-192": ec.SECP192R1,
 }
 
 # Inverted NIST2SEC dictionary
@@ -40,11 +42,11 @@ def ec_construct_public(num):
         instance.
     """
     try:
-        _sec_crv = NIST2SEC[as_unicode(num['crv'])]
+        _sec_crv = NIST2SEC[as_unicode(num["crv"])]
     except KeyError:
-        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num['crv']))
+        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"]))
 
-    ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'], _sec_crv())
+    ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], _sec_crv())
     return ecpn.public_key(default_backend())
 
 
@@ -57,43 +59,9 @@ def ec_construct_private(num):
     :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
         instance.
     """
-    pub_ecpn = ec.EllipticCurvePublicNumbers(num['x'], num['y'],
-                                             NIST2SEC[as_unicode(num['crv'])]())
-    priv_ecpn = ec.EllipticCurvePrivateNumbers(num['d'], pub_ecpn)
+    pub_ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]())
+    priv_ecpn = ec.EllipticCurvePrivateNumbers(num["d"], pub_ecpn)
     return priv_ecpn.private_key(default_backend())
-
-
-def import_private_key_from_file(filename, passphrase=None):
-    """
-    Read a private Elliptic Curve key from a PEM file.
-
-    :param filename: The name of the file
-    :param passphrase: A pass phrase to use to unpack the PEM file.
-    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
-        instance
-    """
-    with open(filename, "rb") as key_file:
-        private_key = serialization.load_pem_private_key(
-            key_file.read(),
-            password=passphrase,
-            backend=default_backend())
-
-    return private_key
-
-
-def import_public_key_from_file(filename):
-    """
-    Read a public Elliptic Curve key from a PEM file.
-
-    :param filename: The name of the file
-    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
-        instance
-    """
-    with open(filename, "rb") as key_file:
-        public_key = serialization.load_pem_public_key(
-            key_file.read(),
-            backend=default_backend())
-    return public_key
 
 
 class ECKey(AsymmetricKey):
@@ -112,14 +80,15 @@ class ECKey(AsymmetricKey):
 
     Parameters according to https://tools.ietf.org/html/rfc7518#section-6.2
     """
+
     members = AsymmetricKey.members[:]
     # The elliptic curve specific attributes
     members.extend(["crv", "x", "y", "d"])
-    longs = ['x', 'y', 'd']
+    longs = ["x", "y", "d"]
     public_members = AsymmetricKey.public_members[:]
     public_members.extend(["kty", "alg", "use", "kid", "crv", "x", "y"])
     # required attributes
-    required = ['kty', 'crv', 'x', 'y']
+    required = ["kty", "crv", "x", "y"]
 
     def __init__(self, kty="EC", alg="", use="", kid="", crv="", x="", y="", d="", **kwargs):
         AsymmetricKey.__init__(self, kty, alg, use, kid, **kwargs)
@@ -133,7 +102,7 @@ class ECKey(AsymmetricKey):
                 self.verify()
                 self.deserialize()
             elif any([self.x, self.y, self.crv]):
-                raise JWKESTException('Missing required parameter')
+                raise JWKESTException("Missing required parameter")
         elif self.priv_key and not self.pub_key:
             self.pub_key = self.priv_key.public_key()
             self._serialize(self.priv_key)
@@ -178,16 +147,16 @@ class ECKey(AsymmetricKey):
                 if isinstance(self.d, (str, bytes)):
                     _d = deser(self.d)
                     self.priv_key = ec_construct_private(
-                        {'x': _x, 'y': _y, 'crv': self.crv, 'd': _d})
+                        {"x": _x, "y": _y, "crv": self.crv, "d": _d}
+                    )
                     self.pub_key = self.priv_key.public_key()
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
-            self.pub_key = ec_construct_public(
-                {'x': _x, 'y': _y, 'crv': self.crv})
+            self.pub_key = ec_construct_public({"x": _x, "y": _y, "crv": self.crv})
 
     def _serialize(self, key):
-        mlen = int(key.key_size/8)
+        mlen = int(key.key_size / 8)
         if isinstance(key, ec.EllipticCurvePublicKey):
             pn = key.public_numbers()
             self.x = long_to_base64(pn.x, mlen)
@@ -216,11 +185,7 @@ class ECKey(AsymmetricKey):
 
         res = self.common()
 
-        res.update({
-            "crv": self.crv,
-            "x": self.x,
-            "y": self.y
-        })
+        res.update({"crv": self.crv, "x": self.x, "y": self.y})
 
         if private and self.d:
             res["d"] = self.d
@@ -249,7 +214,7 @@ class ECKey(AsymmetricKey):
 
         :param filename: File name
         """
-        return self.load_key(import_private_key_from_file(filename))
+        return self.load_key(import_private_ec_key_from_file(filename))
 
     def decryption_key(self):
         """
@@ -280,8 +245,7 @@ class ECKey(AsymmetricKey):
 
         if cmp_keys(self.pub_key, other.pub_key, ec.EllipticCurvePublicKey):
             if other.private_key():
-                if cmp_keys(self.priv_key, other.priv_key,
-                            ec.EllipticCurvePrivateKey):
+                if cmp_keys(self.priv_key, other.priv_key, ec.EllipticCurvePrivateKey):
                     return True
             elif self.private_key():
                 return False
@@ -309,12 +273,61 @@ def cmp_keys(a, b, key_type):
     return False
 
 
-def new_ec_key(crv, kid='', **kwargs):
-    _key = ec.generate_private_key(curve=NIST2SEC[crv],
-                                   backend=default_backend())
+def new_ec_key(crv, kid="", **kwargs):
+    _key = ec.generate_private_key(curve=NIST2SEC[crv], backend=default_backend())
 
     _rk = ECKey(priv_key=_key, kid=kid, **kwargs)
     if not kid:
         _rk.add_kid()
 
     return _rk
+
+
+def import_public_ec_key_from_file(filename):
+    """
+    Read a public Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey instance
+    """
+    public_key = import_public_key_from_pem_file(filename)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError("Not a Elliptic Curve key")
+
+
+def import_private_ec_key_from_file(filename, passphrase=None):
+    """
+    Read a private Elliptic Curve key from a PEM file.
+
+    :param filename: The name of the file
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePrivateKey
+        instance
+    """
+    private_key = import_private_key_from_pem_file(filename, passphrase)
+    if isinstance(private_key, ec.EllipticCurvePrivateKey):
+        return private_key
+    else:
+        return ValueError("Not a private Elliptic Curve key")
+
+
+def import_ec_key(pem_data):
+    """
+    Extract an Elliptic Curve key from a PEM-encoded X.509 certificate
+
+    :param pem_data: Elliptic Curve key encoded in standard form
+    :return: ec.EllipticCurvePublicKey
+    """
+    public_key = import_public_key_from_pem_data(pem_data)
+    if isinstance(public_key, ec.EllipticCurvePublicKey):
+        return public_key
+    else:
+        return ValueError("Not a Elliptic Curve key")
+
+
+def import_ec_key_from_cert_file(pem_file):
+    with open(pem_file, "r") as cert_file:
+        return import_ec_key(cert_file.read())

@@ -8,7 +8,7 @@ from .utils import b64d
 from .utils import b64encode_item
 from .utils import split_token
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class SimpleJWT(object):
     Basic JSON Web Token class that doesn't make any assumptions as to what
     can or should be in the payload
     """
+
     def __init__(self, **headers):
         if not headers.get("alg"):
             headers["alg"] = None
@@ -44,19 +45,19 @@ class SimpleJWT(object):
         self.b64part = part
         self.part = [b64d(p) for p in part]
         self.headers = json.loads(as_unicode(self.part[0]))
-        for key,val in kwargs.items():
+        for key, val in kwargs.items():
             if not val and key in self.headers:
                 continue
 
             try:
-                _ok = self.verify_header(key,val)
+                _ok = self.verify_header(key, val)
             except KeyError:
                 raise
             else:
                 if not _ok:
                     raise HeaderError(
-                        'Expected "{}" to be "{}", was "{}"'.format(
-                            key, val, self.headers[key]))
+                        'Expected "{}" to be "{}", was "{}"'.format(key, val, self.headers[key])
+                    )
 
         return self
 
@@ -72,9 +73,9 @@ class SimpleJWT(object):
             if self.headers:
                 headers = self.headers
             else:
-                headers = {'alg': 'none'}
+                headers = {"alg": "none"}
 
-        logging.debug('JWT header: {}'.format(headers))
+        logging.debug("JWT header: {}".format(headers))
 
         if not parts:
             return ".".join([a.decode() for a in self.b64part])

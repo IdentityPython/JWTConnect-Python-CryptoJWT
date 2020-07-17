@@ -6,7 +6,7 @@ from .. import JWE
 from . import JWK
 from .jwk import key_from_jwk_dict
 
-__author__ = 'jschlyter'
+__author__ = "jschlyter"
 
 DEFAULT_WRAP_PARAMS = {
     "EC": {"alg": "ECDH-ES+A128KW", "enc": "A128GCM"},

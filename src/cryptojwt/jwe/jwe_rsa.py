@@ -11,12 +11,27 @@ from .rsa import RSAEncrypter
 
 logger = logging.getLogger(__name__)
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
 
 class JWE_RSA(JWEKey):
-    args = ["msg", "alg", "enc", "epk", "zip", "jku", "jwk", "x5u", "x5t",
-            "x5c", "kid", "typ", "cty", "apu", "crit"]
+    args = [
+        "msg",
+        "alg",
+        "enc",
+        "epk",
+        "zip",
+        "jku",
+        "jwk",
+        "x5u",
+        "x5t",
+        "x5c",
+        "kid",
+        "typ",
+        "cty",
+        "apu",
+        "crit",
+    ]
 
     def encrypt(self, key, iv="", cek="", **kwargs):
         """
@@ -49,11 +64,11 @@ class JWE_RSA(JWEKey):
 
         _alg = self["alg"]
         if kwarg_cek:
-            jwe_enc_key = ''
+            jwe_enc_key = ""
         elif _alg == "RSA-OAEP":
-            jwe_enc_key = _encrypt(cek, key, 'pkcs1_oaep_padding')
+            jwe_enc_key = _encrypt(cek, key, "pkcs1_oaep_padding")
         elif _alg == "RSA-OAEP-256":
-            jwe_enc_key = _encrypt(cek, key, 'pkcs1_oaep_256_padding')
+            jwe_enc_key = _encrypt(cek, key, "pkcs1_oaep_256_padding")
         elif _alg == "RSA1_5":
             jwe_enc_key = _encrypt(cek, key)
         else:
@@ -62,12 +77,11 @@ class JWE_RSA(JWEKey):
         jwe = JWEnc(**self.headers())
 
         try:
-            _auth_data = kwargs['auth_data']
+            _auth_data = kwargs["auth_data"]
         except KeyError:
             _auth_data = jwe.b64_encode_header()
 
-        ctxt, tag, key = self.enc_setup(_enc, _msg, key=cek, iv=iv,
-                                        auth_data=_auth_data)
+        ctxt, tag, key = self.enc_setup(_enc, _msg, key=cek, iv=iv, auth_data=_auth_data)
         return jwe.pack(parts=[jwe_enc_key, iv, ctxt, tag])
 
     def decrypt(self, token, key, cek=None):
@@ -92,9 +106,9 @@ class JWE_RSA(JWEKey):
         if cek:
             pass
         elif _alg == "RSA-OAEP":
-            cek = _decrypt(jek, key, 'pkcs1_oaep_padding')
+            cek = _decrypt(jek, key, "pkcs1_oaep_padding")
         elif _alg == "RSA-OAEP-256":
-            cek = _decrypt(jek, key, 'pkcs1_oaep_256_padding')
+            cek = _decrypt(jek, key, "pkcs1_oaep_256_padding")
         elif _alg == "RSA1_5":
             cek = _decrypt(jek, key)
         else:
@@ -107,10 +121,14 @@ class JWE_RSA(JWEKey):
 
         auth_data = jwe.b64_protected_header()
 
-        msg = self._decrypt(enc, cek, jwe.ciphertext(),
-                            auth_data=auth_data,
-                            iv=jwe.initialization_vector(),
-                            tag=jwe.authentication_tag())
+        msg = self._decrypt(
+            enc,
+            cek,
+            jwe.ciphertext(),
+            auth_data=auth_data,
+            iv=jwe.initialization_vector(),
+            tag=jwe.authentication_tag(),
+        )
 
         if "zip" in jwe.headers and jwe.headers["zip"] == "DEF":
             msg = zlib.decompress(msg)

@@ -22,7 +22,7 @@ ALG2KEYLEN = {
     "A256KW": 32,
     "HS256": 32,
     "HS384": 48,
-    "HS512": 64
+    "HS512": 64,
 }
 
 
@@ -39,13 +39,15 @@ class SYMKey(JWK):
         }
 
     """
+
     members = JWK.members[:]
     members.extend(["kty", "alg", "use", "kid", "k"])
     public_members = JWK.public_members[:]
-    required = ['k', 'kty']
+    required = ["k", "kty"]
 
-    def __init__(self, kty="oct", alg="", use="", kid="", x5c=None, x5t="",
-                 x5u="", k="", key='', **kwargs):
+    def __init__(
+        self, kty="oct", alg="", use="", kid="", x5c=None, x5t="", x5u="", k="", key="", **kwargs
+    ):
         JWK.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.k = k
         self.key = as_bytes(key)
@@ -70,7 +72,7 @@ class SYMKey(JWK):
             self.deserialize()
         return self.key
 
-    def appropriate_for(self, usage, alg='HS256'):
+    def appropriate_for(self, usage, alg="HS256"):
         """
         Make sure there is a key instance present that can be used for
         the specified usage.
@@ -78,10 +80,10 @@ class SYMKey(JWK):
         try:
             _use = USE[usage]
         except:
-            raise ValueError('Unknown key usage')
+            raise ValueError("Unknown key usage")
         else:
             if not self.use or self.use == _use:
-                if _use == 'sig':
+                if _use == "sig":
                     return self.get_key()
                 else:
                     return self.encryption_key(alg)
@@ -117,8 +119,7 @@ class SYMKey(JWK):
         else:
             raise JWKException("No support for symmetric keys > 512 bits")
 
-        logger.debug('Symmetric encryption key: {}'.format(
-            as_unicode(b64e(_enc_key))))
+        logger.debug("Symmetric encryption key: {}".format(as_unicode(b64e(_enc_key))))
 
         return _enc_key
 
@@ -140,16 +141,16 @@ class SYMKey(JWK):
 
         for key in self.public_members:
             if getattr(other, key) != getattr(self, key):
-                if key == 'kid':
+                if key == "kid":
                     # if one has a value and the other not then assume they are the same
-                    if getattr(self, key) == '' or getattr(other, key) == '':
+                    if getattr(self, key) == "" or getattr(other, key) == "":
                         return True
                 return False
 
         return True
 
 
-def new_sym_key(use='', bytes=24, kid=''):
+def new_sym_key(use="", bytes=24, kid=""):
     _key = SYMKey(use=use, kid=kid, key=as_unicode(os.urandom(bytes)))
     if not _key.kid:
         _key.add_kid()
