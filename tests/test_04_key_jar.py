@@ -1,8 +1,8 @@
 import json
 import os
-import warnings
 import shutil
 import time
+import warnings
 
 import pytest
 
@@ -452,7 +452,7 @@ class TestKeyJar(object):
         )
         iss_keys = kj.get_issuer_keys("https://connect-op.heroku.com")
         if not iss_keys:
-            _msg = '{} is not available at this moment!'.format(_url)
+            _msg = "{} is not available at this moment!".format(_url)
             warnings.warn(_msg)
         else:
             assert iss_kes[0].keys()
