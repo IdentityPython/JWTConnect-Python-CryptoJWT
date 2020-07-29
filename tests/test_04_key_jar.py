@@ -444,6 +444,7 @@ class TestKeyJar(object):
         assert enc_key != []
 
     @pytest.mark.network
+    @pytest.mark.skip("connect-op.herokuapp.com is broken")
     def test_provider(self):
         kj = KeyJar()
         _url = "https://connect-op.herokuapp.com/jwks.json"
