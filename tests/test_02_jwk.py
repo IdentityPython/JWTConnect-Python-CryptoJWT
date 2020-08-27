@@ -515,6 +515,9 @@ def test_key_from_jwk_dict_rsa():
     _key = key_from_jwk_dict(jwk)
     assert isinstance(_key, RSAKey)
     assert _key.has_private_key()
+    _key2 = RSAKey(**jwk)
+    assert isinstance(_key2, RSAKey)
+    assert _key2.has_private_key()
 
 
 def test_key_from_jwk_dict_ec():
