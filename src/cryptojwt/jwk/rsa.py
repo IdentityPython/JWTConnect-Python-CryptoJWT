@@ -128,7 +128,7 @@ def rsa_eq(key1, key2):
 
 
 def x509_rsa_load(txt):
-    """ So I get the same output format as loads produces
+    """So I get the same output format as loads produces
     :param txt:
     :return:
     """

@@ -158,8 +158,7 @@ def as_unicode(b):
 
 
 def bytes2str_conv(item):
-    """
-    """
+    """"""
     if isinstance(item, bytes):
         return item.decode("utf-8")
     elif item is None or isinstance(item, (str, int, bool)):

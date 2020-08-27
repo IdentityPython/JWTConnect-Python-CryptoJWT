@@ -710,7 +710,10 @@ def test_x5t_calculation():
 
 @pytest.mark.parametrize(
     "filename,key_type",
-    [("ec-public.pem", ec.EllipticCurvePublicKey), ("rsa-public.pem", rsa.RSAPublicKey),],
+    [
+        ("ec-public.pem", ec.EllipticCurvePublicKey),
+        ("rsa-public.pem", rsa.RSAPublicKey),
+    ],
 )
 def test_import_public_key_from_pem_file(filename, key_type):
     _file = full_path(filename)
