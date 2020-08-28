@@ -172,10 +172,10 @@ def rsa_construct_private(numbers):
     try:
         cnum["iqmp"] = numbers["di"]
     except KeyError:
-        cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
+        cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["q"])
     else:
         if not numbers["di"]:
-            cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
+            cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["q"])
 
     rpubn = rsa.RSAPublicNumbers(e=numbers["e"], n=numbers["n"])
     rprivn = rsa.RSAPrivateNumbers(public_numbers=rpubn, **cnum)

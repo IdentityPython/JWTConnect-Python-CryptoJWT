@@ -52,7 +52,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    install_requires=["cryptography<=3.0", "requests"],
+    install_requires=["cryptography", "requests"],
     tests_require=["pytest"],
     zip_safe=False,
     extras_require={
