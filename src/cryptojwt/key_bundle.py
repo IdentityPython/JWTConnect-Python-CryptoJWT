@@ -402,7 +402,9 @@ class KeyBundle:
 
         else:
             LOGGER.warning(
-                "HTTP status %d reading remote JWKS from %s", _http_resp.status_code, self.source,
+                "HTTP status %d reading remote JWKS from %s",
+                _http_resp.status_code,
+                self.source,
             )
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
         self.last_updated = time.time()

@@ -85,7 +85,7 @@ class JWE_RSA(JWEKey):
         return jwe.pack(parts=[jwe_enc_key, iv, ctxt, tag])
 
     def decrypt(self, token, key, cek=None):
-        """ Decrypts a JWT
+        """Decrypts a JWT
 
         :param token: The JWT
         :param key: A key to use for decrypting

@@ -115,7 +115,10 @@ def pem2jwk(
 
 
 def export_jwk(
-    jwk: JWK, private: bool = False, encrypt: bool = False, passphrase: Optional[str] = None,
+    jwk: JWK,
+    private: bool = False,
+    encrypt: bool = False,
+    passphrase: Optional[str] = None,
 ) -> bytes:
     """Export JWK as PEM/bin"""
 

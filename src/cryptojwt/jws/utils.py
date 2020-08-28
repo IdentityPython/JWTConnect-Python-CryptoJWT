@@ -11,7 +11,7 @@ from ..utils import b64e
 
 
 def left_hash(msg, func="HS256"):
-    """ Calculate left hash as described in
+    """Calculate left hash as described in
     https://openid.net/specs/openid-connect-core-1_0.html#CodeIDToken
     for at_hash and in
     for c_hash

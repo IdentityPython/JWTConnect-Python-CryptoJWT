@@ -20,7 +20,9 @@ class RSAEncrypter(Encrypter):
         return key.encrypt(
             msg,
             _padding(
-                mgf=padding.MGF1(algorithm=_chosen_hash()), algorithm=_chosen_hash(), label=None,
+                mgf=padding.MGF1(algorithm=_chosen_hash()),
+                algorithm=_chosen_hash(),
+                label=None,
             ),
         )
 
