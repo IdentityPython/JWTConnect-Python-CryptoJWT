@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 import time
+import warnings
 
 import pytest
 
@@ -228,7 +229,11 @@ def test_build_keyjar_usage():
 
 def test_build_keyjar_missing(tmpdir):
     keys = [
-        {"type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"), "use": ["enc", "sig"],}
+        {
+            "type": "RSA",
+            "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"],
+        }
     ]
 
     key_jar = build_keyjar(keys)
@@ -246,7 +251,11 @@ def test_build_RSA_keyjar_from_file(tmpdir):
 
 def test_build_EC_keyjar_missing(tmpdir):
     keys = [
-        {"type": "EC", "key": os.path.join(tmpdir.dirname, "missing_file"), "use": ["enc", "sig"],}
+        {
+            "type": "EC",
+            "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"],
+        }
     ]
 
     key_jar = build_keyjar(keys)
@@ -302,7 +311,8 @@ class TestKeyJar(object):
             ),
         )
         ks.add_kb(
-            "http://www.example.org", keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
+            "http://www.example.org",
+            keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
         )
 
         assert len(ks.items()) == 2
@@ -328,7 +338,8 @@ class TestKeyJar(object):
             ),
         )
         ks.add_kb(
-            "http://www.example.org", keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
+            "http://www.example.org",
+            keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
         )
 
         assert ks.get("sig", "RSA", "http://www.example.org/")
@@ -354,7 +365,8 @@ class TestKeyJar(object):
             ),
         )
         ks.add_kb(
-            "http://www.example.org/", keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
+            "http://www.example.org/",
+            keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
         )
 
         assert ks.get("sig", "RSA", "http://www.example.org")
@@ -380,7 +392,8 @@ class TestKeyJar(object):
             ),
         )
         ks.add_kb(
-            "http://www.example.org/", keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
+            "http://www.example.org/",
+            keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
         )
 
         assert ks.get("enc", "oct")
@@ -406,7 +419,8 @@ class TestKeyJar(object):
             ),
         )
         ks.add_kb(
-            "http://www.example.org/", keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
+            "http://www.example.org/",
+            keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"]),
         )
 
         assert ks.get("enc", "oct", "http://www.example.org/")
@@ -443,13 +457,20 @@ class TestKeyJar(object):
         assert enc_key != []
 
     @pytest.mark.network
+    @pytest.mark.skip("connect-op.herokuapp.com is broken")
     def test_provider(self):
         kj = KeyJar()
+        _url = "https://connect-op.herokuapp.com/jwks.json"
         kj.load_keys(
-            "https://connect-op.heroku.com", jwks_uri="https://connect-op.herokuapp.com/jwks.json",
+            "https://connect-op.heroku.com",
+            jwks_uri=_url,
         )
-
-        assert kj.get_issuer_keys("https://connect-op.heroku.com")[0].keys()
+        iss_keys = kj.get_issuer_keys("https://connect-op.heroku.com")
+        if not iss_keys:
+            _msg = "{} is not available at this moment!".format(_url)
+            warnings.warn(_msg)
+        else:
+            assert iss_kes[0].keys()
 
 
 def test_import_jwks():
@@ -961,7 +982,10 @@ def test_init_key_jar_update():
     assert len(_keyjar_3.get_signing_key("EC")) == 1
 
     _keyjar_4 = init_key_jar(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE, read_only=False,
+        private_path=PRIVATE_FILE,
+        key_defs=KEYSPEC_2,
+        public_path=PUBLIC_FILE,
+        read_only=False,
     )
 
     # Now it should

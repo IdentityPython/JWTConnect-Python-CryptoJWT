@@ -128,7 +128,7 @@ def rsa_eq(key1, key2):
 
 
 def x509_rsa_load(txt):
-    """ So I get the same output format as loads produces
+    """So I get the same output format as loads produces
     :param txt:
     :return:
     """
@@ -172,10 +172,10 @@ def rsa_construct_private(numbers):
     try:
         cnum["iqmp"] = numbers["di"]
     except KeyError:
-        cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
+        cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["q"])
     else:
         if not numbers["di"]:
-            cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["p"])
+            cnum["iqmp"] = rsa.rsa_crt_iqmp(cnum["p"], cnum["q"])
 
     rpubn = rsa.RSAPublicNumbers(e=numbers["e"], n=numbers["n"])
     rprivn = rsa.RSAPrivateNumbers(public_numbers=rpubn, **cnum)

@@ -18,8 +18,7 @@ from .utils import get_keys_seclen_dgst
 
 
 class AES_CBCEncrypter(Encrypter):
-    """
-    """
+    """"""
 
     def __init__(self, key_len=32, key=None, msg_padding="PKCS7"):
         Encrypter.__init__(self)

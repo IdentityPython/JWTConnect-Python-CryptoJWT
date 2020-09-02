@@ -20,13 +20,12 @@ import re
 
 from setuptools import setup
 
-__author__ = 'Roland Hedberg'
+__author__ = "Roland Hedberg"
 
-with open('src/cryptojwt/__init__.py', 'r') as fd:
-    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-                        fd.read(), re.MULTILINE).group(1)
+with open("src/cryptojwt/__init__.py", "r") as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
-tests_requires = ['responses', 'pytest', 'isort>=5.0.2', 'black']
+tests_requires = ["responses", "pytest", "isort>=5.0.2", "black"]
 
 setup(
     name="cryptojwt",
@@ -35,8 +34,14 @@ setup(
     author="Roland Hedberg",
     author_email="roland@catalogix.se",
     license="Apache 2.0",
-    packages=["cryptojwt", "cryptojwt/jwe", "cryptojwt/jwk", "cryptojwt/jws", "cryptojwt/tools",
-              "cryptojwt/serialize"],
+    packages=[
+        "cryptojwt",
+        "cryptojwt/jwe",
+        "cryptojwt/jwk",
+        "cryptojwt/jws",
+        "cryptojwt/tools",
+        "cryptojwt/serialize",
+    ],
     package_dir={"": "src"},
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -45,22 +50,22 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8"
+        "Programming Language :: Python :: 3.8",
     ],
     install_requires=["cryptography", "requests"],
-    tests_require=['pytest'],
+    tests_require=["pytest"],
     zip_safe=False,
     extras_require={
-        'testing': tests_requires,
-        'docs': ['Sphinx', 'sphinx-autobuild', 'alabaster'],
-        'quality': ['isort>=5.0.2', 'black'],
+        "testing": tests_requires,
+        "docs": ["Sphinx", "sphinx-autobuild", "alabaster"],
+        "quality": ["isort>=5.0.2", "black"],
     },
-    scripts=glob.glob('script/*.py'),
+    scripts=glob.glob("script/*.py"),
     entry_points={
         "console_scripts": [
             "jwkgen = cryptojwt.tools.keygen:main",
             "jwkconv = cryptojwt.tools.keyconv:main",
             "jwtpeek = cryptojwt.tools.jwtpeek:main",
         ]
-    }
+    },
 )

@@ -13,12 +13,9 @@ addons:
 install:
   - pip install codecov
   - pip install tox tox-travis
-  - pip install isort black
 script:
   - codecov --version
   - tox
-  - isort --check src tests
-  - black -l 100 --check src tests
 after_success:
   - codecov
 notifications:

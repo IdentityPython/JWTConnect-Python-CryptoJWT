@@ -93,7 +93,9 @@ def key_from_jwk_dict(jwk_dict, private=None):
         else:
             # Ecdsa public key.
             ec_pub_numbers = ec.EllipticCurvePublicNumbers(
-                base64url_to_long(_jwk_dict["x"]), base64url_to_long(_jwk_dict["y"]), curve,
+                base64url_to_long(_jwk_dict["x"]),
+                base64url_to_long(_jwk_dict["y"]),
+                curve,
             )
             _jwk_dict["pub_key"] = ec_pub_numbers.public_key(backends.default_backend())
         return ECKey(**_jwk_dict)

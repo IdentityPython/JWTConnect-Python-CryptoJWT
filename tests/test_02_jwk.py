@@ -515,6 +515,9 @@ def test_key_from_jwk_dict_rsa():
     _key = key_from_jwk_dict(jwk)
     assert isinstance(_key, RSAKey)
     assert _key.has_private_key()
+    _key2 = RSAKey(**jwk)
+    assert isinstance(_key2, RSAKey)
+    assert _key2.has_private_key()
 
 
 def test_key_from_jwk_dict_ec():
@@ -707,7 +710,10 @@ def test_x5t_calculation():
 
 @pytest.mark.parametrize(
     "filename,key_type",
-    [("ec-public.pem", ec.EllipticCurvePublicKey), ("rsa-public.pem", rsa.RSAPublicKey),],
+    [
+        ("ec-public.pem", ec.EllipticCurvePublicKey),
+        ("rsa-public.pem", rsa.RSAPublicKey),
+    ],
 )
 def test_import_public_key_from_pem_file(filename, key_type):
     _file = full_path(filename)
