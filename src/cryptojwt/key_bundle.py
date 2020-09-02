@@ -364,7 +364,7 @@ class KeyBundle:
         """
         Load a JWKS from a webpage.
 
-        :return: True or False if load was successful
+        :return: True if load was successful or False if remote hasn't been modified
         """
         # if self.verify_ssl is not None:
         #     self.httpc_params["verify"] = self.verify_ssl
@@ -408,10 +408,12 @@ class KeyBundle:
             if hasattr(_http_resp, "headers"):
                 headers = getattr(_http_resp, "headers")
                 self.last_remote = headers.get("last-modified") or headers.get("date")
+            res = True
 
         elif _http_resp.status_code == 304:  # Not modified
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
             self.time_out = time.time() + self.cache_time
+            res = False
 
         else:
             LOGGER.warning(
@@ -424,7 +426,7 @@ class KeyBundle:
 
         self.last_updated = time.time()
         self.ignore_errors_until = None
-        return True
+        return res
 
     def _parse_remote_response(self, response):
         """
@@ -465,7 +467,6 @@ class KeyBundle:
         This is a forced update, will happen even if cache time has not elapsed.
         Replaced keys will be marked as inactive and not removed.
         """
-        res = True  # An update was successful
         if self.source:
             _old_keys = self._keys  # just in case
 
@@ -478,21 +479,25 @@ class KeyBundle:
                         self.do_local_jwk(self.source)
                     elif self.fileformat == "der":
                         self.do_local_der(self.source, self.keytype, self.keyusage)
+                    updated = True
                 elif self.remote:
-                    res = self.do_remote()
+                    updated = self.do_remote()
             except Exception as err:
                 LOGGER.error("Key bundle update failed: %s", err)
                 self._keys = _old_keys  # restore
                 return False
 
-            now = time.time()
-            for _key in _old_keys:
-                if _key not in self._keys:
-                    if not _key.inactive_since:  # If already marked don't mess
-                        _key.inactive_since = now
-                    self._keys.append(_key)
+            if updated:
+                now = time.time()
+                for _key in _old_keys:
+                    if _key not in self._keys:
+                        if not _key.inactive_since:  # If already marked don't mess
+                            _key.inactive_since = now
+                        self._keys.append(_key)
+            else:
+                self._keys = _old_keys
 
-        return res
+        return True
 
     def get(self, typ="", only_active=True):
         """
