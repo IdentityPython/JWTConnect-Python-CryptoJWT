@@ -63,10 +63,6 @@ class UpdateFailed(KeyIOError):
     pass
 
 
-class UnknownKeytype(Invalid):
-    """An unknown key type"""
-
-
 class JWKException(JWKESTException):
     pass
 
