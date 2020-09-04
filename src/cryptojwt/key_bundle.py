@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import time
+from datetime import datetime
 from functools import cmp_to_key
 
 import requests
@@ -156,6 +157,7 @@ class KeyBundle:
         keys=None,
         source="",
         cache_time=300,
+        error_holddown=0,
         fileformat="jwks",
         keytype="RSA",
         keyusage=None,
@@ -188,6 +190,7 @@ class KeyBundle:
         self.remote = False
         self.local = False
         self.cache_time = cache_time
+        self.error_holddown = error_holddown
         self.time_out = 0
         self.etag = ""
         self.source = None
@@ -198,6 +201,7 @@ class KeyBundle:
         self.last_updated = 0
         self.last_remote = None  # HTTP Date of last remote update
         self.last_local = None  # UNIX timestamp of last local update
+        self.last_error = None  # UNIX timestamp of last error
 
         if httpc:
             self.httpc = httpc
@@ -365,6 +369,16 @@ class KeyBundle:
         # if self.verify_ssl is not None:
         #     self.httpc_params["verify"] = self.verify_ssl
 
+        if self.last_error:
+            t = self.last_error + self.error_holddown
+            if time.time() < t:
+                LOGGER.warning(
+                    "Not reading remote JWKS from %s (in error holddown until %s)",
+                    self.source,
+                    datetime.fromtimestamp(t),
+                )
+                return False
+
         LOGGER.info("Reading remote JWKS from %s", self.source)
         try:
             LOGGER.debug("KeyBundle fetch keys from: %s", self.source)
@@ -390,6 +404,7 @@ class KeyBundle:
                 self.do_keys(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
+                self.last_error = time.time()
                 raise UpdateFailed(MALFORMED.format(self.source))
 
             if hasattr(_http_resp, "headers"):
@@ -402,12 +417,13 @@ class KeyBundle:
 
         else:
             LOGGER.warning(
-                "HTTP status %d reading remote JWKS from %s",
-                _http_resp.status_code,
-                self.source,
+                "HTTP status %d reading remote JWKS from %s", _http_resp.status_code, self.source,
             )
+            self.last_error = time.time()
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
+
         self.last_updated = time.time()
+        self.last_error = None
         return True
 
     def _parse_remote_response(self, response):
