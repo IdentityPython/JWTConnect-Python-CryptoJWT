@@ -17,6 +17,7 @@ from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.key_bundle import UpdateFailed
 from cryptojwt.key_bundle import build_key_bundle
 from cryptojwt.key_bundle import dump_jwks
 from cryptojwt.key_bundle import init_key
@@ -1024,3 +1025,43 @@ def test_remote_not_modified():
     assert kb2.httpc_params == {"timeout": (2, 2)}
     assert kb2.imp_jwks
     assert kb2.last_updated
+
+
+def test_ignore_errors_period():
+    source_good = "https://example.com/keys.json"
+    source_bad = "https://example.com/keys-bad.json"
+    ignore_errors_period = 1
+    # Mock response
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source_good, json=JWKS_DICT, status=200)
+        rsps.add(method="GET", url=source_bad, json=JWKS_DICT, status=500)
+        httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(
+            source=source_good,
+            httpc=requests.request,
+            httpc_params=httpc_params,
+            ignore_errors_period=ignore_errors_period,
+        )
+        res = kb.do_remote()
+        assert res == True
+        assert kb.ignore_errors_until is None
+
+        # refetch, but fail by using a bad source
+        kb.source = source_bad
+        try:
+            res = kb.do_remote()
+        except UpdateFailed:
+            pass
+
+        # retry should fail silently as we're in holddown
+        res = kb.do_remote()
+        assert kb.ignore_errors_until is not None
+        assert res == False
+
+        # wait until holddown
+        time.sleep(ignore_errors_period + 1)
+
+        # try again
+        kb.source = source_good
+        res = kb.do_remote()
+        assert res == True

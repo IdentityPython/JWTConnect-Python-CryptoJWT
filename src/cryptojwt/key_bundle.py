@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import time
+from datetime import datetime
 from functools import cmp_to_key
 
 import requests
@@ -156,6 +157,7 @@ class KeyBundle:
         keys=None,
         source="",
         cache_time=300,
+        ignore_errors_period=0,
         fileformat="jwks",
         keytype="RSA",
         keyusage=None,
@@ -188,6 +190,8 @@ class KeyBundle:
         self.remote = False
         self.local = False
         self.cache_time = cache_time
+        self.ignore_errors_period = ignore_errors_period
+        self.ignore_errors_until = None  # UNIX timestamp of last error
         self.time_out = 0
         self.etag = ""
         self.source = None
@@ -365,6 +369,14 @@ class KeyBundle:
         # if self.verify_ssl is not None:
         #     self.httpc_params["verify"] = self.verify_ssl
 
+        if self.ignore_errors_until and time.time() < self.ignore_errors_until:
+            LOGGER.warning(
+                "Not reading remote JWKS from %s (in error holddown until %s)",
+                self.source,
+                datetime.fromtimestamp(self.ignore_errors_until),
+            )
+            return False
+
         LOGGER.info("Reading remote JWKS from %s", self.source)
         try:
             LOGGER.debug("KeyBundle fetch keys from: %s", self.source)
@@ -390,6 +402,7 @@ class KeyBundle:
                 self.do_keys(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
+                self.ignore_errors_until = time.time() + self.ignore_errors_period
                 raise UpdateFailed(MALFORMED.format(self.source))
 
             if hasattr(_http_resp, "headers"):
@@ -406,8 +419,11 @@ class KeyBundle:
                 _http_resp.status_code,
                 self.source,
             )
+            self.ignore_errors_until = time.time() + self.ignore_errors_period
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
+
         self.last_updated = time.time()
+        self.ignore_errors_until = None
         return True
 
     def _parse_remote_response(self, response):
