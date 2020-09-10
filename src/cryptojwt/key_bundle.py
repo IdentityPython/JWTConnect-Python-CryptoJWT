@@ -320,19 +320,19 @@ class KeyBundle:
         :param filename: Name of the file from which the JWKS should be loaded
         :return: True if load was successful or False if file hasn't been modified
         """
-        if self._local_update_required():
-            LOGGER.info("Reading local JWKS from %s", filename)
-            with open(filename) as input_file:
-                _info = json.load(input_file)
-            if "keys" in _info:
-                self.do_keys(_info["keys"])
-            else:
-                self.do_keys([_info])
-            self.last_local = time.time()
-            self.time_out = self.last_local + self.cache_time
-            return True
-        else:
+        if not self._local_update_required():
             return False
+
+        LOGGER.info("Reading local JWKS from %s", filename)
+        with open(filename) as input_file:
+            _info = json.load(input_file)
+        if "keys" in _info:
+            self.do_keys(_info["keys"])
+        else:
+            self.do_keys([_info])
+        self.last_local = time.time()
+        self.time_out = self.last_local + self.cache_time
+        return True
 
     def do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
@@ -343,32 +343,32 @@ class KeyBundle:
         :param keyusage: encryption ('enc') or signing ('sig') or both
         :return: True if load was successful or False if file hasn't been modified
         """
-        if self._local_update_required():
-            LOGGER.info("Reading local DER from %s", filename)
-            key_args = {}
-            _kty = keytype.lower()
-            if _kty in ["rsa", "ec"]:
-                key_args["kty"] = _kty
-                _key = import_private_key_from_pem_file(filename)
-                key_args["priv_key"] = _key
-                key_args["pub_key"] = _key.public_key()
-            else:
-                raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
-
-            if not keyusage:
-                key_args["use"] = ["enc", "sig"]
-            else:
-                key_args["use"] = harmonize_usage(keyusage)
-
-            if kid:
-                key_args["kid"] = kid
-
-            self.do_keys([key_args])
-            self.last_local = time.time()
-            self.time_out = self.last_local + self.cache_time
-            return True
-        else:
+        if not self._local_update_required():
             return False
+
+        LOGGER.info("Reading local DER from %s", filename)
+        key_args = {}
+        _kty = keytype.lower()
+        if _kty in ["rsa", "ec"]:
+            key_args["kty"] = _kty
+            _key = import_private_key_from_pem_file(filename)
+            key_args["priv_key"] = _key
+            key_args["pub_key"] = _key.public_key()
+        else:
+            raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
+
+        if not keyusage:
+            key_args["use"] = ["enc", "sig"]
+        else:
+            key_args["use"] = harmonize_usage(keyusage)
+
+        if kid:
+            key_args["kid"] = kid
+
+        self.do_keys([key_args])
+        self.last_local = time.time()
+        self.time_out = self.last_local + self.cache_time
+        return True
 
     def do_remote(self):
         """
