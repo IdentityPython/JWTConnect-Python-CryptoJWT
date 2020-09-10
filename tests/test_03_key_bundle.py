@@ -1027,10 +1027,10 @@ def test_remote_not_modified():
     assert kb2.last_updated
 
 
-def test_error_holddown():
+def test_ignore_errors_period():
     source_good = "https://example.com/keys.json"
     source_bad = "https://example.com/keys-bad.json"
-    error_holddown = 1
+    ignore_errors_period = 1
     # Mock response
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source_good, json=JWKS_DICT, status=200)
@@ -1040,11 +1040,11 @@ def test_error_holddown():
             source=source_good,
             httpc=requests.request,
             httpc_params=httpc_params,
-            error_holddown=error_holddown,
+            ignore_errors_period=ignore_errors_period,
         )
         res = kb.do_remote()
         assert res == True
-        assert kb.last_error is None
+        assert kb.ignore_errors_until is None
 
         # refetch, but fail by using a bad source
         kb.source = source_bad
@@ -1055,11 +1055,11 @@ def test_error_holddown():
 
         # retry should fail silently as we're in holddown
         res = kb.do_remote()
-        assert kb.last_error is not None
+        assert kb.ignore_errors_until is not None
         assert res == False
 
         # wait until holddown
-        time.sleep(error_holddown + 1)
+        time.sleep(ignore_errors_period + 1)
 
         # try again
         kb.source = source_good
