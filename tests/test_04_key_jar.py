@@ -750,7 +750,7 @@ class TestVerifyJWTKeys(object):
         _jwt = factory(self.sjwt_b)
         self.alice_keyjar.return_issuer("Bob")[0].mark_all_as_inactive()
         keys = self.alice_keyjar.get_jwt_verify_keys(_jwt.jwt)
-        assert len(keys) == 1
+        assert len(keys) == 0
 
 
 def test_copy():

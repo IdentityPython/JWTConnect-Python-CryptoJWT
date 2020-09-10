@@ -601,13 +601,13 @@ class KeyJar(object):
                     except KeyError:
                         pass
 
-            keys = self._add_key([], _iss, "ver", _key_type, _kid, nki, allow_missing_kid)
+            keys = self._add_key([], _iss, "sig", _key_type, _kid, nki, allow_missing_kid)
 
             if _key_type == "oct":
-                keys.extend(self.get(key_use="ver", issuer_id="", key_type=_key_type))
+                keys.extend(self.get(key_use="sig", issuer_id="", key_type=_key_type))
         else:
             # No issuer, just use all keys I have
-            keys = self.get(key_use="ver", issuer_id="", key_type=_key_type)
+            keys = self.get(key_use="sig", issuer_id="", key_type=_key_type)
 
         # Only want the appropriate keys.
         keys = [k for k in keys if k.appropriate_for("verify")]

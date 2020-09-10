@@ -297,7 +297,7 @@ class KeyIssuer(object):
             else:
                 _bkeys = bundle.keys()
             for key in _bkeys:
-                if key.inactive_since and key_use != "ver":
+                if key.inactive_since and key_use != "sig":
                     # Skip inactive keys unless for signature verification
                     continue
                 if not key.use or use == key.use:
