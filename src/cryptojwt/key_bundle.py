@@ -421,12 +421,9 @@ class KeyBundle:
             if hasattr(_http_resp, "headers"):
                 headers = getattr(_http_resp, "headers")
                 self.last_remote = headers.get("last-modified") or headers.get("date")
-
         elif not_modified:
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
             self.time_out = time.time() + self.cache_time
-            res = False
-
         else:
             LOGGER.warning(
                 "HTTP status %d reading remote JWKS from %s",
