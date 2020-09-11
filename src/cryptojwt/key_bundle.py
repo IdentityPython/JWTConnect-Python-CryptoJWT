@@ -318,7 +318,11 @@ class KeyBundle:
         Load a JWKS from a local file
 
         :param filename: Name of the file from which the JWKS should be loaded
+        :return: True if load was successful or False if file hasn't been modified
         """
+        if not self._local_update_required():
+            return False
+
         LOGGER.info("Reading local JWKS from %s", filename)
         with open(filename) as input_file:
             _info = json.load(input_file)
@@ -328,6 +332,7 @@ class KeyBundle:
             self.do_keys([_info])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
+        return True
 
     def do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
@@ -336,7 +341,11 @@ class KeyBundle:
         :param filename: Name of the file
         :param keytype: Presently 'rsa' and 'ec' supported
         :param keyusage: encryption ('enc') or signing ('sig') or both
+        :return: True if load was successful or False if file hasn't been modified
         """
+        if not self._local_update_required():
+            return False
+
         LOGGER.info("Reading local DER from %s", filename)
         key_args = {}
         _kty = keytype.lower()
@@ -359,12 +368,13 @@ class KeyBundle:
         self.do_keys([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
+        return True
 
     def do_remote(self):
         """
         Load a JWKS from a webpage.
 
-        :return: True or False if load was successful
+        :return: True if load was successful or False if remote hasn't been modified
         """
         # if self.verify_ssl is not None:
         #     self.httpc_params["verify"] = self.verify_ssl
@@ -390,7 +400,10 @@ class KeyBundle:
             LOGGER.error(err)
             raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err)))
 
-        if _http_resp.status_code == 200:  # New content
+        load_successful = _http_resp.status_code == 200
+        not_modified = _http_resp.status_code == 304
+
+        if load_successful:
             self.time_out = time.time() + self.cache_time
 
             self.imp_jwks = self._parse_remote_response(_http_resp)
@@ -408,11 +421,9 @@ class KeyBundle:
             if hasattr(_http_resp, "headers"):
                 headers = getattr(_http_resp, "headers")
                 self.last_remote = headers.get("last-modified") or headers.get("date")
-
-        elif _http_resp.status_code == 304:  # Not modified
+        elif not_modified:
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
             self.time_out = time.time() + self.cache_time
-
         else:
             LOGGER.warning(
                 "HTTP status %d reading remote JWKS from %s",
@@ -424,7 +435,7 @@ class KeyBundle:
 
         self.last_updated = time.time()
         self.ignore_errors_until = None
-        return True
+        return load_successful
 
     def _parse_remote_response(self, response):
         """
@@ -449,14 +460,10 @@ class KeyBundle:
             return None
 
     def _uptodate(self):
-        res = False
         if self.remote or self.local:
             if time.time() > self.time_out:
-                if self.local and not self._local_update_required():
-                    res = True
-                elif self.update():
-                    res = True
-        return res
+                return self.update()
+        return False
 
     def update(self):
         """
@@ -464,8 +471,9 @@ class KeyBundle:
 
         This is a forced update, will happen even if cache time has not elapsed.
         Replaced keys will be marked as inactive and not removed.
+
+        :return: True if update was ok or False if we encountered an error during update.
         """
-        res = True  # An update was successful
         if self.source:
             _old_keys = self._keys  # just in case
 
@@ -475,24 +483,27 @@ class KeyBundle:
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
-                        self.do_local_jwk(self.source)
+                        updated = self.do_local_jwk(self.source)
                     elif self.fileformat == "der":
-                        self.do_local_der(self.source, self.keytype, self.keyusage)
+                        updated = self.do_local_der(self.source, self.keytype, self.keyusage)
                 elif self.remote:
-                    res = self.do_remote()
+                    updated = self.do_remote()
             except Exception as err:
                 LOGGER.error("Key bundle update failed: %s", err)
                 self._keys = _old_keys  # restore
                 return False
 
-            now = time.time()
-            for _key in _old_keys:
-                if _key not in self._keys:
-                    if not _key.inactive_since:  # If already marked don't mess
-                        _key.inactive_since = now
-                    self._keys.append(_key)
+            if updated:
+                now = time.time()
+                for _key in _old_keys:
+                    if _key not in self._keys:
+                        if not _key.inactive_since:  # If already marked don't mess
+                            _key.inactive_since = now
+                        self._keys.append(_key)
+            else:
+                self._keys = _old_keys
 
-        return res
+        return True
 
     def get(self, typ="", only_active=True):
         """

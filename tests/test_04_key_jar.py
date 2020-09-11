@@ -746,6 +746,12 @@ class TestVerifyJWTKeys(object):
         keys = self.bob_keyjar.get_jwt_verify_keys(_jwt.jwt, no_kid_issuer=no_kid_issuer)
         assert len(keys) == 1
 
+    def test_inactive_verify_key(self):
+        _jwt = factory(self.sjwt_b)
+        self.alice_keyjar.return_issuer("Bob")[0].mark_all_as_inactive()
+        keys = self.alice_keyjar.get_jwt_verify_keys(_jwt.jwt)
+        assert len(keys) == 0
+
 
 def test_copy():
     kj = KeyJar()

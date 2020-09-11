@@ -567,6 +567,7 @@ def test_update_2():
     ec_key = new_ec_key(crv="P-256", key_ops=["sign"])
     _jwks = {"keys": [rsa_key.serialize(), ec_key.serialize()]}
 
+    time.sleep(0.5)
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
@@ -1009,7 +1010,7 @@ def test_remote_not_modified():
 
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, status=304, headers=headers)
-        assert kb.do_remote()
+        assert not kb.do_remote()
         assert kb.last_remote == headers.get("Last-Modified")
         timeout2 = kb.time_out
 
@@ -1019,6 +1020,7 @@ def test_remote_not_modified():
     kb2 = KeyBundle().load(exp)
     assert kb2.source == source
     assert len(kb2.keys()) == 3
+    assert len(kb2.active_keys()) == 3
     assert len(kb2.get("rsa")) == 1
     assert len(kb2.get("oct")) == 1
     assert len(kb2.get("ec")) == 1
