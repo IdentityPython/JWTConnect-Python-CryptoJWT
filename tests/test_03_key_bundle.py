@@ -567,6 +567,7 @@ def test_update_2():
     ec_key = new_ec_key(crv="P-256", key_ops=["sign"])
     _jwks = {"keys": [rsa_key.serialize(), ec_key.serialize()]}
 
+    time.sleep(0.5)
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
