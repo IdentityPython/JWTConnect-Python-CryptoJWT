@@ -209,12 +209,12 @@ def modsplit(name):
     if ":" in name:
         _part = name.split(":")
         if len(_part) != 2:
-            raise ValueError("Syntax error: {s}")
+            raise ValueError(f"Syntax error: {s}")
         return _part[0], _part[1]
 
     _part = name.split(".")
     if len(_part) < 2:
-        raise ValueError("Syntax error: {s}")
+        raise ValueError(f"Syntax error: {s}")
 
     return ".".join(_part[:-1]), _part[-1]
 
