@@ -1070,12 +1070,12 @@ def test_ignore_errors_period():
         assert res == True
 
 
-def test_accept_invalid_keys():
+def test_ignore_invalid_keys():
     rsa_key_dict = new_rsa_key().serialize()
     rsa_key_dict["kty"] = "b0rken"
 
-    kb = KeyBundle(keys={"keys": [rsa_key_dict]}, accept_invalid_keys=True)
+    kb = KeyBundle(keys={"keys": [rsa_key_dict]}, ignore_invalid_keys=True)
     assert len(kb) == 0
 
     with pytest.raises(UnknownKeyType):
-        KeyBundle(keys={"keys": [rsa_key_dict]}, accept_invalid_keys=False)
+        KeyBundle(keys={"keys": [rsa_key_dict]}, ignore_invalid_keys=False)
