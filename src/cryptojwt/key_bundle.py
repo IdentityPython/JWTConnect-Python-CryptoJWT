@@ -162,6 +162,7 @@ class KeyBundle:
         keytype="RSA",
         keyusage=None,
         kid="",
+        ignore_invalid_keys=True,
         httpc=None,
         httpc_params=None,
     ):
@@ -181,6 +182,7 @@ class KeyBundle:
             presently 'rsa' and 'ec' are supported.
         :param keyusage: What the key loaded from file should be used for.
             Only applicable for DER files
+        :param ignore_invalid_keys: Ignore invalid keys
         :param httpc: A HTTP client function
         :param httpc_params: Additional parameters to pass to the HTTP client
             function
@@ -202,6 +204,7 @@ class KeyBundle:
         self.last_updated = 0
         self.last_remote = None  # HTTP Date of last remote update
         self.last_local = None  # UNIX timestamp of last local update
+        self.ignore_invalid_keys = ignore_invalid_keys
 
         if httpc:
             self.httpc = httpc
@@ -274,6 +277,8 @@ class KeyBundle:
             elif inst["kty"].upper() in K2C:
                 inst["kty"] = inst["kty"].upper()
             else:
+                if not self.ignore_invalid_keys:
+                    raise UnknownKeyType(inst)
                 LOGGER.warning("While loading keys, unknown key type: %s", inst["kty"])
                 continue
 
@@ -290,12 +295,18 @@ class KeyBundle:
                 try:
                     _key = K2C[_typ](use=_use, **inst)
                 except KeyError:
+                    if not self.ignore_invalid_keys:
+                        raise UnknownKeyType(inst)
                     _error = "UnknownKeyType: {}".format(_typ)
                     continue
                 except (UnsupportedECurve, UnsupportedAlgorithm) as err:
+                    if not self.ignore_invalid_keys:
+                        raise err
                     _error = str(err)
                     break
                 except JWKException as err:
+                    if not self.ignore_invalid_keys:
+                        raise err
                     LOGGER.warning("While loading keys: %s", err)
                     _error = str(err)
                 else:
