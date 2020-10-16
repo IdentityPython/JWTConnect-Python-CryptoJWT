@@ -57,7 +57,7 @@ class SYMKey(JWK):
             self.key = b64d(bytes(self.k))
 
         if len(self.key) < 16:
-            raise UnsupportedAlgorithm("key too short")
+            raise UnsupportedAlgorithm("client_secret too short, it should be at least 16 digits")
 
     def deserialize(self):
         self.key = b64d(bytes(self.k))
