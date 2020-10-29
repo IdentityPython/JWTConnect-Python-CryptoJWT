@@ -3,7 +3,6 @@ import os
 import pytest
 
 from cryptojwt.exception import IssuerNotFound
-from cryptojwt.exception import JWKESTException
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
 from cryptojwt.jwt import pick_key
