@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
       - rustc
+      - cargo
 install:
   - pip install codecov
   - pip install tox tox-travis
