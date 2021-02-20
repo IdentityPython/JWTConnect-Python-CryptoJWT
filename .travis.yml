@@ -9,7 +9,7 @@ python:
 addons:
   apt:
     packages:
-      -
+      - rustc
 install:
   - pip install codecov
   - pip install tox tox-travis
