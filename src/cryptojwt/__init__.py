@@ -1,6 +1,8 @@
 """JSON Web Token"""
 import logging
 
+import pkg_resources
+
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwk import JWK
 from cryptojwt.jws.jws import JWS
@@ -21,7 +23,7 @@ try:
 except ImportError:
     pass
 
-__version__ = "1.4.0"
+__version__ = pkg_resources.get_distribution("cryptojwt").version
 
 logger = logging.getLogger(__name__)
 
