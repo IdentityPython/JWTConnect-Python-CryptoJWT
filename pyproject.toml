@@ -25,7 +25,7 @@ name = "cryptojwt"
 version = "1.4.0"
 description = "Python implementation of JWT, JWE, JWS and JWK"
 authors = ["Roland Hedberg <roland@catalogix.se>"]
-license = "BSD"
+license = "Apache"
 packages = [
     { include = "cryptojwt", from = "src" }
 ]
