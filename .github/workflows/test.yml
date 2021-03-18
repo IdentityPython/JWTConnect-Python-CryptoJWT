@@ -38,6 +38,6 @@ jobs:
       - name: Run pytest
         run: |
           poetry run pytest -vvv -ra --cov=cryptojwt --isort --black
-      #- name: Run codecov
-      #  run: |
-      #    poetry run codecov
+      - uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
