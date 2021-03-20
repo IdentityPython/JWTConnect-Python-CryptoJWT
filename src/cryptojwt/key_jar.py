@@ -25,14 +25,13 @@ class KeyJar(object):
     """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
 
     def __init__(
-        self,
-        ca_certs=None,
-        verify_ssl=True,
-        keybundle_cls=KeyBundle,
-        remove_after=3600,
-        httpc=None,
-        httpc_params=None,
-        storage=None,
+            self,
+            ca_certs=None,
+            verify_ssl=True,
+            keybundle_cls=KeyBundle,
+            remove_after=3600,
+            httpc=None,
+            httpc_params=None,
     ):
         """
         KeyJar init function
@@ -43,15 +42,9 @@ class KeyJar(object):
         :param remove_after: How long keys marked as inactive will remain in the key Jar.
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
-        :param storage: An instance that can store information. It basically look like dictionary.
         :return: Keyjar instance
         """
-
-        if storage is None:
-            self._issuers = {}
-        else:
-            self._issuers = storage
-
+        self._issuers = {}
         self.spec2key = {}
         self.ca_certs = ca_certs
         self.keybundle_cls = keybundle_cls
@@ -386,7 +379,7 @@ class KeyJar(object):
                     k.serialize(private)
                     for k in kb.keys()
                     if k.inactive_since == 0
-                    and (usage is None or (hasattr(k, "use") and k.use == usage))
+                       and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
             )
         return {"keys": keys}
@@ -472,14 +465,14 @@ class KeyJar(object):
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def _add_key(
-        self,
-        keys,
-        issuer_id,
-        use,
-        key_type="",
-        kid="",
-        no_kid_issuer=None,
-        allow_missing_kid=False,
+            self,
+            keys,
+            issuer_id,
+            use,
+            key_type="",
+            kid="",
+            no_kid_issuer=None,
+            allow_missing_kid=False,
     ):
 
         _issuer = self._get_issuer(issuer_id)
@@ -617,8 +610,6 @@ class KeyJar(object):
         """
         Make deep copy of the content of this key jar.
 
-        Note that if this key jar uses an external storage module the copy will not.
-
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
 
@@ -635,10 +626,12 @@ class KeyJar(object):
     def __len__(self):
         return len(self._issuers)
 
-    def dump(self, exclude=None):
+    def dump(self, exclude: Optional[bool] = None, cutoff: Optional[list] = None) -> dict:
         """
         Returns the key jar content as dictionary
 
+        :param cutoff: list of attribute names that should be ignored when dumping.
+        :type cutoff: list
         :return: A dictionary
         """
 
@@ -654,10 +647,20 @@ class KeyJar(object):
         for _id, _issuer in self._issuers.items():
             if exclude and _issuer.name in exclude:
                 continue
-            _issuers[_id] = _issuer.dump()
+            _issuers[_id] = _issuer.dump(cutoff=cutoff)
         info["issuers"] = _issuers
 
         return info
+
+    def dumps(self, exclude=None):
+        """
+        Returns a JSON representation of the key jar
+
+        :param exclude: Exclude these issuers
+        :return: A string
+        """
+        _dict = self.dump(exclude=exclude)
+        return json.dumps(_dict)
 
     def load(self, info):
         """
@@ -674,6 +677,9 @@ class KeyJar(object):
         for _issuer_id, _issuer_desc in info["issuers"].items():
             self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
         return self
+
+    def loads(self, string):
+        return self.load(json.loads(string))
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def key_summary(self, issuer_id):
@@ -705,7 +711,7 @@ class KeyJar(object):
 # =============================================================================
 
 
-def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=None):
+def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id=""):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
     an existing KeyJar based on a key specification.
@@ -744,7 +750,6 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=N
         kid_template is given then the built-in function add_kid() will be used.
     :param keyjar: If an KeyJar instance the new keys are added to this key jar.
     :param issuer_id: The default owner of the keys in the key jar.
-    :param storage: A Storage instance.
     :return: A KeyJar instance
     """
 
@@ -753,7 +758,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=N
         return None
 
     if keyjar is None:
-        keyjar = KeyJar(storage=storage)
+        keyjar = KeyJar()
 
     keyjar[issuer_id] = _issuer
 
@@ -762,12 +767,11 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=N
 
 @deprecated_alias(issuer="issuer_id", owner="issuer_id")
 def init_key_jar(
-    public_path="",
-    private_path="",
-    key_defs="",
-    issuer_id="",
-    read_only=True,
-    storage=None,
+        public_path="",
+        private_path="",
+        key_defs="",
+        issuer_id="",
+        read_only=True,
 ):
     """
     A number of cases here:
@@ -805,7 +809,6 @@ def init_key_jar(
     :param key_defs: A definition of what keys should be created if they are not already available
     :param issuer_id: The owner of the keys
     :param read_only: This function should not attempt to write anything to a file system.
-    :param storage: A Storage instance.
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
@@ -819,7 +822,7 @@ def init_key_jar(
     if _issuer is None:
         raise ValueError("Could not find any keys")
 
-    keyjar = KeyJar(storage=storage)
+    keyjar = KeyJar()
     keyjar[issuer_id] = _issuer
     return keyjar
 

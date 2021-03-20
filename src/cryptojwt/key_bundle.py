@@ -6,6 +6,7 @@ import os
 import time
 from datetime import datetime
 from functools import cmp_to_key
+from typing import Optional
 
 import requests
 
@@ -24,7 +25,6 @@ from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
 from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
-from .jwk.rsa import import_private_rsa_key_from_file
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
 
@@ -153,18 +153,18 @@ class KeyBundle:
     """The Key Bundle"""
 
     def __init__(
-        self,
-        keys=None,
-        source="",
-        cache_time=300,
-        ignore_errors_period=0,
-        fileformat="jwks",
-        keytype="RSA",
-        keyusage=None,
-        kid="",
-        ignore_invalid_keys=True,
-        httpc=None,
-        httpc_params=None,
+            self,
+            keys=None,
+            source="",
+            cache_time=300,
+            ignore_errors_period=0,
+            fileformat="jwks",
+            keytype="RSA",
+            keyusage=None,
+            kid="",
+            ignore_invalid_keys=True,
+            httpc=None,
+            httpc_params=None,
     ):
         """
         Contains a set of keys that have a common origin.
@@ -751,7 +751,7 @@ class KeyBundle:
 
         return [k for k in self._keys if k not in bundle]
 
-    def dump(self):
+    def dump(self, cutoff: Optional[list] = None):
         _keys = []
         for _k in self._keys:
             _ser = _k.to_dict()
@@ -1246,3 +1246,19 @@ def init_key(filename, type, kid="", **kwargs):
     _new_key = key_gen(type, kid=kid, **kwargs)
     dump_jwk(filename, _new_key)
     return _new_key
+
+
+def key_by_alg(alg: str):
+    if alg.startswith("RS"):
+        return key_gen("RSA", alg="RS256")
+    elif alg.startswith("ES"):
+        if alg == "ES256":
+            return key_gen("EC", crv="P-256")
+        elif alg == "ES384":
+            return key_gen("EC", crv="P-384")
+        elif alg == "ES512":
+            return key_gen("EC", crv="P-521")
+    elif alg.startswith("HS"):
+        return key_gen("sym")
+
+    raise ValueError("Don't know who to create a key to use with '{}'".format(alg))
