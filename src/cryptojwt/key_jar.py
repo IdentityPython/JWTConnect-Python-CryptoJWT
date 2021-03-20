@@ -636,11 +636,11 @@ class KeyJar(object):
         """
 
         info = {
-            "spec2key": self.spec2key,
             "ca_certs": self.ca_certs,
+            "httpc_params": self.httpc_params,
             "keybundle_cls": qualified_name(self.keybundle_cls),
             "remove_after": self.remove_after,
-            "httpc_params": self.httpc_params,
+            "spec2key": self.spec2key,
         }
 
         _issuers = {}
@@ -668,18 +668,33 @@ class KeyJar(object):
         :param info: A dictionary with the information
         :return:
         """
-        self.spec2key = info["spec2key"]
-        self.ca_certs = info["ca_certs"]
-        self.keybundle_cls = importer(info["keybundle_cls"])
-        self.remove_after = info["remove_after"]
-        self.httpc_params = info["httpc_params"]
+        self.ca_certs = info.get("ca_certs", None)
+        self.httpc_params = info.get("httpc_params", None)
+        self.keybundle_cls = importer(info.get("keybundle_cls", KeyBundle))
+        self.remove_after = info.get("remove_after", 3600)
+        self.spec2key = info.get("spec2key", {})
 
-        for _issuer_id, _issuer_desc in info["issuers"].items():
-            self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
+        _issuers = info.get("issuers", None)
+        if _issuers is None:
+            self._issuers = {}
+        else:
+            for _issuer_id, _issuer_desc in _issuers.items():
+                self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
         return self
 
     def loads(self, string):
         return self.load(json.loads(string))
+
+    def flush(self):
+        self.ca_certs = None
+        self.httpc_params = None
+        self._issuers = {}
+        self.keybundle_cls = KeyBundle
+        self.remove_after = 3600
+        self.spec2key = {}
+        # self.httpc=None,
+
+        return self
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def key_summary(self, issuer_id):

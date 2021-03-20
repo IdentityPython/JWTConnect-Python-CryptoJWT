@@ -189,22 +189,22 @@ class KeyBundle:
         """
 
         self._keys = []
-        self.remote = False
-        self.local = False
         self.cache_time = cache_time
+        self.etag = ""
+        self.fileformat = fileformat.lower()
         self.ignore_errors_period = ignore_errors_period
         self.ignore_errors_until = None  # UNIX timestamp of last error
-        self.time_out = 0
-        self.etag = ""
-        self.source = None
-        self.fileformat = fileformat.lower()
+        self.ignore_invalid_keys = ignore_invalid_keys
+        self.imp_jwks = None
         self.keytype = keytype
         self.keyusage = keyusage
-        self.imp_jwks = None
-        self.last_updated = 0
-        self.last_remote = None  # HTTP Date of last remote update
         self.last_local = None  # UNIX timestamp of last local update
-        self.ignore_invalid_keys = ignore_invalid_keys
+        self.last_remote = None  # HTTP Date of last remote update
+        self.last_updated = 0
+        self.local = False
+        self.remote = False
+        self.source = None
+        self.time_out = 0
 
         if httpc:
             self.httpc = httpc
@@ -761,16 +761,22 @@ class KeyBundle:
 
         res = {
             "keys": _keys,
-            "fileformat": self.fileformat,
-            "last_updated": self.last_updated,
-            "last_remote": self.last_remote,
-            "last_local": self.last_local,
-            "httpc_params": self.httpc_params,
-            "remote": self.remote,
-            "local": self.local,
-            "imp_jwks": self.imp_jwks,
-            "time_out": self.time_out,
             "cache_time": self.cache_time,
+            "etag": self.etag,
+            "fileformat": self.fileformat,
+            "httpc_params": self.httpc_params,
+            "ignore_errors_period": self.ignore_errors_period,
+            "ignore_errors_until": self.ignore_errors_until,
+            "ignore_invalid_keys": self.ignore_invalid_keys,
+            "imp_jwks": self.imp_jwks,
+            "keytype": self.keytype,
+            "keyusage": self.keyusage,
+            "last_local": self.last_local,
+            "last_remote": self.last_remote,
+            "last_updated": self.last_updated,
+            "local": self.local,
+            "remote": self.remote,
+            "time_out": self.time_out,
         }
 
         if self.source:
@@ -782,17 +788,45 @@ class KeyBundle:
         _keys = spec.get("keys", [])
         if _keys:
             self.do_keys(_keys)
-        self.source = spec.get("source", None)
-        self.fileformat = spec.get("fileformat", "jwks")
-        self.last_updated = spec.get("last_updated", 0)
-        self.last_remote = spec.get("last_remote", None)
-        self.last_local = spec.get("last_local", None)
-        self.remote = spec.get("remote", False)
-        self.local = spec.get("local", False)
-        self.imp_jwks = spec.get("imp_jwks", None)
-        self.time_out = spec.get("time_out", 0)
         self.cache_time = spec.get("cache_time", 0)
+        self.etag = spec.get("etag", "")
+        self.fileformat = spec.get("fileformat", "jwks")
         self.httpc_params = spec.get("httpc_params", {})
+        self.ignore_errors_period = spec.get("ignore_errors_period", 0)
+        self.ignore_errors_until = spec.get("ignore_errors_until", None)
+        self.ignore_invalid_keys = spec.get("ignore_invalid_keys", True)
+        self.imp_jwks = spec.get("imp_jwks", None)
+        self.keytype = (spec.get("keytype", "RSA"),)
+        self.keyusage = (spec.get("keyusage", None),)
+        self.last_local = spec.get("last_local", None)
+        self.last_remote = spec.get("last_remote", None)
+        self.last_updated = spec.get("last_updated", 0)
+        self.local = spec.get("local", False)
+        self.remote = spec.get("remote", False)
+        self.source = spec.get("source", None)
+        self.time_out = spec.get("time_out", 0)
+        return self
+
+    def flush(self):
+        self._keys = []
+        self.cache_time = (300,)
+        self.etag = ""
+        self.fileformat = "jwks"
+        # self.httpc=None,
+        self.httpc_params = (None,)
+        self.ignore_errors_period = 0
+        self.ignore_errors_until = None
+        self.ignore_invalid_keys = True
+        self.imp_jwks = None
+        self.keytype = ("RSA",)
+        self.keyusage = (None,)
+        self.last_local = None  # UNIX timestamp of last local update
+        self.last_remote = None  # HTTP Date of last remote update
+        self.last_updated = 0
+        self.local = False
+        self.remote = False
+        self.source = None
+        self.time_out = 0
         return self
 
 

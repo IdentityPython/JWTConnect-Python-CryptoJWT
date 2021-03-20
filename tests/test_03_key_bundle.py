@@ -953,10 +953,16 @@ def test_export_inactive():
     res = kb.dump()
     assert set(res.keys()) == {
         "cache_time",
+        "etag",
         "fileformat",
         "httpc_params",
+        "ignore_errors_until",
+        "ignore_errors_period",
+        "ignore_invalid_keys",
         "imp_jwks",
         "keys",
+        "keytype",
+        "keyusage",
         "last_updated",
         "last_remote",
         "last_local",

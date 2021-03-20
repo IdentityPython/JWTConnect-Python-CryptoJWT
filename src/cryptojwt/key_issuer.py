@@ -378,7 +378,7 @@ class KeyIssuer(object):
     def load(self, info):
         """
 
-        :param items: A list with the information
+        :param items: A dictionary with the information to load
         :return:
         """
         self.name = info["name"]
@@ -388,6 +388,18 @@ class KeyIssuer(object):
         self.remove_after = info["remove_after"]
         self.httpc_params = info["httpc_params"]
         self._bundles = [KeyBundle().load(val) for val in info["bundles"]]
+        return self
+
+    def flush(self):
+        self.ca_certs = (None,)
+        self.keybundle_cls = (KeyBundle,)
+        self.remove_after = (3600,)
+        self.httpc = (None,)
+        self.httpc_params = (None,)
+        self.name = ""
+        self.spec2key = None
+        self.remove_after = 0
+        self._bundles = []
         return self
 
     def update(self):
