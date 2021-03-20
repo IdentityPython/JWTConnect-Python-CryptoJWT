@@ -626,10 +626,11 @@ class KeyJar(object):
     def __len__(self):
         return len(self._issuers)
 
-    def _dump_issuers(self,
-                      exclude_issuers: Optional[List[str]] = None,
-                      exclude_attributes: Optional[List[str]] = None
-                      ):
+    def _dump_issuers(
+        self,
+        exclude_issuers: Optional[List[str]] = None,
+        exclude_attributes: Optional[List[str]] = None,
+    ):
         _issuers = {}
         for _id, _issuer in self._issuers.items():
             if exclude_issuers and _issuer.name in exclude_issuers:
@@ -667,11 +668,13 @@ class KeyJar(object):
                     pass
 
         if exclude_attributes is None:
-            info["issuers"] = self._dump_issuers(exclude_issuers=exclude_issuers,
-                                                 exclude_attributes=exclude_attributes)
+            info["issuers"] = self._dump_issuers(
+                exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
+            )
         elif "issuers" not in exclude_attributes:
-            info["issuers"] = self._dump_issuers(exclude_issuers=exclude_issuers,
-                                                 exclude_attributes=exclude_attributes)
+            info["issuers"] = self._dump_issuers(
+                exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
+            )
 
         return info
 
