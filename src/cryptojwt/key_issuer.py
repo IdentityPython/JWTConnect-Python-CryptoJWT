@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+from typing import List
 from typing import Optional
 
 from requests import request
@@ -351,18 +352,17 @@ class KeyIssuer(object):
             nr += len(kb)
         return nr
 
-    def dump(self, exclude=None, cutoff: Optional[list] = None) -> dict:
+    def dump(self, exclude_attribute: Optional[List[str]] = None) -> dict:
         """
         Returns the content as a dictionary.
 
-        :param exclude: Issuer that should not be include in the dump
-        :param cutoff: List of attribute name for objects that should be ignored.
+        :param exclude_attribute: List of attribute names for objects that should be ignored.
         :return: A dictionary
         """
 
         _bundles = []
         for kb in self._bundles:
-            _bundles.append(kb.dump(cutoff=cutoff))
+            _bundles.append(kb.dump(exclude_attribute=exclude_attribute))
 
         info = {
             "name": self.name,
@@ -373,6 +373,12 @@ class KeyIssuer(object):
             "remove_after": self.remove_after,
             "httpc_params": self.httpc_params,
         }
+
+        # remove after the fact
+        if exclude_attribute:
+            for attr in exclude_attribute:
+                del info[attr]
+
         return info
 
     def load(self, info):

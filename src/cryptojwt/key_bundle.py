@@ -6,6 +6,7 @@ import os
 import time
 from datetime import datetime
 from functools import cmp_to_key
+from typing import List
 from typing import Optional
 
 import requests
@@ -751,7 +752,7 @@ class KeyBundle:
 
         return [k for k in self._keys if k not in bundle]
 
-    def dump(self, cutoff: Optional[list] = None):
+    def dump(self, exclude_attribute: Optional[List[str]] = None):
         _keys = []
         for _k in self._keys:
             _ser = _k.to_dict()
@@ -781,6 +782,10 @@ class KeyBundle:
 
         if self.source:
             res["source"] = self.source
+
+        if exclude_attribute:
+            for attr in exclude_attribute:
+                del res[attr]
 
         return res
 
