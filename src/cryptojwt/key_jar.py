@@ -628,7 +628,7 @@ class KeyJar(object):
 
     def dump(
         self,
-        exclude_issuer: Optional[List[str]] = None,
+        exclude_issuers: Optional[List[str]] = None,
         exclude_attributes: Optional[List[str]] = None,
     ) -> dict:
         """
@@ -648,23 +648,31 @@ class KeyJar(object):
             "spec2key": self.spec2key,
         }
 
-        _issuers = {}
-        for _id, _issuer in self._issuers.items():
-            if exclude_issuer and _issuer.name in exclude_issuer:
-                continue
-            _issuers[_id] = _issuer.dump(exclude_attributes=exclude_attributes)
-        info["issuers"] = _issuers
+        if exclude_attributes:
+            for attr in exclude_attributes:
+                try:
+                    del info[attr]
+                except KeyError:
+                    pass
+
+        if "issuers" not in exclude_attributes:
+            _issuers = {}
+            for _id, _issuer in self._issuers.items():
+                if exclude_issuers and _issuer.name in exclude_issuers:
+                    continue
+                _issuers[_id] = _issuer.dump(exclude_attributes=exclude_attributes)
+            info["issuers"] = _issuers
 
         return info
 
-    def dumps(self, exclude=None):
+    def dumps(self, exclude_issuers: Optional[List[str]] = None):
         """
         Returns a JSON representation of the key jar
 
-        :param exclude: Exclude these issuers
+        :param exclude_issuers: Exclude these issuers
         :return: A string
         """
-        _dict = self.dump(exclude=exclude)
+        _dict = self.dump(exclude_issuers=exclude_issuers)
         return json.dumps(_dict)
 
     def load(self, info):

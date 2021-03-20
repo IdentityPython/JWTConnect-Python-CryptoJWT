@@ -785,7 +785,10 @@ class KeyBundle:
 
         if exclude_attributes:
             for attr in exclude_attributes:
-                del res[attr]
+                try:
+                    del res[attr]
+                except KeyError:
+                    pass
 
         return res
 

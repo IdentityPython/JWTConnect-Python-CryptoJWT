@@ -377,7 +377,10 @@ class KeyIssuer(object):
         # remove after the fact
         if exclude_attributes:
             for attr in exclude_attributes:
-                del info[attr]
+                try:
+                    del info[attr]
+                except KeyError:
+                    pass
 
         return info
 
