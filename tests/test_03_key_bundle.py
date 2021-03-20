@@ -1,14 +1,14 @@
 # pylint: disable=missing-docstring,no-self-use
 import json
 import os
-from pathlib import Path
 import shutil
 import time
+from pathlib import Path
 
-from cryptography.hazmat.primitives.asymmetric import rsa
 import pytest
 import requests
 import responses
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from cryptojwt.exception import UnknownKeyType
 from cryptojwt.jwk.ec import ECKey
@@ -53,8 +53,8 @@ JWK0 = {
             "e": "AQAB",
             "kid": "abc",
             "n": "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY"
-                 "2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfK"
-                 "qoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
+            "2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfK"
+            "qoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
         }
     ]
 }
@@ -63,11 +63,11 @@ JWK1 = {
     "keys": [
         {
             "n": "zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S"
-                 "_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFY"
-                 "Inq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVb"
-                 "CGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znan"
-                 "LwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MX"
-                 "sGxBHf3AKT5w",
+            "_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFY"
+            "Inq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVb"
+            "CGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znan"
+            "LwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MX"
+            "sGxBHf3AKT5w",
             "e": "AQAB",
             "kty": "RSA",
             "kid": "rsa1",
@@ -87,11 +87,11 @@ JWK2 = {
             "kid": "kriMPdmBvx68skT8-mPAB3BseeA",
             "kty": "RSA",
             "n": "kSCWg6q9iYxvJE2NIhSyOiKvqoWCO2GFipgH0sTSAs5FalHQosk9ZNTztX0ywS"
-                 "_AHsBeQPqYygfYVJL6_EgzVuwRk5txr9e3n1uml94fLyq_AXbwo9yAduf4dCHT"
-                 "P8CWR1dnDR-Qnz_4PYlWVEuuHHONOw_blbfdMjhY-C_BYM2E3pRxbohBb3x__C"
-                 "fueV7ddz2LYiH3wjz0QS_7kjPiNCsXcNyKQEOTkbHFi3mu0u13SQwNddhcynd_"
-                 "GTgWN8A-6SN1r4hzpjFKFLbZnBt77ACSiYx-IHK4Mp-NaVEi5wQtSsjQtI--Xs"
-                 "okxRDqYLwus1I1SihgbV_STTg5enufuw",
+            "_AHsBeQPqYygfYVJL6_EgzVuwRk5txr9e3n1uml94fLyq_AXbwo9yAduf4dCHT"
+            "P8CWR1dnDR-Qnz_4PYlWVEuuHHONOw_blbfdMjhY-C_BYM2E3pRxbohBb3x__C"
+            "fueV7ddz2LYiH3wjz0QS_7kjPiNCsXcNyKQEOTkbHFi3mu0u13SQwNddhcynd_"
+            "GTgWN8A-6SN1r4hzpjFKFLbZnBt77ACSiYx-IHK4Mp-NaVEi5wQtSsjQtI--Xs"
+            "okxRDqYLwus1I1SihgbV_STTg5enufuw",
             "use": "sig",
             "x5c": [
                 "MIIDPjCCAiqgAwIBAgIQsRiM0jheFZhKk49YD0SK1TAJBgUrDgMCHQUAMC0xKz"
@@ -121,11 +121,11 @@ JWK2 = {
             "kid": "MnC_VZcATfM5pOYiJHMba9goEKY",
             "kty": "RSA",
             "n": "vIqz-4-ER_vNWLON9yv8hIYV737JQ6rCl6XfzOC628seYUPf0TaGk91CFxefhz"
-                 "h23V9Tkq-RtwN1Vs_z57hO82kkzL-cQHZX3bMJD-GEGOKXCEXURN7VMyZWMAuz"
-                 "QoW9vFb1k3cR1RW_EW_P-C8bb2dCGXhBYqPfHyimvz2WarXhntPSbM5XyS5v5y"
-                 "Cw5T_Vuwqqsio3V8wooWGMpp61y12NhN8bNVDQAkDPNu2DT9DXB1g0CeFINp_K"
-                 "AS_qQ2Kq6TSvRHJqxRR68RezYtje9KAqwqx4jxlmVAQy0T3-T-IAbsk1wRtWDn"
-                 "dhO6s1Os-dck5TzyZ_dNOhfXgelixLUQ",
+            "h23V9Tkq-RtwN1Vs_z57hO82kkzL-cQHZX3bMJD-GEGOKXCEXURN7VMyZWMAuz"
+            "QoW9vFb1k3cR1RW_EW_P-C8bb2dCGXhBYqPfHyimvz2WarXhntPSbM5XyS5v5y"
+            "Cw5T_Vuwqqsio3V8wooWGMpp61y12NhN8bNVDQAkDPNu2DT9DXB1g0CeFINp_K"
+            "AS_qQ2Kq6TSvRHJqxRR68RezYtje9KAqwqx4jxlmVAQy0T3-T-IAbsk1wRtWDn"
+            "dhO6s1Os-dck5TzyZ_dNOhfXgelixLUQ",
             "use": "sig",
             "x5c": [
                 "MIIC4jCCAcqgAwIBAgIQQNXrmzhLN4VGlUXDYCRT3zANBgkqhkiG9w0BAQsFADAtMSswKQYDVQQDEyJhY2NvdW50cy5hY2Nlc3Njb"
@@ -152,12 +152,12 @@ JWK2 = {
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
-                      "-b112-36a304b66dad/v2.0/",
+            "-b112-36a304b66dad/v2.0/",
             "kid": "GvnPApfWMdLRi8PDmisFn7bprKg",
             "kty": "RSA",
             "n": "5ymq_xwmst1nstPr8YFOTyD1J5N4idYmrph7AyAv95RbWXfDRqy8CMRG7sJq"
-                 "-UWOKVOA4MVrd_NdV-ejj1DE5MPSiG"
-                 "-mZK_5iqRCDFvPYqOyRj539xaTlARNY4jeXZ0N6irZYKqSfYACjkkKxbLKcijSu1pJ48thXOTED0oNa6U",
+            "-UWOKVOA4MVrd_NdV-ejj1DE5MPSiG"
+            "-mZK_5iqRCDFvPYqOyRj539xaTlARNY4jeXZ0N6irZYKqSfYACjkkKxbLKcijSu1pJ48thXOTED0oNa6U",
             "use": "sig",
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAKVzMH2FfC12MA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVib"
@@ -181,13 +181,12 @@ JWK2 = {
         {
             "e": "AQAB",
             "issuer": "https://login.microsoftonline.com/9188040d-6c67-4c5b"
-                      "-b112-36a304b66dad/v2.0/",
+            "-b112-36a304b66dad/v2.0/",
             "kid": "dEtpjbEvbhfgwUI-bdK5xAU_9UQ",
             "kty": "RSA",
-            "n":
-                "x7HNcD9ZxTFRaAgZ7-gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQeSML7qZPlowb5BUakdLI70ayM4vN36--0ht8-oCHhl8Yj"
-                 "GFQkU-Iv2yahWHEP-1EK6eOEYu6INQP9Lk0HMk3QViLwshwb"
-                 "-KXVD02jdmX2HNdYJdPyc0c",
+            "n": "x7HNcD9ZxTFRaAgZ7-gdYLkgQua3zvQseqBJIt8Uq3MimInMZoE9QGQeSML7qZPlowb5BUakdLI70ayM4vN36--0ht8-oCHhl8Yj"
+            "GFQkU-Iv2yahWHEP-1EK6eOEYu6INQP9Lk0HMk3QViLwshwb"
+            "-KXVD02jdmX2HNdYJdPyc0c",
             "use": "sig",
             "x5c": [
                 "MIICWzCCAcSgAwIBAgIJAL3MzqqEFMYjMA0GCSqGSIb3DQEBBQUAMCkxJzAlBgNVBAMTHkxpdmUgSUQgU1RTIFNpZ25pbmcgUHVib"
@@ -279,7 +278,7 @@ def test_ignore_unknown_types():
     kb = KeyBundle(
         {
             "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
-                   "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
+            "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
             "use": "sig",
             "alg": "EdDSA",
             "kty": "OKP",
@@ -619,16 +618,14 @@ def test_loads_1():
                 "kty": "RSA",
                 "use": "sig",
                 "e": "AQAB",
-                "n":
-                    "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
+                "n": "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
                 "kid": "1",
             },
             {
                 "kty": "RSA",
                 "use": "enc",
                 "e": "AQAB",
-                "n":
-                    "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
+                "n": "wf-wiusGhA-gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB_87ds3dy3Rfym_GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8",
                 "kid": "2",
             },
         ]
@@ -661,8 +658,7 @@ def test_dump_jwk():
 JWKS_DICT = {
     "keys": [
         {
-            "n":
-                u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
+            "n": u"zkpUgEgXICI54blf6iWiD2RbMDCOO1jV0VSff1MFFnujM4othfMsad7H1kRo50YM5S_X9TdvrpdOfpz5aBaKFhT6Ziv0nhtcekq1eRl8mjBlvGKCE5XGk-0LFSDwvqgkJoFYInq7bu0a4JEzKs5AyJY75YlGh879k1Uu2Sv3ZZOunfV1O1Orta-NvS-aG_jN5cstVbCGWE20H0vFVrJKNx0Zf-u-aA-syM4uX7wdWgQ-owoEMHge0GmGgzso2lwOYf_4znanLwEuO3p5aabEaFoKNR4K6GjQcjBcYmDEE4CtfRU9AEmhcD1kleiTB9TjPWkgDmT9MXsGxBHf3AKT5w",
             "e": u"AQAB",
             "kty": "RSA",
             "kid": "5-VBFv40P8D4I-7SFz7hMugTbPs",

@@ -470,7 +470,7 @@ class TestKeyJar(object):
             _msg = "{} is not available at this moment!".format(_url)
             warnings.warn(_msg)
         else:
-            assert iss_kes[0].keys()
+            assert iss_keys[0].keys()
 
 
 def test_import_jwks():

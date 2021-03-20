@@ -751,6 +751,7 @@ def test_dump_json():
     res = issuer.dump()
     assert json.dumps(res)
 
+
 def test_contains():
     issuer = KeyIssuer()
     issuer.add_kb(KeyBundle(JWK1["keys"]))
