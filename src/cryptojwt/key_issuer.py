@@ -352,17 +352,17 @@ class KeyIssuer(object):
             nr += len(kb)
         return nr
 
-    def dump(self, exclude_attribute: Optional[List[str]] = None) -> dict:
+    def dump(self, exclude_attributes: Optional[List[str]] = None) -> dict:
         """
         Returns the content as a dictionary.
 
-        :param exclude_attribute: List of attribute names for objects that should be ignored.
+        :param exclude_attributes: List of attribute names for objects that should be ignored.
         :return: A dictionary
         """
 
         _bundles = []
         for kb in self._bundles:
-            _bundles.append(kb.dump(exclude_attribute=exclude_attribute))
+            _bundles.append(kb.dump(exclude_attributes=exclude_attributes))
 
         info = {
             "name": self.name,
@@ -375,8 +375,8 @@ class KeyIssuer(object):
         }
 
         # remove after the fact
-        if exclude_attribute:
-            for attr in exclude_attribute:
+        if exclude_attributes:
+            for attr in exclude_attributes:
                 del info[attr]
 
         return info

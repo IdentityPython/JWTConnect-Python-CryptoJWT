@@ -752,7 +752,7 @@ class KeyBundle:
 
         return [k for k in self._keys if k not in bundle]
 
-    def dump(self, exclude_attribute: Optional[List[str]] = None):
+    def dump(self, exclude_attributes: Optional[List[str]] = None):
         _keys = []
         for _k in self._keys:
             _ser = _k.to_dict()
@@ -783,8 +783,8 @@ class KeyBundle:
         if self.source:
             res["source"] = self.source
 
-        if exclude_attribute:
-            for attr in exclude_attribute:
+        if exclude_attributes:
+            for attr in exclude_attributes:
                 del res[attr]
 
         return res

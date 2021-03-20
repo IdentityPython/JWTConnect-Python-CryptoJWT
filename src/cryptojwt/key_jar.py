@@ -629,14 +629,14 @@ class KeyJar(object):
     def dump(
         self,
         exclude_issuer: Optional[List[str]] = None,
-        exclude_attribute: Optional[List[str]] = None,
+        exclude_attributes: Optional[List[str]] = None,
     ) -> dict:
         """
         Returns the key jar content as dictionary
 
-        :param exclude_issuer: A list of issuers you don't want included.
-        :param exclude_attribute: list of attribute names that should be ignored when dumping.
-        :type exclude_attribute: list
+        :param exclude_issuers: A list of issuers you don't want included.
+        :param exclude_attributes: list of attribute names that should be ignored when dumping.
+        :type exclude_attributes: list
         :return: A dictionary
         """
 
@@ -652,7 +652,7 @@ class KeyJar(object):
         for _id, _issuer in self._issuers.items():
             if exclude_issuer and _issuer.name in exclude_issuer:
                 continue
-            _issuers[_id] = _issuer.dump(exclude_attribute=exclude_attribute)
+            _issuers[_id] = _issuer.dump(exclude_attributes=exclude_attributes)
         info["issuers"] = _issuers
 
         return info
