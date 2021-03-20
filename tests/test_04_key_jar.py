@@ -1033,6 +1033,16 @@ def test_dump():
     assert nkj.get_signing_key("rsa", "C", kid="MnC_VZcATfM5pOYiJHMba9goEKY")
 
 
+def test_dump_json():
+    kj = KeyJar()
+    kj.add_kb("Alice", KeyBundle(JWK0["keys"]))
+    kj.add_kb("Bob", KeyBundle(JWK1["keys"]))
+    kj.add_kb("C", KeyBundle(JWK2["keys"]))
+
+    res = kj.dump()
+    assert json.dumps(res)
+
+
 def test_contains():
     kj = KeyJar()
     kj.add_kb("Alice", KeyBundle(JWK0["keys"]))

@@ -25,11 +25,10 @@ class KeyIssuer(object):
 
     params = {
         "ca_certs": None,
-        "keybundle_cls": KeyBundle,
-        "remove_after": 3600,
-        "httpc": None,
         "httpc_params": None,
+        "keybundle_cls": KeyBundle,
         "name": "",
+        "remove_after": 3600,
         "spec2key": None,
     }
 
@@ -56,14 +55,13 @@ class KeyIssuer(object):
 
         self._bundles = []
 
-        self.keybundle_cls = keybundle_cls
-        self.name = name
-
-        self.spec2key = {}
         self.ca_certs = ca_certs
-        self.remove_after = remove_after
         self.httpc = httpc or request
         self.httpc_params = httpc_params or {}
+        self.keybundle_cls = keybundle_cls
+        self.name = name
+        self.remove_after = remove_after
+        self.spec2key = {}
 
     def __repr__(self) -> str:
         return '<KeyIssuer "{}" {}>'.format(self.name, self.key_summary())

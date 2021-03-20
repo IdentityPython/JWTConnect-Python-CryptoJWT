@@ -7,7 +7,7 @@ class KeyIssuer:
     @staticmethod
     def serialize(item: key_issuer.KeyIssuer) -> str:
         """ Convert from KeyIssuer to JSON """
-        return json.dumps(item.dump(exclude_attributes=["keybundle_cls", "httpc"]))
+        return json.dumps(item.dump(exclude_attributes=["keybundle_cls"]))
 
     def deserialize(self, spec: str) -> key_issuer.KeyIssuer:
         """ Convert from JSON to KeyIssuer """

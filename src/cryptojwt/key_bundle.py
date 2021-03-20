@@ -794,28 +794,6 @@ class KeyBundle:
             val = getattr(self, attr)
             res[attr] = val
 
-        # res = {
-        #     "cache_time": self.cache_time,
-        #     "etag": self.etag,
-        #     "fileformat": self.fileformat,
-        #     "httpc_params": self.httpc_params,
-        #     "ignore_errors_period": self.ignore_errors_period,
-        #     "ignore_errors_until": self.ignore_errors_until,
-        #     "ignore_invalid_keys": self.ignore_invalid_keys,
-        #     "imp_jwks": self.imp_jwks,
-        #     "keytype": self.keytype,
-        #     "keyusage": self.keyusage,
-        #     "last_local": self.last_local,
-        #     "last_remote": self.last_remote,
-        #     "last_updated": self.last_updated,
-        #     "local": self.local,
-        #     "remote": self.remote,
-        #     "time_out": self.time_out,
-        # }
-
-        # if self.source:
-        #     res["source"] = self.source
-
         return res
 
     def load(self, spec):
