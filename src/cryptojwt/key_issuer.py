@@ -17,12 +17,21 @@ from .utils import qualified_name
 
 __author__ = "Roland Hedberg"
 
-
 logger = logging.getLogger(__name__)
 
 
 class KeyIssuer(object):
     """ A key issuer instance contains a number of KeyBundles. """
+
+    params = {
+        "ca_certs": None,
+        "keybundle_cls": KeyBundle,
+        "remove_after": 3600,
+        "httpc": None,
+        "httpc_params": None,
+        "name": "",
+        "spec2key": None,
+    }
 
     def __init__(
         self,
@@ -360,27 +369,23 @@ class KeyIssuer(object):
         :return: A dictionary
         """
 
-        _bundles = []
-        for kb in self._bundles:
-            _bundles.append(kb.dump(exclude_attributes=exclude_attributes))
+        if exclude_attributes is None:
+            exclude_attributes = []
 
-        info = {
-            "name": self.name,
-            "bundles": _bundles,
-            "keybundle_cls": qualified_name(self.keybundle_cls),
-            "spec2key": self.spec2key,
-            "ca_certs": self.ca_certs,
-            "remove_after": self.remove_after,
-            "httpc_params": self.httpc_params,
-        }
+        info = {}
+        for attr, default in self.params.items():
+            if attr in exclude_attributes:
+                continue
+            val = getattr(self, attr)
+            if attr == "keybundle_cls":
+                val = qualified_name(val)
+            info[attr] = val
 
-        # remove after the fact
-        if exclude_attributes:
-            for attr in exclude_attributes:
-                try:
-                    del info[attr]
-                except KeyError:
-                    pass
+        if "bundles" not in exclude_attributes:
+            _bundles = []
+            for kb in self._bundles:
+                _bundles.append(kb.dump(exclude_attributes=exclude_attributes))
+            info["bundles"] = _bundles
 
         return info
 
@@ -390,24 +395,20 @@ class KeyIssuer(object):
         :param items: A dictionary with the information to load
         :return:
         """
-        self.name = info["name"]
-        self.keybundle_cls = importer(info["keybundle_cls"])
-        self.spec2key = info["spec2key"]
-        self.ca_certs = info["ca_certs"]
-        self.remove_after = info["remove_after"]
-        self.httpc_params = info["httpc_params"]
+        for attr, default in self.params.items():
+            val = info.get(attr)
+            if val:
+                if attr == "keybundle_cls":
+                    val = importer(val)
+                setattr(self, attr, val)
+
         self._bundles = [KeyBundle().load(val) for val in info["bundles"]]
         return self
 
     def flush(self):
-        self.ca_certs = (None,)
-        self.keybundle_cls = (KeyBundle,)
-        self.remove_after = (3600,)
-        self.httpc = (None,)
-        self.httpc_params = (None,)
-        self.name = ""
-        self.spec2key = None
-        self.remove_after = 0
+        for attr, default in self.params.items():
+            setattr(self, attr, default)
+
         self._bundles = []
         return self
 

@@ -153,6 +153,26 @@ def ec_init(spec):
 class KeyBundle:
     """The Key Bundle"""
 
+    params = {
+        "cache_time": 0,
+        "etag": "",
+        "fileformat": "jwks",
+        "httpc_params": {},
+        "ignore_errors_period": 0,
+        "ignore_errors_until": None,
+        "ignore_invalid_keys": True,
+        "imp_jwks": None,
+        "keytype": "RSA",
+        "keyusage": None,
+        "last_local": None,
+        "last_remote": None,
+        "last_updated": 0,
+        "local": False,
+        "remote": False,
+        "source": None,
+        "time_out": 0,
+    }
+
     def __init__(
         self,
         keys=None,
@@ -491,6 +511,7 @@ class KeyBundle:
 
             # reread everything
             self._keys = []
+            updated = None
 
             try:
                 if self.local:
@@ -753,66 +774,67 @@ class KeyBundle:
         return [k for k in self._keys if k not in bundle]
 
     def dump(self, exclude_attributes: Optional[List[str]] = None):
-        _keys = []
-        for _k in self._keys:
-            _ser = _k.to_dict()
-            if _k.inactive_since:
-                _ser["inactive_since"] = _k.inactive_since
-            _keys.append(_ser)
+        if exclude_attributes is None:
+            exclude_attributes = []
 
-        res = {
-            "keys": _keys,
-            "cache_time": self.cache_time,
-            "etag": self.etag,
-            "fileformat": self.fileformat,
-            "httpc_params": self.httpc_params,
-            "ignore_errors_period": self.ignore_errors_period,
-            "ignore_errors_until": self.ignore_errors_until,
-            "ignore_invalid_keys": self.ignore_invalid_keys,
-            "imp_jwks": self.imp_jwks,
-            "keytype": self.keytype,
-            "keyusage": self.keyusage,
-            "last_local": self.last_local,
-            "last_remote": self.last_remote,
-            "last_updated": self.last_updated,
-            "local": self.local,
-            "remote": self.remote,
-            "time_out": self.time_out,
-        }
+        res = {}
 
-        if self.source:
-            res["source"] = self.source
+        if "keys" not in exclude_attributes:
+            _keys = []
+            for _k in self._keys:
+                _ser = _k.to_dict()
+                if _k.inactive_since:
+                    _ser["inactive_since"] = _k.inactive_since
+                _keys.append(_ser)
+            res["keys"] = _keys
 
-        if exclude_attributes:
-            for attr in exclude_attributes:
-                try:
-                    del res[attr]
-                except KeyError:
-                    pass
+        for attr, default in self.params.items():
+            if attr in exclude_attributes:
+                continue
+            val = getattr(self, attr)
+            res[attr] = val
+
+        # res = {
+        #     "cache_time": self.cache_time,
+        #     "etag": self.etag,
+        #     "fileformat": self.fileformat,
+        #     "httpc_params": self.httpc_params,
+        #     "ignore_errors_period": self.ignore_errors_period,
+        #     "ignore_errors_until": self.ignore_errors_until,
+        #     "ignore_invalid_keys": self.ignore_invalid_keys,
+        #     "imp_jwks": self.imp_jwks,
+        #     "keytype": self.keytype,
+        #     "keyusage": self.keyusage,
+        #     "last_local": self.last_local,
+        #     "last_remote": self.last_remote,
+        #     "last_updated": self.last_updated,
+        #     "local": self.local,
+        #     "remote": self.remote,
+        #     "time_out": self.time_out,
+        # }
+
+        # if self.source:
+        #     res["source"] = self.source
 
         return res
 
     def load(self, spec):
+        """
+        Sets attributes according to a specification.
+        Does not overwrite an existing attributes value with a default value.
+
+        :param spec: Dictionary with attributes and value to populate the instance with
+        :return: The instance itself
+        """
         _keys = spec.get("keys", [])
         if _keys:
             self.do_keys(_keys)
-        self.cache_time = spec.get("cache_time", 0)
-        self.etag = spec.get("etag", "")
-        self.fileformat = spec.get("fileformat", "jwks")
-        self.httpc_params = spec.get("httpc_params", {})
-        self.ignore_errors_period = spec.get("ignore_errors_period", 0)
-        self.ignore_errors_until = spec.get("ignore_errors_until", None)
-        self.ignore_invalid_keys = spec.get("ignore_invalid_keys", True)
-        self.imp_jwks = spec.get("imp_jwks", None)
-        self.keytype = (spec.get("keytype", "RSA"),)
-        self.keyusage = (spec.get("keyusage", None),)
-        self.last_local = spec.get("last_local", None)
-        self.last_remote = spec.get("last_remote", None)
-        self.last_updated = spec.get("last_updated", 0)
-        self.local = spec.get("local", False)
-        self.remote = spec.get("remote", False)
-        self.source = spec.get("source", None)
-        self.time_out = spec.get("time_out", 0)
+
+        for attr, default in self.params.items():
+            val = spec.get(attr)
+            if val:
+                setattr(self, attr, val)
+
         return self
 
     def flush(self):
