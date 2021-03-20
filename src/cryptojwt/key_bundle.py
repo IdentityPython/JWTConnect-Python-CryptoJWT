@@ -153,18 +153,18 @@ class KeyBundle:
     """The Key Bundle"""
 
     def __init__(
-            self,
-            keys=None,
-            source="",
-            cache_time=300,
-            ignore_errors_period=0,
-            fileformat="jwks",
-            keytype="RSA",
-            keyusage=None,
-            kid="",
-            ignore_invalid_keys=True,
-            httpc=None,
-            httpc_params=None,
+        self,
+        keys=None,
+        source="",
+        cache_time=300,
+        ignore_errors_period=0,
+        fileformat="jwks",
+        keytype="RSA",
+        keyusage=None,
+        kid="",
+        ignore_invalid_keys=True,
+        httpc=None,
+        httpc_params=None,
     ):
         """
         Contains a set of keys that have a common origin.

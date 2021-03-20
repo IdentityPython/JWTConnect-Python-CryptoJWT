@@ -351,7 +351,7 @@ class KeyIssuer(object):
             nr += len(kb)
         return nr
 
-    def dump(self, exclude=None, cutoff: Optional[list]=None) -> dict:
+    def dump(self, exclude=None, cutoff: Optional[list] = None) -> dict:
         """
         Returns the content as a dictionary.
 
