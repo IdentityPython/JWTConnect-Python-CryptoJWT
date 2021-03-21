@@ -6,6 +6,8 @@ import os
 import time
 from datetime import datetime
 from functools import cmp_to_key
+from typing import List
+from typing import Optional
 
 import requests
 
@@ -24,7 +26,6 @@ from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
 from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
-from .jwk.rsa import import_private_rsa_key_from_file
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
 
@@ -152,6 +153,26 @@ def ec_init(spec):
 class KeyBundle:
     """The Key Bundle"""
 
+    params = {
+        "cache_time": 0,
+        "etag": "",
+        "fileformat": "jwks",
+        "httpc_params": {},
+        "ignore_errors_period": 0,
+        "ignore_errors_until": None,
+        "ignore_invalid_keys": True,
+        "imp_jwks": None,
+        "keytype": "RSA",
+        "keyusage": None,
+        "last_local": None,
+        "last_remote": None,
+        "last_updated": 0,
+        "local": False,
+        "remote": False,
+        "source": None,
+        "time_out": 0,
+    }
+
     def __init__(
         self,
         keys=None,
@@ -189,22 +210,22 @@ class KeyBundle:
         """
 
         self._keys = []
-        self.remote = False
-        self.local = False
         self.cache_time = cache_time
+        self.etag = ""
+        self.fileformat = fileformat.lower()
         self.ignore_errors_period = ignore_errors_period
         self.ignore_errors_until = None  # UNIX timestamp of last error
-        self.time_out = 0
-        self.etag = ""
-        self.source = None
-        self.fileformat = fileformat.lower()
+        self.ignore_invalid_keys = ignore_invalid_keys
+        self.imp_jwks = None
         self.keytype = keytype
         self.keyusage = keyusage
-        self.imp_jwks = None
-        self.last_updated = 0
-        self.last_remote = None  # HTTP Date of last remote update
         self.last_local = None  # UNIX timestamp of last local update
-        self.ignore_invalid_keys = ignore_invalid_keys
+        self.last_remote = None  # HTTP Date of last remote update
+        self.last_updated = 0
+        self.local = False
+        self.remote = False
+        self.source = None
+        self.time_out = 0
 
         if httpc:
             self.httpc = httpc
@@ -490,6 +511,7 @@ class KeyBundle:
 
             # reread everything
             self._keys = []
+            updated = None
 
             try:
                 if self.local:
@@ -751,48 +773,68 @@ class KeyBundle:
 
         return [k for k in self._keys if k not in bundle]
 
-    def dump(self):
-        _keys = []
-        for _k in self._keys:
-            _ser = _k.to_dict()
-            if _k.inactive_since:
-                _ser["inactive_since"] = _k.inactive_since
-            _keys.append(_ser)
+    def dump(self, exclude_attributes: Optional[List[str]] = None):
+        if exclude_attributes is None:
+            exclude_attributes = []
 
-        res = {
-            "keys": _keys,
-            "fileformat": self.fileformat,
-            "last_updated": self.last_updated,
-            "last_remote": self.last_remote,
-            "last_local": self.last_local,
-            "httpc_params": self.httpc_params,
-            "remote": self.remote,
-            "local": self.local,
-            "imp_jwks": self.imp_jwks,
-            "time_out": self.time_out,
-            "cache_time": self.cache_time,
-        }
+        res = {}
 
-        if self.source:
-            res["source"] = self.source
+        if "keys" not in exclude_attributes:
+            _keys = []
+            for _k in self._keys:
+                _ser = _k.to_dict()
+                if _k.inactive_since:
+                    _ser["inactive_since"] = _k.inactive_since
+                _keys.append(_ser)
+            res["keys"] = _keys
+
+        for attr, default in self.params.items():
+            if attr in exclude_attributes:
+                continue
+            val = getattr(self, attr)
+            res[attr] = val
 
         return res
 
     def load(self, spec):
+        """
+        Sets attributes according to a specification.
+        Does not overwrite an existing attributes value with a default value.
+
+        :param spec: Dictionary with attributes and value to populate the instance with
+        :return: The instance itself
+        """
         _keys = spec.get("keys", [])
         if _keys:
             self.do_keys(_keys)
-        self.source = spec.get("source", None)
-        self.fileformat = spec.get("fileformat", "jwks")
-        self.last_updated = spec.get("last_updated", 0)
-        self.last_remote = spec.get("last_remote", None)
-        self.last_local = spec.get("last_local", None)
-        self.remote = spec.get("remote", False)
-        self.local = spec.get("local", False)
-        self.imp_jwks = spec.get("imp_jwks", None)
-        self.time_out = spec.get("time_out", 0)
-        self.cache_time = spec.get("cache_time", 0)
-        self.httpc_params = spec.get("httpc_params", {})
+
+        for attr, default in self.params.items():
+            val = spec.get(attr)
+            if val:
+                setattr(self, attr, val)
+
+        return self
+
+    def flush(self):
+        self._keys = []
+        self.cache_time = (300,)
+        self.etag = ""
+        self.fileformat = "jwks"
+        # self.httpc=None,
+        self.httpc_params = (None,)
+        self.ignore_errors_period = 0
+        self.ignore_errors_until = None
+        self.ignore_invalid_keys = True
+        self.imp_jwks = None
+        self.keytype = ("RSA",)
+        self.keyusage = (None,)
+        self.last_local = None  # UNIX timestamp of last local update
+        self.last_remote = None  # HTTP Date of last remote update
+        self.last_updated = 0
+        self.local = False
+        self.remote = False
+        self.source = None
+        self.time_out = 0
         return self
 
 
@@ -1246,3 +1288,19 @@ def init_key(filename, type, kid="", **kwargs):
     _new_key = key_gen(type, kid=kid, **kwargs)
     dump_jwk(filename, _new_key)
     return _new_key
+
+
+def key_by_alg(alg: str):
+    if alg.startswith("RS"):
+        return key_gen("RSA", alg="RS256")
+    elif alg.startswith("ES"):
+        if alg == "ES256":
+            return key_gen("EC", crv="P-256")
+        elif alg == "ES384":
+            return key_gen("EC", crv="P-384")
+        elif alg == "ES512":
+            return key_gen("EC", crv="P-521")
+    elif alg.startswith("HS"):
+        return key_gen("sym")
+
+    raise ValueError("Don't know who to create a key to use with '{}'".format(alg))

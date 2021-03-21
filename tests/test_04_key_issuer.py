@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import time
@@ -741,6 +742,14 @@ def test_dump():
     nkj = KeyIssuer().load(res)
     assert nkj.get("sig", "rsa", kid="kriMPdmBvx68skT8-mPAB3BseeA")
     assert nkj.get("sig", "rsa", kid="MnC_VZcATfM5pOYiJHMba9goEKY")
+
+
+def test_dump_json():
+    issuer = KeyIssuer()
+    issuer.add_kb(KeyBundle(JWK2["keys"]))
+
+    res = issuer.dump()
+    assert json.dumps(res)
 
 
 def test_contains():

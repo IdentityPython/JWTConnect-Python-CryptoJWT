@@ -470,7 +470,7 @@ class TestKeyJar(object):
             _msg = "{} is not available at this moment!".format(_url)
             warnings.warn(_msg)
         else:
-            assert iss_kes[0].keys()
+            assert iss_keys[0].keys()
 
 
 def test_import_jwks():
@@ -1031,6 +1031,16 @@ def test_dump():
     assert set(nkj.owners()) == {"Alice", "Bob", "C"}
     assert nkj.get_signing_key("rsa", "Alice", kid="abc")
     assert nkj.get_signing_key("rsa", "C", kid="MnC_VZcATfM5pOYiJHMba9goEKY")
+
+
+def test_dump_json():
+    kj = KeyJar()
+    kj.add_kb("Alice", KeyBundle(JWK0["keys"]))
+    kj.add_kb("Bob", KeyBundle(JWK1["keys"]))
+    kj.add_kb("C", KeyBundle(JWK2["keys"]))
+
+    res = kj.dump()
+    assert json.dumps(res)
 
 
 def test_contains():

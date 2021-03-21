@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+from typing import List
+from typing import Optional
 
 from requests import request
 
@@ -15,12 +17,20 @@ from .utils import qualified_name
 
 __author__ = "Roland Hedberg"
 
-
 logger = logging.getLogger(__name__)
 
 
 class KeyIssuer(object):
     """ A key issuer instance contains a number of KeyBundles. """
+
+    params = {
+        "ca_certs": None,
+        "httpc_params": None,
+        "keybundle_cls": KeyBundle,
+        "name": "",
+        "remove_after": 3600,
+        "spec2key": None,
+    }
 
     def __init__(
         self,
@@ -45,14 +55,13 @@ class KeyIssuer(object):
 
         self._bundles = []
 
-        self.keybundle_cls = keybundle_cls
-        self.name = name
-
-        self.spec2key = {}
         self.ca_certs = ca_certs
-        self.remove_after = remove_after
         self.httpc = httpc or request
         self.httpc_params = httpc_params or {}
+        self.keybundle_cls = keybundle_cls
+        self.name = name
+        self.remove_after = remove_after
+        self.spec2key = {}
 
     def __repr__(self) -> str:
         return '<KeyIssuer "{}" {}>'.format(self.name, self.key_summary())
@@ -350,41 +359,55 @@ class KeyIssuer(object):
             nr += len(kb)
         return nr
 
-    def dump(self, exclude=None):
+    def dump(self, exclude_attributes: Optional[List[str]] = None) -> dict:
         """
         Returns the content as a dictionary.
 
+        :param exclude_attributes: List of attribute names for objects that should be ignored.
         :return: A dictionary
         """
 
-        _bundles = []
-        for kb in self._bundles:
-            _bundles.append(kb.dump())
+        if exclude_attributes is None:
+            exclude_attributes = []
 
-        info = {
-            "name": self.name,
-            "bundles": _bundles,
-            "keybundle_cls": qualified_name(self.keybundle_cls),
-            "spec2key": self.spec2key,
-            "ca_certs": self.ca_certs,
-            "remove_after": self.remove_after,
-            "httpc_params": self.httpc_params,
-        }
+        info = {}
+        for attr, default in self.params.items():
+            if attr in exclude_attributes:
+                continue
+            val = getattr(self, attr)
+            if attr == "keybundle_cls":
+                val = qualified_name(val)
+            info[attr] = val
+
+        if "bundles" not in exclude_attributes:
+            _bundles = []
+            for kb in self._bundles:
+                _bundles.append(kb.dump(exclude_attributes=exclude_attributes))
+            info["bundles"] = _bundles
+
         return info
 
     def load(self, info):
         """
 
-        :param items: A list with the information
+        :param items: A dictionary with the information to load
         :return:
         """
-        self.name = info["name"]
-        self.keybundle_cls = importer(info["keybundle_cls"])
-        self.spec2key = info["spec2key"]
-        self.ca_certs = info["ca_certs"]
-        self.remove_after = info["remove_after"]
-        self.httpc_params = info["httpc_params"]
+        for attr, default in self.params.items():
+            val = info.get(attr)
+            if val:
+                if attr == "keybundle_cls":
+                    val = importer(val)
+                setattr(self, attr, val)
+
         self._bundles = [KeyBundle().load(val) for val in info["bundles"]]
+        return self
+
+    def flush(self):
+        for attr, default in self.params.items():
+            setattr(self, attr, default)
+
+        self._bundles = []
         return self
 
     def update(self):

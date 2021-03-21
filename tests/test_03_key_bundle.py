@@ -953,15 +953,22 @@ def test_export_inactive():
     res = kb.dump()
     assert set(res.keys()) == {
         "cache_time",
+        "etag",
         "fileformat",
         "httpc_params",
+        "ignore_errors_until",
+        "ignore_errors_period",
+        "ignore_invalid_keys",
         "imp_jwks",
         "keys",
+        "keytype",
+        "keyusage",
         "last_updated",
         "last_remote",
         "last_local",
         "remote",
         "local",
+        "source",
         "time_out",
     }
 
@@ -1079,3 +1086,31 @@ def test_ignore_invalid_keys():
 
     with pytest.raises(UnknownKeyType):
         KeyBundle(keys={"keys": [rsa_key_dict]}, ignore_invalid_keys=False)
+
+
+def test_exclude_attributes():
+    source = "https://example.com/keys.json"
+    # Mock response
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
+        httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
+        kb.do_remote()
+
+    exp = kb.dump(exclude_attributes=["cache_time", "ignore_invalid_keys"])
+    kb2 = KeyBundle(cache_time=600, ignore_invalid_keys=False).load(exp)
+    assert kb2.cache_time == 600
+    assert kb2.ignore_invalid_keys is False
+
+
+def test_remote_dump_json():
+    source = "https://example.com/keys.json"
+    # Mock response
+    with responses.RequestsMock() as rsps:
+        rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
+        httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
+        kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
+        kb.do_remote()
+
+    exp = kb.dump()
+    assert json.dumps(exp)

@@ -32,7 +32,6 @@ class KeyJar(object):
         remove_after=3600,
         httpc=None,
         httpc_params=None,
-        storage=None,
     ):
         """
         KeyJar init function
@@ -43,15 +42,9 @@ class KeyJar(object):
         :param remove_after: How long keys marked as inactive will remain in the key Jar.
         :param httpc: A HTTP client to use. Default is Requests request.
         :param httpc_params: HTTP request parameters
-        :param storage: An instance that can store information. It basically look like dictionary.
         :return: Keyjar instance
         """
-
-        if storage is None:
-            self._issuers = {}
-        else:
-            self._issuers = storage
-
+        self._issuers = {}
         self.spec2key = {}
         self.ca_certs = ca_certs
         self.keybundle_cls = keybundle_cls
@@ -617,8 +610,6 @@ class KeyJar(object):
         """
         Make deep copy of the content of this key jar.
 
-        Note that if this key jar uses an external storage module the copy will not.
-
         :return: A :py:class:`oidcmsg.key_jar.KeyJar` instance
         """
 
@@ -635,29 +626,67 @@ class KeyJar(object):
     def __len__(self):
         return len(self._issuers)
 
-    def dump(self, exclude=None):
+    def _dump_issuers(
+        self,
+        exclude_issuers: Optional[List[str]] = None,
+        exclude_attributes: Optional[List[str]] = None,
+    ):
+        _issuers = {}
+        for _id, _issuer in self._issuers.items():
+            if exclude_issuers and _issuer.name in exclude_issuers:
+                continue
+            _issuers[_id] = _issuer.dump(exclude_attributes=exclude_attributes)
+        return _issuers
+
+    def dump(
+        self,
+        exclude_issuers: Optional[List[str]] = None,
+        exclude_attributes: Optional[List[str]] = None,
+    ) -> dict:
         """
         Returns the key jar content as dictionary
 
+        :param exclude_issuers: A list of issuers you don't want included.
+        :param exclude_attributes: list of attribute names that should be ignored when dumping.
+        :type exclude_attributes: list
         :return: A dictionary
         """
 
         info = {
-            "spec2key": self.spec2key,
             "ca_certs": self.ca_certs,
+            "httpc_params": self.httpc_params,
             "keybundle_cls": qualified_name(self.keybundle_cls),
             "remove_after": self.remove_after,
-            "httpc_params": self.httpc_params,
+            "spec2key": self.spec2key,
         }
 
-        _issuers = {}
-        for _id, _issuer in self._issuers.items():
-            if exclude and _issuer.name in exclude:
-                continue
-            _issuers[_id] = _issuer.dump()
-        info["issuers"] = _issuers
+        if exclude_attributes:
+            for attr in exclude_attributes:
+                try:
+                    del info[attr]
+                except KeyError:
+                    pass
+
+        if exclude_attributes is None:
+            info["issuers"] = self._dump_issuers(
+                exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
+            )
+        elif "issuers" not in exclude_attributes:
+            info["issuers"] = self._dump_issuers(
+                exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
+            )
 
         return info
+
+    def dumps(self, exclude_issuers: Optional[List[str]] = None):
+        """
+        Returns a JSON representation of the key jar
+
+        :param exclude_issuers: Exclude these issuers
+        :return: A string
+        """
+        _dict = self.dump(exclude_issuers=exclude_issuers)
+        return json.dumps(_dict)
 
     def load(self, info):
         """
@@ -665,14 +694,32 @@ class KeyJar(object):
         :param info: A dictionary with the information
         :return:
         """
-        self.spec2key = info["spec2key"]
-        self.ca_certs = info["ca_certs"]
-        self.keybundle_cls = importer(info["keybundle_cls"])
-        self.remove_after = info["remove_after"]
-        self.httpc_params = info["httpc_params"]
+        self.ca_certs = info.get("ca_certs", None)
+        self.httpc_params = info.get("httpc_params", None)
+        self.keybundle_cls = importer(info.get("keybundle_cls", KeyBundle))
+        self.remove_after = info.get("remove_after", 3600)
+        self.spec2key = info.get("spec2key", {})
 
-        for _issuer_id, _issuer_desc in info["issuers"].items():
-            self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
+        _issuers = info.get("issuers", None)
+        if _issuers is None:
+            self._issuers = {}
+        else:
+            for _issuer_id, _issuer_desc in _issuers.items():
+                self._issuers[_issuer_id] = KeyIssuer().load(_issuer_desc)
+        return self
+
+    def loads(self, string):
+        return self.load(json.loads(string))
+
+    def flush(self):
+        self.ca_certs = None
+        self.httpc_params = None
+        self._issuers = {}
+        self.keybundle_cls = KeyBundle
+        self.remove_after = 3600
+        self.spec2key = {}
+        # self.httpc=None,
+
         return self
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
@@ -705,7 +752,7 @@ class KeyJar(object):
 # =============================================================================
 
 
-def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=None):
+def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id=""):
     """
     Builds a :py:class:`oidcmsg.key_jar.KeyJar` instance or adds keys to
     an existing KeyJar based on a key specification.
@@ -744,7 +791,6 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=N
         kid_template is given then the built-in function add_kid() will be used.
     :param keyjar: If an KeyJar instance the new keys are added to this key jar.
     :param issuer_id: The default owner of the keys in the key jar.
-    :param storage: A Storage instance.
     :return: A KeyJar instance
     """
 
@@ -753,7 +799,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id="", storage=N
         return None
 
     if keyjar is None:
-        keyjar = KeyJar(storage=storage)
+        keyjar = KeyJar()
 
     keyjar[issuer_id] = _issuer
 
@@ -767,7 +813,6 @@ def init_key_jar(
     key_defs="",
     issuer_id="",
     read_only=True,
-    storage=None,
 ):
     """
     A number of cases here:
@@ -805,7 +850,6 @@ def init_key_jar(
     :param key_defs: A definition of what keys should be created if they are not already available
     :param issuer_id: The owner of the keys
     :param read_only: This function should not attempt to write anything to a file system.
-    :param storage: A Storage instance.
     :return: An instantiated :py:class;`oidcmsg.key_jar.KeyJar` instance
     """
 
@@ -819,7 +863,7 @@ def init_key_jar(
     if _issuer is None:
         raise ValueError("Could not find any keys")
 
-    keyjar = KeyJar(storage=storage)
+    keyjar = KeyJar()
     keyjar[issuer_id] = _issuer
     return keyjar
 
