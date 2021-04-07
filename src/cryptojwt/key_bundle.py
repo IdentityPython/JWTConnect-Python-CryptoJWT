@@ -47,6 +47,8 @@ K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
 
 MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
 
+update_lock = threading.Lock()
+
 
 def harmonize_usage(use):
     """
@@ -508,7 +510,7 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-            with threading.Lock():
+            with update_lock:
                 _old_keys = self._keys  # just in case
 
                 # reread everything
