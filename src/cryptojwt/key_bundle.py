@@ -3,6 +3,7 @@ import copy
 import json
 import logging
 import os
+import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
@@ -507,34 +508,35 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-            _old_keys = self._keys  # just in case
+            with threading.Lock():
+                _old_keys = self._keys  # just in case
 
-            # reread everything
-            self._keys = []
-            updated = None
+                # reread everything
+                self._keys = []
+                updated = None
 
-            try:
-                if self.local:
-                    if self.fileformat in ["jwks", "jwk"]:
-                        updated = self.do_local_jwk(self.source)
-                    elif self.fileformat == "der":
-                        updated = self.do_local_der(self.source, self.keytype, self.keyusage)
-                elif self.remote:
-                    updated = self.do_remote()
-            except Exception as err:
-                LOGGER.error("Key bundle update failed: %s", err)
-                self._keys = _old_keys  # restore
-                return False
+                try:
+                    if self.local:
+                        if self.fileformat in ["jwks", "jwk"]:
+                            updated = self.do_local_jwk(self.source)
+                        elif self.fileformat == "der":
+                            updated = self.do_local_der(self.source, self.keytype, self.keyusage)
+                    elif self.remote:
+                        updated = self.do_remote()
+                except Exception as err:
+                    LOGGER.error("Key bundle update failed: %s", err)
+                    self._keys = _old_keys  # restore
+                    return False
 
-            if updated:
-                now = time.time()
-                for _key in _old_keys:
-                    if _key not in self._keys:
-                        if not _key.inactive_since:  # If already marked don't mess
-                            _key.inactive_since = now
-                        self._keys.append(_key)
-            else:
-                self._keys = _old_keys
+                if updated:
+                    now = time.time()
+                    for _key in _old_keys:
+                        if _key not in self._keys:
+                            if not _key.inactive_since:  # If already marked don't mess
+                                _key.inactive_since = now
+                            self._keys.append(_key)
+                else:
+                    self._keys = _old_keys
 
         return True
 
