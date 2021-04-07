@@ -3,12 +3,12 @@ import copy
 import json
 import logging
 import os
+import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
 from typing import List
 from typing import Optional
-import threading
 
 import requests
 
