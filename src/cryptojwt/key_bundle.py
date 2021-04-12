@@ -259,11 +259,11 @@ class KeyBundle:
             self.source = None
             if isinstance(keys, dict):
                 if "keys" in keys:
-                    self.do_keys(keys["keys"])
+                    self._do_keys(keys["keys"])
                 else:
-                    self.do_keys([keys])
+                    self._do_keys([keys])
             else:
-                self.do_keys(keys)
+                self._do_keys(keys)
         else:
             self._set_source(source, fileformat)
             if self.local:
@@ -290,9 +290,9 @@ class KeyBundle:
 
     def _do_local(self, kid):
         if self.fileformat in ["jwks", "jwk"]:
-            self.do_local_jwk(self.source)
+            self._do_local_jwk(self.source)
         elif self.fileformat == "der":
-            self.do_local_der(self.source, self.keytype, self.keyusage, kid)
+            self._do_local_der(self.source, self.keytype, self.keyusage, kid)
 
     def _local_update_required(self) -> bool:
         stat = os.stat(self.source)
@@ -304,7 +304,11 @@ class KeyBundle:
             self.last_local = stat.st_mtime
             return True
 
+    @keys_writer
     def do_keys(self, keys):
+        return self._do_keys(keys)
+
+    def _do_keys(self, keys):
         """
         Go from JWK description to binary keys
 
@@ -366,7 +370,7 @@ class KeyBundle:
 
         self.last_updated = time.time()
 
-    def do_local_jwk(self, filename):
+    def _do_local_jwk(self, filename):
         """
         Load a JWKS from a local file
 
@@ -380,14 +384,14 @@ class KeyBundle:
         with open(filename) as input_file:
             _info = json.load(input_file)
         if "keys" in _info:
-            self.do_keys(_info["keys"])
+            self._do_keys(_info["keys"])
         else:
-            self.do_keys([_info])
+            self._do_keys([_info])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
         return True
 
-    def do_local_der(self, filename, keytype, keyusage=None, kid=""):
+    def _do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
         Load a DER encoded file amd create a key from it.
 
@@ -418,7 +422,7 @@ class KeyBundle:
         if kid:
             key_args["kid"] = kid
 
-        self.do_keys([key_args])
+        self._do_keys([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
         return True
@@ -465,7 +469,7 @@ class KeyBundle:
 
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
-                self.do_keys(self.imp_jwks["keys"])
+                self._do_keys(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
@@ -538,9 +542,9 @@ class KeyBundle:
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
-                        updated = self.do_local_jwk(self.source)
+                        updated = self._do_local_jwk(self.source)
                     elif self.fileformat == "der":
-                        updated = self.do_local_der(self.source, self.keytype, self.keyusage)
+                        updated = self._do_local_der(self.source, self.keytype, self.keyusage)
                 elif self.remote:
                     updated = self.do_remote()
             except Exception as err:
@@ -840,7 +844,7 @@ class KeyBundle:
         """
         _keys = spec.get("keys", [])
         if _keys:
-            self.do_keys(_keys)
+            self._do_keys(_keys)
 
         for attr, default in self.params.items():
             val = spec.get(attr)
