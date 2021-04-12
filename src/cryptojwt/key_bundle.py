@@ -575,7 +575,7 @@ class KeyBundle:
                 _typs = [typ.lower(), typ.upper()]
                 _keys = [k for k in self._keys if k.kty in _typs]
             else:
-                _keys = self._keys
+                _keys = copy.copy(self._keys)
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -591,7 +591,7 @@ class KeyBundle:
         if update:
             self._uptodate()
         with self._lock_reader:
-            return self._keys
+            return copy.copy(self._keys)
 
     def active_keys(self):
         """Return the set of active keys."""
@@ -792,9 +792,8 @@ class KeyBundle:
 
         return _bundle
 
-    @keys_reader
     def __iter__(self):
-        return self._keys.__iter__()
+        return self.keys().__iter__()
 
     def difference(self, bundle):
         """
