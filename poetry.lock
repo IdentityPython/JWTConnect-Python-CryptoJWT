@@ -404,6 +404,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "readerwriterlock"
+version = "1.0.8"
+description = "A python implementation of the three Reader-Writer problems."
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+typing-extensions = "*"
+
+[[package]]
 name = "regex"
 version = "2020.11.13"
 description = "Alternative regular expression module, to replace re."
@@ -607,7 +618,7 @@ python-versions = "*"
 name = "typing-extensions"
 version = "3.7.4.3"
 description = "Backported and Experimental Type Hints for Python 3.5+"
-category = "dev"
+category = "main"
 optional = false
 python-versions = "*"
 
@@ -639,7 +650,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "a39019ac3af30b197f08099583fc06c61a9077638c3e351e34afd9ed019ef352"
+content-hash = "27c1fe3ba4fef2096f46f02e72a8b80b0d972f78ac6739d29af5d03609c49c52"
 
 [metadata.files]
 alabaster = [
@@ -908,6 +919,10 @@ pytest-isort = [
 pytz = [
     {file = "pytz-2021.1-py2.py3-none-any.whl", hash = "sha256:eb10ce3e7736052ed3623d49975ce333bcd712c7bb19a58b9e2089d4057d0798"},
     {file = "pytz-2021.1.tar.gz", hash = "sha256:83a4a90894bf38e243cf052c8b58f381bfe9a7a483f6a9cab140bc7f702ac4da"},
+]
+readerwriterlock = [
+    {file = "readerwriterlock-1.0.8-py3-none-any.whl", hash = "sha256:35c6277a4fdc23b7449025f708578a5069698bc7eea63ce7c6c50de175c71435"},
+    {file = "readerwriterlock-1.0.8.tar.gz", hash = "sha256:b806126d0c5ca90e84eb6f73a2bf9761df6c0b3184b9063bc229078cdf1464a7"},
 ]
 regex = [
     {file = "regex-2020.11.13-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:8b882a78c320478b12ff024e81dc7d43c1462aa4a3341c754ee65d857a521f85"},
