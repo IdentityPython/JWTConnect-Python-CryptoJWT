@@ -151,6 +151,14 @@ def ec_init(spec):
     return _kb
 
 
+def keys_reader(func):
+    def wrapper(self, *args, **kwargs):
+        with self._lock_reader:
+            return func(self, *args, **kwargs)
+
+    return wrapper
+
+
 def keys_writer(func):
     def wrapper(self, *args, **kwargs):
         with self._lock_writer:
@@ -655,6 +663,7 @@ class KeyBundle:
         except ValueError:
             pass
 
+    @keys_reader
     def __len__(self):
         """
         The number of keys.
@@ -760,8 +769,9 @@ class KeyBundle:
         return changed
 
     def __contains__(self, key):
-        return key in self._keys
+        return key in self.keys()
 
+    @keys_reader
     def copy(self):
         """
         Make deep copy of this KeyBundle
@@ -782,6 +792,7 @@ class KeyBundle:
 
         return _bundle
 
+    @keys_reader
     def __iter__(self):
         return self._keys.__iter__()
 
