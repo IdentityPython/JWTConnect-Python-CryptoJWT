@@ -834,6 +834,7 @@ class KeyBundle:
 
         return res
 
+    @keys_writer
     def load(self, spec):
         """
         Sets attributes according to a specification.
