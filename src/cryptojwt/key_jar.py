@@ -688,7 +688,12 @@ class KeyJar(object):
         _dict = self.dump(exclude_issuers=exclude_issuers)
         return json.dumps(_dict)
 
-    def load(self, info):
+    def load(
+        self,
+        info: dict,
+        init_args: Optional[dict] = None,
+        load_args: Optional[dict] = None,
+    ):
         """
 
         :param info: A dictionary with the information
