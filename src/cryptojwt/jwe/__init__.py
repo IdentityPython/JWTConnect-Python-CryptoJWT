@@ -32,6 +32,11 @@ SUPPORTED = {
     ],
 }
 
+DEPRECATED = {
+    "alg": ["RSA1_5"],
+    "enc": [],
+}
+
 
 class Encrypter(object):
     """Abstract base class for encryption algorithms."""
