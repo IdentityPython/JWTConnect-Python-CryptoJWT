@@ -318,7 +318,6 @@ class KeyJar(object):
             should be replace.
         :return: Dictionary with usage as key and keys as values
         """
-
         logger.debug("Initiating key bundle for issuer: %s" % issuer_id)
 
         _issuer = self.return_issuer(issuer_id)
