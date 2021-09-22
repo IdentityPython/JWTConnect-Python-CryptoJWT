@@ -41,7 +41,7 @@ jwtpeek = "cryptojwt.tools.jwtpeek:main"
 python = "^3.6"
 cryptography = "^3.4.6"
 requests = "^2.25.1"
-readerwriterlock = "^1.0.8"
+readerwriterlock = "^1.0.9"
 
 [tool.poetry.dev-dependencies]
 alabaster = "^0.7.12"
