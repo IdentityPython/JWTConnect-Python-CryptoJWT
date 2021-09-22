@@ -174,7 +174,7 @@ def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = No
 
 
 def main():
-    """ Main function"""
+    """Main function"""
     parser = argparse.ArgumentParser(description="JWK Conversion Utility")
 
     parser.add_argument("--kid", dest="kid", metavar="key_id", help="Key ID")

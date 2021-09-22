@@ -19,7 +19,7 @@ DEFAULT_EC_CURVE = "P-256"
 
 
 def main():
-    """ Main function"""
+    """Main function"""
     parser = argparse.ArgumentParser(description="JSON Web Key (JWK) Generator")
 
     parser.add_argument("--kty", dest="kty", metavar="type", help="Key type", required=True)

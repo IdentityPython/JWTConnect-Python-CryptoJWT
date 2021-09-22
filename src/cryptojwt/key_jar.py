@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyJar(object):
-    """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
+    """A keyjar contains a number of KeyBundles sorted by owner/issuer"""
 
     def __init__(
         self,
