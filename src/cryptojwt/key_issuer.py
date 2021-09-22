@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyIssuer(object):
-    """ A key issuer instance contains a number of KeyBundles. """
+    """A key issuer instance contains a number of KeyBundles."""
 
     params = {
         "ca_certs": None,
