@@ -688,7 +688,7 @@ class TestVerifyJWTKeys(object):
         self.sjwt_b = _jws.sign_compact([sig_key])
 
     def test_no_kid_multiple_keys(self):
-        """ This is extremely strict """
+        """This is extremely strict"""
         _jwt = factory(self.sjwt_a)
         # remove kid reference
         _jwt.jwt.headers["kid"] = ""
