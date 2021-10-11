@@ -8,12 +8,12 @@ from requests import request
 from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
-from .key_bundle import DEFAULT_HTTPC_TIMEOUT
 from .key_bundle import KeyBundle
 from .key_issuer import KeyIssuer
 from .key_issuer import build_keyissuer
 from .key_issuer import init_key_issuer
 from .utils import deprecated_alias
+from .utils import httpc_params_loader
 from .utils import importer
 from .utils import qualified_name
 
@@ -51,9 +51,7 @@ class KeyJar(object):
         self.keybundle_cls = keybundle_cls
         self.remove_after = remove_after
         self.httpc = httpc or request
-        self.httpc_params = httpc_params or {}
-        if "timeout" not in self.httpc_params:
-            self.httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
+        self.httpc_params = httpc_params_loader(httpc_params)
 
         # Now part of httpc_params
         # self.verify_ssl = verify_ssl

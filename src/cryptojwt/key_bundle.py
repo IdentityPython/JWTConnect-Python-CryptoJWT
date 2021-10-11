@@ -29,13 +29,13 @@ from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
+from .utils import httpc_params_loader
 
 __author__ = "Roland Hedberg"
 
 KEYLOADERR = "Failed to load %s key from '%s' (%s)"
 REMOTE_FAILED = "Remote key update from '{}' failed, HTTP status {}"
 MALFORMED = "Remote key update from {} failed, malformed JWKS."
-DEFAULT_HTTPC_TIMEOUT = 10
 
 LOGGER = logging.getLogger(__name__)
 
@@ -254,9 +254,7 @@ class KeyBundle:
         else:
             self.httpc = requests.request
 
-        self.httpc_params = httpc_params or {}
-        if "timeout" not in self.httpc_params:
-            self.httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
+        self.httpc_params = httpc_params_loader(httpc_params)
 
         if keys:
             self.source = None
