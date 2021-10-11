@@ -35,6 +35,7 @@ __author__ = "Roland Hedberg"
 KEYLOADERR = "Failed to load %s key from '%s' (%s)"
 REMOTE_FAILED = "Remote key update from '{}' failed, HTTP status {}"
 MALFORMED = "Remote key update from {} failed, malformed JWKS."
+DEFAULT_HTTPC_TIMEOUT = 10
 
 LOGGER = logging.getLogger(__name__)
 
@@ -254,6 +255,8 @@ class KeyBundle:
             self.httpc = requests.request
 
         self.httpc_params = httpc_params or {}
+        if "timeout" not in self.httpc_params:
+            self.httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
 
         if keys:
             self.source = None

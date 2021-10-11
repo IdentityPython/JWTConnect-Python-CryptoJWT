@@ -774,7 +774,7 @@ def test_localhost_url():
 
     kb = issuer.find(url)
     assert len(kb) == 1
-    assert kb[0].httpc_params == {"verify": False}
+    assert kb[0].httpc_params == {"timeout": 10, "verify": False}
 
 
 def test_add_url():

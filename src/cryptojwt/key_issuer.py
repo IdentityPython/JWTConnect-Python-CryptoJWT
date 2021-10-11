@@ -8,6 +8,7 @@ from requests import request
 
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
+from .key_bundle import DEFAULT_HTTPC_TIMEOUT
 from .key_bundle import KeyBundle
 from .key_bundle import build_key_bundle
 from .key_bundle import key_diff
@@ -58,6 +59,8 @@ class KeyIssuer(object):
         self.ca_certs = ca_certs
         self.httpc = httpc or request
         self.httpc_params = httpc_params or {}
+        if "timeout" not in self.httpc_params:
+            self.httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
         self.keybundle_cls = keybundle_cls
         self.name = name
         self.remove_after = remove_after
