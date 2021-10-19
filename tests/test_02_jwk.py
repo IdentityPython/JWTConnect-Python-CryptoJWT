@@ -115,6 +115,12 @@ def test_dumps():
     assert _eq(list(jwk.keys()), ["kty", "e", "n", "kid"])
 
 
+def test_key_size():
+    _ckey = import_rsa_key_from_cert_file(CERT)
+    jwk = jwk_wrap(_ckey)
+    assert jwk.key_len() == 1024
+
+
 def test_import_rsa_key():
     _ckey = import_private_rsa_key_from_file(full_path(KEY))
     assert isinstance(_ckey, rsa.RSAPrivateKey)
@@ -163,7 +169,7 @@ def test_verify_2():
     _key = RSAKey()
     _key.load_key(import_rsa_key_from_cert_file(CERT))
     assert _key.verify()
-
+    assert _key.key_len() == 1024  # default
 
 def test_cmp_rsa():
     _key1 = RSAKey()
@@ -188,12 +194,13 @@ def test_import_export_eckey():
     _key = ECKey(**ECKEY)
     _key.deserialize()
     assert _eq(list(_key.keys()), ["y", "x", "d", "crv", "kty"])
+    assert _key.key_len() == 521
 
 
 def test_new_ec_key():
     ec_key = new_ec_key("P-256")
     assert isinstance(ec_key, ECKey)
-
+    assert ec_key.key_len() == 256
 
 def test_create_eckey():
     ec = new_ec_key("P-256")
@@ -622,7 +629,7 @@ def test_mint_new_sym_key():
     assert key.use == "sig"
     assert key.kid == "one"
     assert len(key.key) == 24
-
+    assert key.key_len() == 24
 
 def test_dump_load():
     _ckey = import_rsa_key_from_cert_file(CERT)

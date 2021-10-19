@@ -178,7 +178,7 @@ class JWK(object):
 
     def get_key(self, private=False, **kwargs):
         """
-        Get a keys useful for signing and/or encrypting information.
+        Get a key useful for signing and/or encrypting information.
 
         :param private: Private key requested. If false return a public key.
         :return: A key instance. This can be an RSA, EC or other
@@ -289,6 +289,9 @@ class JWK(object):
 
     def update(self):
         pass
+
+    def key_len(self):
+        raise NotImplemented()
 
 
 def pems_to_x5c(cert_chain):

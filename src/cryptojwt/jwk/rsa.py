@@ -4,6 +4,7 @@ import logging
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptojwt.exception import KeyNotFound
 
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
@@ -469,6 +470,14 @@ class RSAKey(AsymmetricKey):
                 return False
         else:
             return cmp_private_numbers(pn1, pn2)
+
+    def key_len(self):
+        if self.priv_key:
+            return self.priv_key.key_size
+        elif self.pub_key:
+            return self.pub_key.key_size
+        else:
+            raise KeyNotFound()
 
 
 def new_rsa_key(key_size=2048, kid="", public_exponent=65537, **kwargs):
