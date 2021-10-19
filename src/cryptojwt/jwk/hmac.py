@@ -155,7 +155,7 @@ class SYMKey(JWK):
         if self.key:
             return len(self.key)
         else:
-            raise KeyNotFound()
+            raise KeyNotFound
 
 
 def new_sym_key(use="", bytes=24, kid=""):

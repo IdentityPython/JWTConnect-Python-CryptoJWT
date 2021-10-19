@@ -478,7 +478,7 @@ class RSAKey(AsymmetricKey):
         elif self.pub_key:
             return self.pub_key.key_size
         else:
-            raise KeyNotFound()
+            raise KeyNotFound
 
 
 def new_rsa_key(key_size=2048, kid="", public_exponent=65537, **kwargs):

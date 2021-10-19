@@ -291,7 +291,7 @@ class JWK(object):
         pass
 
     def key_len(self):
-        raise NotImplemented()
+        raise NotImplemented
 
 
 def pems_to_x5c(cert_chain):

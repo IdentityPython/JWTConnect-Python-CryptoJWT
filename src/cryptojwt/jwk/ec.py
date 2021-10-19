@@ -262,7 +262,7 @@ class ECKey(AsymmetricKey):
         elif self.pub_key:
             return self.pub_key.key_size
         else:
-            raise KeyNotFound()
+            raise KeyNotFound
 
 
 def cmp_keys(a, b, key_type):
