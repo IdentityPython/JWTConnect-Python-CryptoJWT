@@ -1,6 +1,8 @@
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from cryptojwt.exception import KeyNotFound
+
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..exception import UnsupportedECurve
@@ -253,6 +255,14 @@ class ECKey(AsymmetricKey):
                 return True
 
         return False
+
+    def key_len(self):
+        if self.priv_key:
+            return self.priv_key.key_size
+        elif self.pub_key:
+            return self.pub_key.key_size
+        else:
+            raise KeyNotFound
 
 
 def cmp_keys(a, b, key_type):
