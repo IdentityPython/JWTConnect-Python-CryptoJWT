@@ -172,7 +172,10 @@ def test_init_key_jar_update():
     assert len(_keyjar_3.get_signing_key("EC")) == 1
 
     _keyjar_4 = init_key_jar(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE, read_only=False,
+        private_path=PRIVATE_FILE,
+        key_defs=KEYSPEC_2,
+        public_path=PUBLIC_FILE,
+        read_only=False,
     )
 
     # Now it should

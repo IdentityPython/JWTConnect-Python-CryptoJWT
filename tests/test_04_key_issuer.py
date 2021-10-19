@@ -222,7 +222,11 @@ def test_build_keyissuer_usage():
 
 def test_build_keyissuer_missing(tmpdir):
     keys = [
-        {"type": "RSA", "key": os.path.join(tmpdir.dirname, "missing_file"), "use": ["enc", "sig"],}
+        {
+            "type": "RSA",
+            "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"],
+        }
     ]
 
     key_issuer = build_keyissuer(keys)
@@ -240,7 +244,11 @@ def test_build_RSA_keyissuer_from_file(tmpdir):
 
 def test_build_EC_keyissuer_missing(tmpdir):
     keys = [
-        {"type": "EC", "key": os.path.join(tmpdir.dirname, "missing_file"), "use": ["enc", "sig"],}
+        {
+            "type": "EC",
+            "key": os.path.join(tmpdir.dirname, "missing_file"),
+            "use": ["enc", "sig"],
+        }
     ]
 
     key_issuer = build_keyissuer(keys)
@@ -617,7 +625,10 @@ def test_init_key_issuer_update():
 
     # New set of keys, JWKSs with keys and public written to file
     _keyissuer_1 = init_key_issuer(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC, public_path=PUBLIC_FILE, read_only=False,
+        private_path=PRIVATE_FILE,
+        key_defs=KEYSPEC,
+        public_path=PUBLIC_FILE,
+        read_only=False,
     )
     assert len(_keyissuer_1) == 2
 
@@ -647,7 +658,10 @@ def test_init_key_issuer_update():
     assert len(_keyissuer_3.get("sig", "EC")) == 1
 
     _keyissuer_4 = init_key_issuer(
-        private_path=PRIVATE_FILE, key_defs=KEYSPEC_2, public_path=PUBLIC_FILE, read_only=False,
+        private_path=PRIVATE_FILE,
+        key_defs=KEYSPEC_2,
+        public_path=PUBLIC_FILE,
+        read_only=False,
     )
 
     # Now it should

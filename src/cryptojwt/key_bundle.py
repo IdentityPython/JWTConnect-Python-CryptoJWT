@@ -484,7 +484,9 @@ class KeyBundle:
             self.time_out = time.time() + self.cache_time
         else:
             LOGGER.warning(
-                "HTTP status %d reading remote JWKS from %s", _http_resp.status_code, self.source,
+                "HTTP status %d reading remote JWKS from %s",
+                _http_resp.status_code,
+                self.source,
             )
             self.ignore_errors_until = time.time() + self.ignore_errors_period
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
