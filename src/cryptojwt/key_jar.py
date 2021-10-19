@@ -690,10 +690,7 @@ class KeyJar(object):
         return json.dumps(_dict)
 
     def load(
-        self,
-        info: dict,
-        init_args: Optional[dict] = None,
-        load_args: Optional[dict] = None,
+        self, info: dict, init_args: Optional[dict] = None, load_args: Optional[dict] = None,
     ):
         """
 
@@ -814,11 +811,7 @@ def build_keyjar(key_conf, kid_template="", keyjar=None, issuer_id=""):
 
 @deprecated_alias(issuer="issuer_id", owner="issuer_id")
 def init_key_jar(
-    public_path="",
-    private_path="",
-    key_defs="",
-    issuer_id="",
-    read_only=True,
+    public_path="", private_path="", key_defs="", issuer_id="", read_only=True,
 ):
     """
     A number of cases here:
@@ -860,10 +853,7 @@ def init_key_jar(
     """
 
     _issuer = init_key_issuer(
-        public_path=public_path,
-        private_path=private_path,
-        key_defs=key_defs,
-        read_only=read_only,
+        public_path=public_path, private_path=private_path, key_defs=key_defs, read_only=read_only,
     )
 
     if _issuer is None:

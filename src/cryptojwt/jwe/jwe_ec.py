@@ -157,12 +157,7 @@ class JWE_EC(JWEKey):
                 raise Exception("Unknown key length for algorithm")
 
             self.cek = ecdh_derive_key(
-                key,
-                epubkey.pub_key,
-                apu,
-                apv,
-                str(self.headers["enc"]).encode(),
-                dk_len,
+                key, epubkey.pub_key, apu, apv, str(self.headers["enc"]).encode(), dk_len,
             )
         elif self.headers["alg"] in [
             "ECDH-ES+A128KW",

@@ -10,10 +10,7 @@ def _eq(l1, l2):
 def test_pack_jwt():
     _jwt = SimpleJWT(**{"alg": "none", "cty": "jwt"})
     jwt = _jwt.pack(
-        parts=[
-            {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True},
-            "",
-        ]
+        parts=[{"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}, "",]
     )
 
     p = jwt.split(".")

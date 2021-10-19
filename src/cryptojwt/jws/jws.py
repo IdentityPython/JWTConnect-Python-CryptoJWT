@@ -321,11 +321,7 @@ class JWS(JWx):
         for _sign in _signs:
             protected_headers = _sign.get("protected", "")
             token = b".".join(
-                [
-                    protected_headers.encode(),
-                    _payload.encode(),
-                    _sign["signature"].encode(),
-                ]
+                [protected_headers.encode(), _payload.encode(), _sign["signature"].encode(),]
             )
 
             unprotected_headers = _sign.get("header", {})

@@ -431,8 +431,7 @@ def test_jws_mm():
 
 
 @pytest.mark.parametrize(
-    "ec_func,alg",
-    [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512")],
+    "ec_func,alg", [(ec.SECP256R1, "ES256"), (ec.SECP384R1, "ES384"), (ec.SECP521R1, "ES512")],
 )
 def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"
@@ -707,9 +706,7 @@ def test_sign_json_dont_flatten_if_multiple_signatures():
     key = ECKey().load_key(P256())
     unprotected_headers = {"foo": "bar"}
     _jwt = JWS(msg="hello world", alg="ES256").sign_json(
-        headers=[(None, unprotected_headers), (None, {"abc": "xyz"})],
-        keys=[key],
-        flatten=True,
+        headers=[(None, unprotected_headers), (None, {"abc": "xyz"})], keys=[key], flatten=True,
     )
     assert "signatures" in json.loads(_jwt)
 

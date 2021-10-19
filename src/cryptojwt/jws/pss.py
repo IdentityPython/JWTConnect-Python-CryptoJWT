@@ -38,8 +38,7 @@ class PSSSigner(Signer):
         sig = key.sign(
             digest,
             padding.PSS(
-                mgf=padding.MGF1(self.hash_algorithm()),
-                salt_length=padding.PSS.MAX_LENGTH,
+                mgf=padding.MGF1(self.hash_algorithm()), salt_length=padding.PSS.MAX_LENGTH,
             ),
             utils.Prehashed(self.hash_algorithm()),
         )
@@ -60,8 +59,7 @@ class PSSSigner(Signer):
                 signature,
                 msg,
                 padding.PSS(
-                    mgf=padding.MGF1(self.hash_algorithm()),
-                    salt_length=padding.PSS.MAX_LENGTH,
+                    mgf=padding.MGF1(self.hash_algorithm()), salt_length=padding.PSS.MAX_LENGTH,
                 ),
                 self.hash_algorithm(),
             )

@@ -171,6 +171,7 @@ def test_verify_2():
     assert _key.verify()
     assert _key.key_len() == 1024  # default
 
+
 def test_cmp_rsa():
     _key1 = RSAKey()
     _key1.load_key(import_rsa_key_from_cert_file(CERT))
@@ -201,6 +202,7 @@ def test_new_ec_key():
     ec_key = new_ec_key("P-256")
     assert isinstance(ec_key, ECKey)
     assert ec_key.key_len() == 256
+
 
 def test_create_eckey():
     ec = new_ec_key("P-256")
@@ -631,6 +633,7 @@ def test_mint_new_sym_key():
     assert len(key.key) == 24
     assert key.key_len() == 24
 
+
 def test_dump_load():
     _ckey = import_rsa_key_from_cert_file(CERT)
     _key = jwk_wrap(_ckey, "sig", "kid1")
@@ -717,10 +720,7 @@ def test_x5t_calculation():
 
 @pytest.mark.parametrize(
     "filename,key_type",
-    [
-        ("ec-public.pem", ec.EllipticCurvePublicKey),
-        ("rsa-public.pem", rsa.RSAPublicKey),
-    ],
+    [("ec-public.pem", ec.EllipticCurvePublicKey), ("rsa-public.pem", rsa.RSAPublicKey),],
 )
 def test_import_public_key_from_pem_file(filename, key_type):
     _file = full_path(filename)
