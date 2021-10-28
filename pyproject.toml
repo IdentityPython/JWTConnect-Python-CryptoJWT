@@ -39,7 +39,7 @@ jwtpeek = "cryptojwt.tools.jwtpeek:main"
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-cryptography = "^3.4.6"
+cryptography = ">=3.4.6"
 requests = "^2.25.1"
 readerwriterlock = "^1.0.9"
 
