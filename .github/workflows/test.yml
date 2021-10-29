@@ -6,7 +6,7 @@ on:
 
 jobs:
   pre_job:
-    runs-on: [self-hosted, x64]
+    runs-on: ubuntu-latest
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
