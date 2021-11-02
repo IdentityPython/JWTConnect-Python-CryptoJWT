@@ -2,14 +2,14 @@
 from __future__ import print_function
 
 import base64
-from collections import Counter
 import json
 import os.path
 import struct
+from collections import Counter
 
+import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
-import pytest
 
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
@@ -122,8 +122,8 @@ def test_import_rsa_key():
 
     assert _eq(djwk.keys(), ["kty", "e", "n", "p", "q", "d", "kid"])
     assert (
-            djwk["n"] == "5zbNbHIYIkGGJ3RGdRKkYmF4gOorv5eDuUKTVtuu3VvxrpOWvwnFV"
-                         "-NY0LgqkQSMMyVzodJE3SUuwQTUHPXXY5784vnkFqzPRx6bHgPxKz7XfwQjEBTafQTMmOeYI8wFIOIHY5i0RWR-gxDbh_D5TXuUqScOOqR47vSpIbUH-nc"
+        djwk["n"] == "5zbNbHIYIkGGJ3RGdRKkYmF4gOorv5eDuUKTVtuu3VvxrpOWvwnFV"
+        "-NY0LgqkQSMMyVzodJE3SUuwQTUHPXXY5784vnkFqzPRx6bHgPxKz7XfwQjEBTafQTMmOeYI8wFIOIHY5i0RWR-gxDbh_D5TXuUqScOOqR47vSpIbUH-nc"
     )
     assert djwk["e"] == "AQAB"
 
@@ -152,12 +152,10 @@ def test_serialize_rsa_priv_key():
 
 ECKEY = {
     "crv": "P-521",
-    "x":
-        u"AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk",
+    "x": u"AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk",
     "y": u"ADSmRA43Z1DSNx_RvcLI87cdL07l6jQyyBXMoxVg_l2Th"
-         u"-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2",
-    "d":
-        u"AY5pb7A0UFiB3RELSD64fTLOSV_jazdF7fLYyuTw8lOfRhWg6Y6rUrPAxerEzgdRhajnu0ferB0d53vM9mE15j2C",
+    u"-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2",
+    "d": u"AY5pb7A0UFiB3RELSD64fTLOSV_jazdF7fLYyuTw8lOfRhWg6Y6rUrPAxerEzgdRhajnu0ferB0d53vM9mE15j2C",
 }
 
 
@@ -610,8 +608,8 @@ def test_thumbprint_rsa():
             "kty": "RSA",
             "e": "AQAB",
             "n": "3xIyjRLL1LYi2FULhN6koVwtsaixgXa5TBOMcq2EMsk_Fq"
-                 "-tSXmxA8ATYcUnuSGX3PGJ5pHwIF42eesIzQV5ypYklF0sLAkmkXow_TMDX0qoc4rdfc2prq"
-                 "-mzPWwGcYoRsjDKiSUFOUSKB41zQ6sMY2k4BWZVo1bEL0CVpVct1DDhqSME6uUKex9T2AbwWNvwFacrwJaWyKixBhiPSwVBn7dUWDnJiM39_4Lnw6JnriXcli-aJlPuXm5F_qspXL4Pfn9nR5Z9j9Qf7NFif7nVRyg8cx7OYTbbsoIbMYYG-boVPLL7ebEBZVIUysqH_WkNJlkl5m7gAs5DB_KfMx18Q",
+            "-tSXmxA8ATYcUnuSGX3PGJ5pHwIF42eesIzQV5ypYklF0sLAkmkXow_TMDX0qoc4rdfc2prq"
+            "-mzPWwGcYoRsjDKiSUFOUSKB41zQ6sMY2k4BWZVo1bEL0CVpVct1DDhqSME6uUKex9T2AbwWNvwFacrwJaWyKixBhiPSwVBn7dUWDnJiM39_4Lnw6JnriXcli-aJlPuXm5F_qspXL4Pfn9nR5Z9j9Qf7NFif7nVRyg8cx7OYTbbsoIbMYYG-boVPLL7ebEBZVIUysqH_WkNJlkl5m7gAs5DB_KfMx18Q",
         }
     )
     thumbprint = "Q1wZMrouq_iCnG7mr2y03Zxf7iE9mie-y_Mfh9-Cgk0"
@@ -666,9 +664,8 @@ def test_pem_to_x5c():
     x5c = pems_to_x5c([cert_chain])
     assert len(x5c) == 1
     assert (
-            x5c[0]
-            ==
-            "MIIB2jCCAUOgAwIBAgIBATANBgkqhkiG9w0BAQUFADA0MRgwFgYDVQQDEw9UaGUgY29kZSB0ZXN0ZXIxGDAWBgNVBAoTD1VtZWEgVW5pdmVyc2l0eTAeFw0xMjEwMDQwMDIzMDNaFw0xMzEwMDQwMDIzMDNaMDIxCzAJBgNVBAYTAlNFMSMwIQYDVQQDExpPcGVuSUQgQ29ubmVjdCBUZXN0IFNlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwf+wiusGhA+gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB/87ds3dy3Rfym/GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQCsTntG4dfW5kO/Qle6uBhIhZU+3IreIPmbwzpXoCbcgjRa01z6WiBLwDC1RLAL7ucaF/EVlUq4e0cNXKt4ESGNc1xHISOMLetwvS1SN5tKWA9HNua/SaqRtiShxLUjPjmrtpUgotLNDRvUYnTdTT1vhZar7TSPr1yObirjvz/qLw=="
+        x5c[0]
+        == "MIIB2jCCAUOgAwIBAgIBATANBgkqhkiG9w0BAQUFADA0MRgwFgYDVQQDEw9UaGUgY29kZSB0ZXN0ZXIxGDAWBgNVBAoTD1VtZWEgVW5pdmVyc2l0eTAeFw0xMjEwMDQwMDIzMDNaFw0xMzEwMDQwMDIzMDNaMDIxCzAJBgNVBAYTAlNFMSMwIQYDVQQDExpPcGVuSUQgQ29ubmVjdCBUZXN0IFNlcnZlcjCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEAwf+wiusGhA+gleZYQAOPQlNUIucPiqXdPVyieDqQbXXOPBe3nuggtVzeq7pVFH1dZz4dY2Q2LA5DaegvP8kRvoSB/87ds3dy3Rfym/GUSc5B0l1TgEobcyaep8jguRoHto6GWHfCfKqoUYZq4N8vh4LLMQwLR6zi6Jtu82nB5k8CAwEAATANBgkqhkiG9w0BAQUFAAOBgQCsTntG4dfW5kO/Qle6uBhIhZU+3IreIPmbwzpXoCbcgjRa01z6WiBLwDC1RLAL7ucaF/EVlUq4e0cNXKt4ESGNc1xHISOMLetwvS1SN5tKWA9HNua/SaqRtiShxLUjPjmrtpUgotLNDRvUYnTdTT1vhZar7TSPr1yObirjvz/qLw=="
     )
 
 
@@ -683,8 +680,8 @@ def test_certificate_fingerprint():
 
     res = certificate_fingerprint(der)
     assert (
-            res == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
-                   ":80:8B:55:49:F1:48"
+        res == "01:DF:F1:D4:5F:21:7B:2E:3A:A2:D8:CA:13:4C:41:66:03:A1:EF:3E:7B:5E:8B:69:04:5E"
+        ":80:8B:55:49:F1:48"
     )
 
     res = certificate_fingerprint(der, "sha1")
@@ -702,7 +699,7 @@ def test_x5t_calculation():
         der = cert_file.read()
 
     x5t = x5t_calculation(der)
-    assert x5t == b'8akAdSuvQXr7-yi6cKXOuu4cGBo'
+    assert x5t == b"8akAdSuvQXr7-yi6cKXOuu4cGBo"
 
 
 @pytest.mark.parametrize(
