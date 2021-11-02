@@ -349,12 +349,6 @@ def certificate_fingerprint(der, hash="sha256"):
     return ":".join([fp[i : i + 2] for i in range(0, len(fp), 2)]).upper()
 
 
-def calculate_x5t(der, hash="sha1"):
-    val = certificate_fingerprint(der, hash)
-    val = val.replace(":", "")
-    return base64.b64encode(as_bytes(val))
-
-
 def pem_hash(pem_file):
     with open(pem_file, "r") as fp:
         pem = fp.read()
