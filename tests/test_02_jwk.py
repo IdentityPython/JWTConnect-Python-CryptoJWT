@@ -15,7 +15,6 @@ from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
 from cryptojwt.exception import WrongUsage
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk import calculate_x5t
 from cryptojwt.jwk import certificate_fingerprint
 from cryptojwt.jwk import pem_hash
 from cryptojwt.jwk import pems_to_x5c
@@ -34,6 +33,7 @@ from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.jwk.x509 import import_public_key_from_pem_file
+from cryptojwt.jwk.x509 import x5t_calculation
 from cryptojwt.utils import as_bytes
 from cryptojwt.utils import as_unicode
 from cryptojwt.utils import b64e
@@ -708,14 +708,8 @@ def test_x5t_calculation():
     with open(full_path("cert.der"), "rb") as cert_file:
         der = cert_file.read()
 
-    x5t = calculate_x5t(der)
-    assert x5t == b"Q0FDRjIxOUU3MjAwQ0QxQ0NBRkQ0RjZEODQ2QjlFRTg3NDgwNDc2NA=="
-
-    x5t_s256 = calculate_x5t(der, "sha256")
-    assert (
-        x5t_s256
-        == b"MDFERkYxRDQ1RjIxN0IyRTNBQTJEOENBMTM0QzQxNjYwM0ExRUYzRTdCNUU4QjY5MDQ1RTgwOEI1NTQ5RjE0OA=="
-    )
+    x5t = x5t_calculation(der)
+    assert x5t == b"8akAdSuvQXr7-yi6cKXOuu4cGBo"
 
 
 @pytest.mark.parametrize(
