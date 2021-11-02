@@ -10,10 +10,11 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - 3.6
-          - 3.7
-          - 3.8
-          - 3.9
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -33,6 +34,8 @@ jobs:
         run: |
           pip install poetry
           poetry config virtualenvs.in-project true
+      - name: Python 3.10 workaround
+        run: poetry config experimental.new-installer false
       - name: Install dependencies
         run: poetry install
       - name: Run pytest

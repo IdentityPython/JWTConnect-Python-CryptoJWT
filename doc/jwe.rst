@@ -43,10 +43,10 @@ There is a lower level way of doing the same, it will look like this::
     >>> from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
     >>> from cryptojwt.jwe.jwe_rsa import JWE_RSA
 
-    >>> priv_key = import_private_rsa_key_from_file(KEY)
+    >>> priv_key = import_private_rsa_key_from_file('certs/key.pem')
     >>> pub_key = priv_key.public_key()
     >>> plain = b'Now is the time for all good men to come to the aid of ...'
-    >>> _rsa = JWE_RSA(plain, alg="RSA1_5", enc="A128CBC-HS256")
+    >>> _rsa = JWE_RSA(plain, alg="RSA-OAEP", enc="A128CBC-HS256")
     >>> jwe = _rsa.encrypt(pub_key)
 
 Here the key is an cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey
@@ -61,7 +61,7 @@ Decrypting using the encrypted message above.
     >>> from cryptojwt.jwe.jwe import factory
     >>> from cryptojwt.jwk.rsa import RSAKey
 
-    >>> _decryptor = factory(jwe, alg="RSA1_5", enc="A128CBC-HS256")
+    >>> _decryptor = factory(jwe, alg="RSA-OAEP", enc="A128CBC-HS256")
     >>> _dkey = RSAKey(priv_key=priv_key)
     >>> msg = _decryptor.decrypt(jwe, [_dkey])
 

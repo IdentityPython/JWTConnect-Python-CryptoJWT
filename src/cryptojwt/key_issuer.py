@@ -12,6 +12,7 @@ from .key_bundle import KeyBundle
 from .key_bundle import build_key_bundle
 from .key_bundle import key_diff
 from .key_bundle import update_key_bundle
+from .utils import httpc_params_loader
 from .utils import importer
 from .utils import qualified_name
 
@@ -21,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyIssuer(object):
-    """ A key issuer instance contains a number of KeyBundles. """
+    """A key issuer instance contains a number of KeyBundles."""
 
     params = {
         "ca_certs": None,
@@ -57,7 +58,7 @@ class KeyIssuer(object):
 
         self.ca_certs = ca_certs
         self.httpc = httpc or request
-        self.httpc_params = httpc_params or {}
+        self.httpc_params = httpc_params_loader(httpc_params)
         self.keybundle_cls = keybundle_cls
         self.name = name
         self.remove_after = remove_after
