@@ -27,7 +27,7 @@ def utc_time_sans_frac():
 
     :return: A number of seconds
     """
-    return int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds())
+    return int(datetime.utcnow().timestamp())
 
 
 def pick_key(keys, use, alg="", key_type="", kid=""):
