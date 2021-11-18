@@ -29,6 +29,7 @@ from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
+from .utils import httpc_params_loader
 
 __author__ = "Roland Hedberg"
 
@@ -253,7 +254,7 @@ class KeyBundle:
         else:
             self.httpc = requests.request
 
-        self.httpc_params = httpc_params or {}
+        self.httpc_params = httpc_params_loader(httpc_params)
 
         if keys:
             self.source = None

@@ -178,7 +178,7 @@ class JWK(object):
 
     def get_key(self, private=False, **kwargs):
         """
-        Get a keys useful for signing and/or encrypting information.
+        Get a key useful for signing and/or encrypting information.
 
         :param private: Private key requested. If false return a public key.
         :return: A key instance. This can be an RSA, EC or other
@@ -290,6 +290,9 @@ class JWK(object):
     def update(self):
         pass
 
+    def key_len(self):
+        raise NotImplemented
+
 
 def pems_to_x5c(cert_chain):
     """
@@ -347,12 +350,6 @@ def certificate_fingerprint(der, hash="sha256"):
         raise UnsupportedAlgorithm(hash)
 
     return ":".join([fp[i : i + 2] for i in range(0, len(fp), 2)]).upper()
-
-
-def calculate_x5t(der, hash="sha1"):
-    val = certificate_fingerprint(der, hash)
-    val = val.replace(":", "")
-    return base64.b64encode(as_bytes(val))
 
 
 def pem_hash(pem_file):

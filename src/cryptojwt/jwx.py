@@ -1,6 +1,7 @@
 """A basic class on which to build the JWS and JWE classes."""
 import json
 import logging
+import warnings
 
 import requests
 
@@ -8,6 +9,7 @@ from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
 
 from .exception import HeaderError
+from .jwe import DEPRECATED
 from .jwk.jwk import key_from_jwk_dict
 from .jwk.rsa import RSAKey
 from .jwk.rsa import import_rsa_key
@@ -91,6 +93,8 @@ class JWx:
                         raise ValueError("x5u")
                 else:
                     self._dict[key] = _val
+                if key in DEPRECATED and _val in DEPRECATED[key]:
+                    warnings.warn(f"{key}={_val} deprecated")
 
     def _set_jwk(self, val):
         if isinstance(val, dict):

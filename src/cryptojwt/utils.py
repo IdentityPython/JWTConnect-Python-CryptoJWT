@@ -10,6 +10,8 @@ from typing import List
 
 from cryptojwt.exception import BadSyntax
 
+DEFAULT_HTTPC_TIMEOUT = 10
+
 # ---------------------------------------------------------------------------
 # Helper functions
 
@@ -255,3 +257,10 @@ def rename_kwargs(func_name, kwargs, aliases):
                 raise TypeError("{} received both {} and {}".format(func_name, alias, new))
             warnings.warn("{} is deprecated; use {}".format(alias, new), DeprecationWarning)
             kwargs[new] = kwargs.pop(alias)
+
+
+def httpc_params_loader(httpc_params):
+    httpc_params = httpc_params or {}
+    if "timeout" not in httpc_params:
+        httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
+    return httpc_params
