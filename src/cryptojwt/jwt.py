@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 from datetime import datetime
+from datetime import timezone
 from json import JSONDecodeError
 
 from .exception import HeaderError
@@ -27,7 +28,9 @@ def utc_time_sans_frac():
 
     :return: A number of seconds
     """
-    return int((datetime.utcnow() - datetime(1970, 1, 1)).total_seconds())
+    return int(
+        (datetime.now(timezone.utc) - datetime(1970, 1, 1, tzinfo=timezone.utc)).total_seconds()
+    )
 
 
 def pick_key(keys, use, alg="", key_type="", kid=""):
