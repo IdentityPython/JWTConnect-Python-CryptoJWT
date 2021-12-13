@@ -22,7 +22,7 @@ exclude_lines = [
 
 [tool.poetry]
 name = "cryptojwt"
-version = "1.6.0"
+version = "1.6.1"
 description = "Python implementation of JWT, JWE, JWS and JWK"
 authors = ["Roland Hedberg <roland@catalogix.se>"]
 license = "Apache-2.0"
