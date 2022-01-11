@@ -54,9 +54,7 @@ def main():
     elif args.kty.upper() == "SYM" or args.kty.upper() == "OCT":
         if args.keysize is None:
             args.keysize = DEFAULT_SYM_KEYSIZE
-        jwk = new_sym_key(bytes=args.keysize)
-        if args.kid:
-            jwk.kid = args.kid
+        jwk = new_sym_key(bytes=args.keysize, kid=args.kid)
     else:
         print("Unknown key type: {}".format(args.kty), file=sys.stderr)
         exit(1)
