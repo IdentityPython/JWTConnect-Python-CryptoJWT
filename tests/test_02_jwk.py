@@ -158,10 +158,10 @@ def test_serialize_rsa_priv_key():
 
 ECKEY = {
     "crv": "P-521",
-    "x": u"AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk",
-    "y": u"ADSmRA43Z1DSNx_RvcLI87cdL07l6jQyyBXMoxVg_l2Th"
-    u"-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2",
-    "d": u"AY5pb7A0UFiB3RELSD64fTLOSV_jazdF7fLYyuTw8lOfRhWg6Y6rUrPAxerEzgdRhajnu0ferB0d53vM9mE15j2C",
+    "x": "AekpBQ8ST8a8VcfVOTNl353vSrDCLLJXmPk06wTjxrrjcBpXp5EOnYG_NjFZ6OvLFV1jSfS9tsz4qUxcWceqwQGk",
+    "y": "ADSmRA43Z1DSNx_RvcLI87cdL07l6jQyyBXMoxVg_l2Th"
+    "-x3S1WDhjDly79ajL4Kkd0AZMaZmh9ubmf63e3kyMj2",
+    "d": "AY5pb7A0UFiB3RELSD64fTLOSV_jazdF7fLYyuTw8lOfRhWg6Y6rUrPAxerEzgdRhajnu0ferB0d53vM9mE15j2C",
 }
 
 

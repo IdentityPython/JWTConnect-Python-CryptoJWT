@@ -27,7 +27,7 @@ __version__ = pkg_resources.get_distribution("cryptojwt").version
 
 logger = logging.getLogger(__name__)
 
-JWT_TYPES = (u"JWT", u"application/jws", u"JWS", u"JWE")
+JWT_TYPES = ("JWT", "application/jws", "JWS", "JWE")
 
 JWT_CLAIMS = {
     "iss": str,
