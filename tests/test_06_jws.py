@@ -641,7 +641,7 @@ def test_signer_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
+    protected = dict(header1="header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
 
     exp_protected = protected.copy()
@@ -665,14 +665,14 @@ def test_verify_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
+    protected = dict(header1="header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
     protectedHeader, enc_payload, sig = _jwt.split(".")
     data = dict(
         payload=enc_payload,
         signatures=[
             dict(
-                header=dict(alg=u"ES256", jwk=_key.serialize()),
+                header=dict(alg="ES256", jwk=_key.serialize()),
                 protected=protectedHeader,
                 signature=sig,
             )
