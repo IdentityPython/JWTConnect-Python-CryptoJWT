@@ -714,11 +714,6 @@ class KeyBundle:
         for key in self._keys:
             if key.kid == kid:
                 return key
-
-        for key in self._keys:
-            if key.kid == kid:
-                return key
-
         return None
 
     def kids(self):
