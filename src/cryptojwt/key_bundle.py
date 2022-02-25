@@ -724,9 +724,7 @@ class KeyBundle:
         """
         k = self._get_key_with_kid(kid)
         if k:
-            self._keys.remove(k)
             k.inactive_since = time.time()
-            self._keys.append(k)
             return True
         else:
             return False
