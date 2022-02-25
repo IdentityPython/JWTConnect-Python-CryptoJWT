@@ -480,7 +480,7 @@ def test_httpc_params_1():
         rsps.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
-        assert kb.do_remote()
+        assert kb._do_remote()
 
 
 @pytest.mark.network
@@ -926,7 +926,7 @@ def test_remote():
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
-        kb.do_remote()
+        kb._do_remote()
 
     exp = kb.dump()
     kb2 = KeyBundle().load(exp)
@@ -954,13 +954,13 @@ def test_remote_not_modified():
 
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
-        assert kb.do_remote()
+        assert kb._do_remote()
         assert kb.last_remote == headers.get("Last-Modified")
         timeout1 = kb.time_out
 
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, status=304, headers=headers)
-        assert not kb.do_remote()
+        assert not kb._do_remote()
         assert kb.last_remote == headers.get("Last-Modified")
         timeout2 = kb.time_out
 
@@ -994,19 +994,19 @@ def test_ignore_errors_period():
             httpc_params=httpc_params,
             ignore_errors_period=ignore_errors_period,
         )
-        res = kb.do_remote()
+        res = kb._do_remote()
         assert res == True
         assert kb.ignore_errors_until is None
 
         # refetch, but fail by using a bad source
         kb.source = source_bad
         try:
-            res = kb.do_remote()
+            res = kb._do_remote()
         except UpdateFailed:
             pass
 
         # retry should fail silently as we're in holddown
-        res = kb.do_remote()
+        res = kb._do_remote()
         assert kb.ignore_errors_until is not None
         assert res == False
 
@@ -1015,7 +1015,7 @@ def test_ignore_errors_period():
 
         # try again
         kb.source = source_good
-        res = kb.do_remote()
+        res = kb._do_remote()
         assert res == True
 
 
@@ -1037,7 +1037,7 @@ def test_exclude_attributes():
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
-        kb.do_remote()
+        kb._do_remote()
 
     exp = kb.dump(exclude_attributes=["cache_time", "ignore_invalid_keys"])
     kb2 = KeyBundle(cache_time=600, ignore_invalid_keys=False).load(exp)
@@ -1052,7 +1052,7 @@ def test_remote_dump_json():
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
-        kb.do_remote()
+        kb._do_remote()
 
     exp = kb.dump()
     assert json.dumps(exp)

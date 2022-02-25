@@ -442,7 +442,7 @@ class KeyBundle:
         self.time_out = self.last_local + self.cache_time
         return True
 
-    def do_remote(self):
+    def _do_remote(self):
         """
         Load a JWKS from a webpage.
 
@@ -564,7 +564,7 @@ class KeyBundle:
                     elif self.fileformat == "der":
                         updated = self._do_local_der(self.source, self.keytype, self.keyusage)
                 elif self.remote:
-                    updated = self.do_remote()
+                    updated = self._do_remote()
             except Exception as err:
                 LOGGER.error("Key bundle update failed: %s", err)
                 self._keys = _old_keys  # restore
