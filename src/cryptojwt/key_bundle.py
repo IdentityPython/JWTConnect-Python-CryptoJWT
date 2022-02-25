@@ -757,17 +757,9 @@ class KeyBundle:
         if not isinstance(after, float):
             after = float(after)
 
-        _kl = []
-        changed = False
-        for k in self._keys:
-            if k.inactive_since and k.inactive_since + after < now:
-                changed = True
-                continue
-
-            _kl.append(k)
-
-        self._keys = _kl
-        return changed
+        self._keys = [
+            k for k in self._keys if not k.inactive_since or k.inactive_since + after > now
+        ]
 
     def __contains__(self, key):
         return key in self.keys()
