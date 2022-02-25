@@ -410,7 +410,7 @@ def test_mark_as_inactive():
     for k in kb.keys():
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
-    kb.do_keys([desc])
+    kb.add_jwk_dicts([desc])
     assert len(kb.keys()) == 2
     assert len(kb.active_keys()) == 1
 
@@ -422,7 +422,7 @@ def test_copy():
     for k in kb.keys():
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
-    kb.do_keys([desc])
+    kb.add_jwk_dicts([desc])
 
     kbc = kb.copy()
     assert len(kbc.keys()) == 2
@@ -891,7 +891,7 @@ def test_export_inactive():
     for k in kb.keys():
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
-    kb.do_keys([desc])
+    kb.add_jwk_dicts([desc])
     res = kb.dump()
     assert set(res.keys()) == {
         "cache_time",

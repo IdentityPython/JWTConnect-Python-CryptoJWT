@@ -261,11 +261,11 @@ class KeyBundle:
             self.source = None
             if isinstance(keys, dict):
                 if "keys" in keys:
-                    self._do_keys(keys["keys"])
+                    self._add_jwk_dicts(keys["keys"])
                 else:
-                    self._do_keys([keys])
+                    self._add_jwk_dicts([keys])
             else:
-                self._do_keys(keys)
+                self._add_jwk_dicts(keys)
         else:
             self._set_source(source, fileformat)
             if self.local:
@@ -306,18 +306,34 @@ class KeyBundle:
             self.last_local = stat.st_mtime
             return True
 
-    @keys_writer
     def do_keys(self, keys):
-        return self._do_keys(keys)
+        """Compatibility function for add_jwk_dicts()"""
+        self.add_jwk_dicts(keys)
 
-    def _do_keys(self, keys):
+    @keys_writer
+    def add_jwk_dicts(self, keys):
         """
-        Go from JWK description to binary keys
+        Add JWK dictionaries
 
-        :param keys:
+        :param keys: List of JWK dictionaries
         :return:
         """
-        _new_key = []
+        self._add_jwk_dicts(keys)
+
+    def _add_jwk_dicts(self, keys):
+        _new_keys = self._jwk_dicts_to_keys(keys)
+        if _new_keys:
+            self._keys.extend(_new_keys)
+            self.last_updated = time.time()
+
+    def _jwk_dicts_to_keys(self, keys):
+        """
+        Return JWK dictionaries as list of JWK objects
+
+        :param keys: List of JWK dictionaries
+        :return: List of JWK objects
+        """
+        _new_keys = []
 
         for inst in keys:
             if inst["kty"].lower() in K2C:
@@ -361,14 +377,13 @@ class KeyBundle:
                     if _key not in self._keys:
                         if not _key.kid:
                             _key.add_kid()
-                        _new_key.append(_key)
+                        _new_keys.append(_key)
                     _error = ""
 
             if _error:
                 LOGGER.warning("While loading keys, %s", _error)
 
-        if _new_key:
-            self._keys.extend(_new_key)
+        return _new_keys
 
         self.last_updated = time.time()
 
@@ -386,9 +401,9 @@ class KeyBundle:
         with open(filename) as input_file:
             _info = json.load(input_file)
         if "keys" in _info:
-            self._do_keys(_info["keys"])
+            self._add_jwk_dicts(_info["keys"])
         else:
-            self._do_keys([_info])
+            self._add_jwk_dicts([_info])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
         return True
@@ -424,7 +439,7 @@ class KeyBundle:
         if kid:
             key_args["kid"] = kid
 
-        self._do_keys([key_args])
+        self._add_jwk_dicts([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
         return True
@@ -471,7 +486,7 @@ class KeyBundle:
 
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
-                self._do_keys(self.imp_jwks["keys"])
+                self._add_jwk_dicts(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
@@ -834,7 +849,7 @@ class KeyBundle:
         """
         _keys = spec.get("keys", [])
         if _keys:
-            self._do_keys(_keys)
+            self._add_jwk_dicts(_keys)
 
         for attr, default in self.params.items():
             val = spec.get(attr)
