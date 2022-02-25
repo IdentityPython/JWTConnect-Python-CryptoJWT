@@ -752,10 +752,7 @@ class KeyBundle:
             before it should be removed.
         :param when: To make it easier to test
         """
-        if when:
-            now = when
-        else:
-            now = time.time()
+        now = when or time.time()
 
         if not isinstance(after, float):
             after = float(after)
