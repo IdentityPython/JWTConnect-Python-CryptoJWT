@@ -321,12 +321,12 @@ class KeyBundle:
         self._add_jwk_dicts(keys)
 
     def _add_jwk_dicts(self, keys):
-        _new_keys = self._jwk_dicts_to_keys(keys)
+        _new_keys = self.jwk_dicts_as_keys(keys)
         if _new_keys:
             self._keys.extend(_new_keys)
             self.last_updated = time.time()
 
-    def _jwk_dicts_to_keys(self, keys):
+    def jwk_dicts_as_keys(self, keys):
         """
         Return JWK dictionaries as list of JWK objects
 
@@ -384,8 +384,6 @@ class KeyBundle:
                 LOGGER.warning("While loading keys, %s", _error)
 
         return _new_keys
-
-        self.last_updated = time.time()
 
     def _do_local_jwk(self, filename):
         """
@@ -474,6 +472,7 @@ class KeyBundle:
             LOGGER.error(err)
             raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err)))
 
+        new_keys = None
         load_successful = _http_resp.status_code == 200
         not_modified = _http_resp.status_code == 304
 
@@ -486,7 +485,7 @@ class KeyBundle:
 
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
-                self._add_jwk_dicts(self.imp_jwks["keys"])
+                new_keys = self.jwk_dicts_as_keys(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
@@ -507,6 +506,8 @@ class KeyBundle:
             self.ignore_errors_until = time.time() + self.ignore_errors_period
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
 
+        if new_keys is not None:
+            self._keys = new_keys
         self.last_updated = time.time()
         self.ignore_errors_until = None
         return load_successful
