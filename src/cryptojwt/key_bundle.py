@@ -4,6 +4,7 @@ import copy
 import json
 import logging
 import os
+import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
@@ -11,7 +12,6 @@ from typing import List
 from typing import Optional
 
 import requests
-from readerwriterlock import rwlock
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
@@ -153,14 +153,6 @@ def ec_init(spec):
     return _kb
 
 
-def keys_reader(func):
-    def wrapper(self, *args, **kwargs):
-        with self._lock_reader:
-            return func(self, *args, **kwargs)
-
-    return wrapper
-
-
 def keys_writer(func):
     def wrapper(self, *args, **kwargs):
         with self._lock_writer:
@@ -246,9 +238,7 @@ class KeyBundle:
         self.source = None
         self.time_out = 0
 
-        self._lock = rwlock.RWLockFairD()
-        self._lock_reader = self._lock.gen_rlock()
-        self._lock_writer = self._lock.gen_wlock()
+        self._lock_writer = threading.Lock()
 
         if httpc:
             self.httpc = httpc
@@ -592,12 +582,11 @@ class KeyBundle:
         """
         self._uptodate()
 
-        with self._lock_reader:
-            if typ:
-                _typs = [typ.lower(), typ.upper()]
-                _keys = [k for k in self._keys if k.kty in _typs]
-            else:
-                _keys = self._keys[:]
+        if typ:
+            _typs = [typ.lower(), typ.upper()]
+            _keys = [k for k in self._keys[:] if k.kty in _typs]
+        else:
+            _keys = self._keys[:]
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -612,8 +601,7 @@ class KeyBundle:
         """
         if update:
             self._uptodate()
-        with self._lock_reader:
-            return self._keys[:]
+        return self._keys[:]
 
     def active_keys(self):
         """Return the set of active keys."""
@@ -685,7 +673,6 @@ class KeyBundle:
         except ValueError:
             pass
 
-    @keys_reader
     def __len__(self):
         """
         The number of keys.
@@ -707,8 +694,7 @@ class KeyBundle:
         :return: The key or None
         """
         self._uptodate()
-        with self._lock_reader:
-            return self._get_key_with_kid(kid)
+        return self._get_key_with_kid(kid)
 
     def _get_key_with_kid(self, kid):
         for key in self._keys:
@@ -775,7 +761,6 @@ class KeyBundle:
     def __contains__(self, key):
         return key in self.keys()
 
-    @keys_reader
     def copy(self):
         """
         Make deep copy of this KeyBundle
