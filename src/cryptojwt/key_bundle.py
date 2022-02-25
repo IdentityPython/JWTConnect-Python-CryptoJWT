@@ -1,4 +1,5 @@
 """Implementation of a Key Bundle."""
+
 import copy
 import json
 import logging
@@ -580,7 +581,7 @@ class KeyBundle:
                 _typs = [typ.lower(), typ.upper()]
                 _keys = [k for k in self._keys if k.kty in _typs]
             else:
-                _keys = copy.copy(self._keys)
+                _keys = self._keys[:]
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -596,7 +597,7 @@ class KeyBundle:
         if update:
             self._uptodate()
         with self._lock_reader:
-            return copy.copy(self._keys)
+            return self._keys[:]
 
     def active_keys(self):
         """Return the set of active keys."""
