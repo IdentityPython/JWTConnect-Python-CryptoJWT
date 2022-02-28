@@ -1,18 +1,21 @@
-from datetime import datetime
 import json
 import logging
 import os
 import threading
 import time
-from typing import Callable, Optional, List
-from cryptojwt.jwk import JWK
 from abc import ABC
 from abc import abstractmethod
-from cryptojwt.jwk.jwk import key_from_jwk_dict
-from .exception import UpdateFailed
+from datetime import datetime
+from typing import Callable
+from typing import List
+from typing import Optional
 
 import requests
 
+from cryptojwt.jwk import JWK
+from cryptojwt.jwk.jwk import key_from_jwk_dict
+
+from .exception import UpdateFailed
 from .utils import httpc_params_loader
 
 DEFAULT_CACHE_TIME = 300
