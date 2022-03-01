@@ -35,7 +35,7 @@ def import_private_key_from_pem_file(filename, passphrase=None):
     :return: A private key instance
     """
     with open(filename, "rb") as key_file:
-        private_key = import_private_key_from_pem_data(key_file.read(), password=passphrase)
+        private_key = import_private_key_from_pem_data(key_file.read(), passphrase=passphrase)
     return private_key
 
 
