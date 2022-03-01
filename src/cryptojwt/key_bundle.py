@@ -15,22 +15,18 @@ import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
-from cryptojwt.jwk.x509 import import_private_key_from_pem_data
 from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 
-from .cached_content import CachedContent
 from .exception import JWKException
 from .exception import UnknownKeyType
 from .exception import UnsupportedAlgorithm
 from .exception import UnsupportedECurve
 from .exception import UpdateFailed
-from .jwk import JWK
 from .jwk.ec import ECKey
 from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
 from .jwk.jwk import import_jwk
-from .jwk.jwk import key_from_jwk_dict
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .jwk.utils import harmonize_usage
@@ -51,34 +47,6 @@ LOGGER = logging.getLogger(__name__)
 
 # Make sure the keys are all uppercase
 K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
-
-
-def jwks_deserializer(data) -> List[JWK]:
-    keys = json.loads(data.decode())
-    if isinstance(keys, dict) and "keys" in keys:
-        return [key_from_jwk_dict(k) for k in keys["keys"]]
-    elif isinstance(keys, list):
-        return [key_from_jwk_dict(k) for k in keys]
-    raise ValueError("Unknown JWKS format")
-
-
-def der_deserializer(data, keytype, keyusage=None, kid=None) -> List[JWK]:
-    key_dict = {}
-    _kty = keytype.lower()
-    if _kty in ["rsa", "ec"]:
-        key_dict["kty"] = _kty
-        _key = import_private_key_from_pem_data(data)
-        key_dict["priv_key"] = _key
-        key_dict["pub_key"] = _key.public_key()
-    else:
-        raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
-    if not keyusage:
-        key_dict["use"] = ["enc", "sig"]
-    else:
-        key_dict["use"] = harmonize_usage(keyusage)
-    if kid:
-        key_dict["kid"] = kid
-    return jwk_dict_as_keys(key_dict)
 
 
 def rsa_init(spec):
@@ -253,15 +221,6 @@ class KeyBundle:
         self.time_out = 0
 
         self._lock_writer = threading.Lock()
-
-        self.content = CachedContent.from_source(
-            source=source,
-            cache_time=cache_time,
-            ignore_errors_period=ignore_errors_period,
-            httpc=httpc,
-            httpc_params=httpc_params,
-            deserializer=jwks_deserializer,
-        )
 
         if httpc:
             self.httpc = httpc
@@ -1352,41 +1311,3 @@ def key_by_alg(alg: str):
         return key_gen("sym")
 
     raise ValueError("Don't know who to create a key to use with '{}'".format(alg))
-
-
-def jwk_dict_as_keys(jwk_dict):
-    """
-    Return JWK dictionary as JWK objects
-
-    :param keys: JWK dictionary
-    :return: list of JWK objects
-    """
-
-    res = []
-    kty = jwk_dict["kty"]
-
-    if kty.lower() in K2C:
-        jwk_dict["kty"] = kty.lower()
-    elif kty.upper() in K2C:
-        jwk_dict["kty"] = kty.upper()
-    else:
-        raise UnknownKeyType(jwk_dict)
-
-    try:
-        usage = harmonize_usage(jwk_dict["use"])
-    except KeyError:
-        usage = [""]
-    else:
-        del jwk_dict["use"]
-
-    kty = jwk_dict["kty"]
-    for use in usage:
-        try:
-            key = K2C[kty](use=use, **jwk_dict)
-        except KeyError:
-            raise UnknownKeyType(jwk_dict)
-        if not key.kid:
-            key.add_kid()
-        res.append(key)
-
-    return res
