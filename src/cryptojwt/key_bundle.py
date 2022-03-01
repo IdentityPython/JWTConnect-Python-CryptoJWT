@@ -33,6 +33,7 @@ from .jwk.jwk import import_jwk
 from .jwk.jwk import key_from_jwk_dict
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
+from .jwk.utils import harmonize_usage
 from .utils import as_unicode
 from .utils import httpc_params_loader
 
@@ -50,8 +51,6 @@ LOGGER = logging.getLogger(__name__)
 
 # Make sure the keys are all uppercase
 K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
-
-MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
 
 
 def jwks_deserializer(data) -> List[JWK]:
@@ -80,23 +79,6 @@ def der_deserializer(data, keytype, keyusage=None, kid=None) -> List[JWK]:
     if kid:
         key_dict["kid"] = kid
     return jwk_dict_as_keys(key_dict)
-
-
-def harmonize_usage(use):
-    """
-
-    :param use:
-    :return: list of usage
-    """
-    if isinstance(use, str):
-        return [MAP[use]]
-
-    if isinstance(use, list):
-        _ul = list(MAP.keys())
-        _us = {MAP[u] for u in use if u in _ul}
-        return list(_us)
-
-    return None
 
 
 def rsa_init(spec):
