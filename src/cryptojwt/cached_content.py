@@ -12,22 +12,10 @@ from typing import Optional
 
 import requests
 
-from cryptojwt.jwk import JWK
-from cryptojwt.jwk.jwk import key_from_jwk_dict
-
 from .exception import UpdateFailed
 from .utils import httpc_params_loader
 
 DEFAULT_CACHE_TIME = 300
-
-
-def jwks_deserializer(data) -> List[JWK]:
-    keys = json.loads(data)
-    if isinstance(keys, dict) and "keys" in keys:
-        return [key_from_jwk_dict(k) for k in keys["keys"]]
-    elif isinstance(keys, list):
-        return [key_from_jwk_dict(k) for k in keys]
-    raise ValueError("Unknown JWKS format")
 
 
 class NotModified(Exception):
@@ -75,6 +63,7 @@ class CachedContent(ABC):
                 except NotModified:
                     return False
                 except Exception as exc:
+                    print(exc)
                     self.logger.error("Content update %s failed: %s", self.source, exc)
                     if self.ignore_errors_period:
                         self.ignore_errors_until = time.time() + self.ignore_errors_period
@@ -117,7 +106,7 @@ class CachedContentFile(CachedContent):
             self.logger.debug("Refresh forced")
         self.logger.debug("%s modified", self.filename)
         self.last_modified = last_modified
-        with open(self.filename) as file:
+        with open(self.filename, "rb") as file:
             t1 = time.perf_counter()
             content = file.read()
             t2 = time.perf_counter()
@@ -181,4 +170,4 @@ class CachedContentHTTP(CachedContent):
         self.http_etag = response.headers.get("etag")
         self.http_date = response.headers.get("date")
         self.logger.debug("%s updated", self.url)
-        return response.text
+        return response.content
