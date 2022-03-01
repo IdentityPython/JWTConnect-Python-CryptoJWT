@@ -9,16 +9,18 @@ from cryptojwt.cached_content import CachedContentFile
 from cryptojwt.cached_content import CachedContentHTTP
 from cryptojwt.exception import UpdateFailed
 from cryptojwt.jwk import JWK
+from cryptojwt.jwk.deserializer import der_private_deserializer
+from cryptojwt.jwk.deserializer import jwks_deserializer
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.key_bundle import der_deserializer
-from cryptojwt.key_bundle import jwks_deserializer
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 JWKS_FILE = "test_keys/jwk.json"
+
 RSA_PEM_FILE = "test_keys/rsa-2048-private.pem"
 EC_PEM_FILE = "test_keys/ec-p256-private.pem"
+
 JWKS_URL = "https://raw.githubusercontent.com/IdentityPython/JWTConnect-Python-CryptoJWT/main/tests/test_keys/jwk.json"
 BAD_URL = "https://httpstat.us/404"
 
@@ -86,8 +88,8 @@ def test_local_jwks():
         assert isinstance(key, JWK)
 
 
-def test_local_pem_rsa():
-    deserializer = functools.partial(der_deserializer, keytype="rsa")
+def test_local_pem_rsa_private():
+    deserializer = functools.partial(der_private_deserializer, keytype="rsa")
     cc = CachedContent.from_source(source=full_path(RSA_PEM_FILE), deserializer=deserializer)
     assert isinstance(cc, CachedContentFile)
     keys = cc.get()
@@ -97,7 +99,7 @@ def test_local_pem_rsa():
 
 
 def test_local_pem_ec():
-    deserializer = functools.partial(der_deserializer, keytype="ec")
+    deserializer = functools.partial(der_private_deserializer, keytype="ec")
     cc = CachedContent.from_source(source=full_path(EC_PEM_FILE), deserializer=deserializer)
     assert isinstance(cc, CachedContentFile)
     keys = cc.get()
