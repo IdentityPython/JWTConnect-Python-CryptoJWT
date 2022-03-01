@@ -35,10 +35,21 @@ def import_private_key_from_pem_file(filename, passphrase=None):
     :return: A private key instance
     """
     with open(filename, "rb") as key_file:
-        private_key = serialization.load_pem_private_key(
-            key_file.read(), password=passphrase, backend=default_backend()
-        )
+        private_key = import_private_key_from_pem_data(key_file.read(), password=passphrase)
     return private_key
+
+
+def import_private_key_from_pem_data(pem_data, passphrase=None):
+    """
+    Read a private key from a PEM data.
+
+    :param pem_data: Bytes of pem data
+    :param passphrase: A pass phrase to use to unpack the PEM file.
+    :return: A private key instance
+    """
+    return serialization.load_pem_private_key(
+        pem_data, password=passphrase, backend=default_backend()
+    )
 
 
 PREFIX = "-----BEGIN CERTIFICATE-----"
