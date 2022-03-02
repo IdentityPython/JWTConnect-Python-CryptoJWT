@@ -9,8 +9,8 @@ from cryptojwt.cached_content import CachedContentFile
 from cryptojwt.cached_content import CachedContentHTTP
 from cryptojwt.exception import UpdateFailed
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk.deserializer import der_private_deserializer
-from cryptojwt.jwk.deserializer import jwks_deserializer
+from cryptojwt.jwk.serialization import der_private_deserializer
+from cryptojwt.jwk.serialization import jwks_deserializer
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.rsa import RSAKey
 
