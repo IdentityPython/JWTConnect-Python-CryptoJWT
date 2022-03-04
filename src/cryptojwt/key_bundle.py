@@ -252,15 +252,16 @@ class KeyBundle:
             self.source = None
             if isinstance(keys, dict):
                 if "keys" in keys:
-                    self.add_jwk_dicts(keys["keys"])
+                    initial_keys = keys["keys"]
                 else:
-                    self.add_jwk_dicts([keys])
+                    initial_keys = [keys]
             else:
-                self.add_jwk_dicts(keys)
+                initial_keys = keys
+            self._keys = self.jwk_dicts_as_keys(initial_keys)
         else:
             self._set_source(source, fileformat)
             if self.local:
-                self._do_local(kid)
+                self._keys = self._do_local(kid)
 
     def _set_source(self, source, fileformat):
         if source.startswith("file://"):
@@ -286,6 +287,7 @@ class KeyBundle:
             self._do_local_jwk(self.source)
         elif self.fileformat == "der":
             self._do_local_der(self.source, self.keytype, self.keyusage, kid)
+        return self._keys
 
     def _local_update_required(self) -> bool:
         stat = os.stat(self.source)
