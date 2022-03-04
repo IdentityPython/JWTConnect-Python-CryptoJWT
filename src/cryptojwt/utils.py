@@ -1,4 +1,5 @@
 import base64
+import cgi
 import functools
 import importlib
 import json
@@ -264,3 +265,9 @@ def httpc_params_loader(httpc_params):
     if "timeout" not in httpc_params:
         httpc_params["timeout"] = DEFAULT_HTTPC_TIMEOUT
     return httpc_params
+
+
+def check_content_type(content_type, mime_type):
+    """Return True if the content type contains the MIME type"""
+    mt, _ = cgi.parse_header(content_type)
+    return mime_type == mt
