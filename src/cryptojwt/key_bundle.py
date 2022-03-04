@@ -284,10 +284,10 @@ class KeyBundle:
 
     def _do_local(self, kid):
         if self.fileformat in ["jwks", "jwk"]:
-            self._do_local_jwk(self.source)
+            updated, res = self._do_local_jwk(self.source)
         elif self.fileformat == "der":
-            self._do_local_der(self.source, self.keytype, self.keyusage, kid)
-        return self._keys
+            updated, res = self._do_local_der(self.source, self.keytype, self.keyusage, kid)
+        return res
 
     def _local_update_required(self) -> bool:
         stat = os.stat(self.source)
@@ -386,18 +386,19 @@ class KeyBundle:
         :return: True if load was successful or False if file hasn't been modified
         """
         if not self._local_update_required():
-            return False
+            return False, None
 
         LOGGER.info("Reading local JWKS from %s", filename)
         with open(filename) as input_file:
             _info = json.load(input_file)
         if "keys" in _info:
-            self._add_jwk_dicts(_info["keys"])
+            res = self.jwk_dicts_as_keys(_info["keys"])
         else:
-            self._add_jwk_dicts([_info])
+            res = self.jwk_dicts_as_keys([_info])
+
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True
+        return True, res
 
     def _do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
@@ -409,7 +410,7 @@ class KeyBundle:
         :return: True if load was successful or False if file hasn't been modified
         """
         if not self._local_update_required():
-            return False
+            return False, None
 
         LOGGER.info("Reading local DER from %s", filename)
         key_args = {}
@@ -430,10 +431,10 @@ class KeyBundle:
         if kid:
             key_args["kid"] = kid
 
-        self._add_jwk_dicts([key_args])
+        res = self.jwk_dicts_as_keys([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True
+        return True, res
 
     def _do_remote(self):
         """
@@ -553,9 +554,13 @@ class KeyBundle:
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
-                        updated = self._do_local_jwk(self.source)
+                        updated, k = self._do_local_jwk(self.source)
+                        if k:
+                            self._keys.extend(k)
                     elif self.fileformat == "der":
-                        updated = self._do_local_der(self.source, self.keytype, self.keyusage)
+                        updated, k = self._do_local_der(self.source, self.keytype, self.keyusage)
+                        if k:
+                            self._keys.extend(k)
                 elif self.remote:
                     updated = self._do_remote()
             except Exception as err:
