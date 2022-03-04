@@ -252,11 +252,11 @@ class KeyBundle:
             self.source = None
             if isinstance(keys, dict):
                 if "keys" in keys:
-                    self._add_jwk_dicts(keys["keys"])
+                    self.add_jwk_dicts(keys["keys"])
                 else:
-                    self._add_jwk_dicts([keys])
+                    self.add_jwk_dicts([keys])
             else:
-                self._add_jwk_dicts(keys)
+                self.add_jwk_dicts(keys)
         else:
             self._set_source(source, fileformat)
             if self.local:
@@ -310,12 +310,12 @@ class KeyBundle:
         :return:
         """
         self._add_jwk_dicts(keys)
+        self.last_updated = time.time()
 
     def _add_jwk_dicts(self, keys):
         _new_keys = self.jwk_dicts_as_keys(keys)
         if _new_keys:
             self._keys.extend(_new_keys)
-            self.last_updated = time.time()
 
     def jwk_dicts_as_keys(self, keys):
         """
