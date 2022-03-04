@@ -263,6 +263,7 @@ class KeyBundle:
             if self.local:
                 self._keys = self._do_local(kid)
 
+
     def _set_source(self, source, fileformat):
         if source.startswith("file://"):
             self.source = source[7:]
@@ -284,10 +285,10 @@ class KeyBundle:
 
     def _do_local(self, kid):
         if self.fileformat in ["jwks", "jwk"]:
-            updated, res = self._do_local_jwk(self.source)
+            updated, keys = self._do_local_jwk(self.source)
         elif self.fileformat == "der":
-            updated, res = self._do_local_der(self.source, self.keytype, self.keyusage, kid)
-        return res
+            updated, keys = self._do_local_der(self.source, self.keytype, self.keyusage, kid)
+        return keys
 
     def _local_update_required(self) -> bool:
         stat = os.stat(self.source)
@@ -311,13 +312,8 @@ class KeyBundle:
         :param keys: List of JWK dictionaries
         :return:
         """
-        self._add_jwk_dicts(keys)
+        self._keys.extend(self.jwk_dicts_as_keys(keys))
         self.last_updated = time.time()
-
-    def _add_jwk_dicts(self, keys):
-        _new_keys = self.jwk_dicts_as_keys(keys)
-        if _new_keys:
-            self._keys.extend(_new_keys)
 
     def jwk_dicts_as_keys(self, keys):
         """
@@ -392,13 +388,13 @@ class KeyBundle:
         with open(filename) as input_file:
             _info = json.load(input_file)
         if "keys" in _info:
-            res = self.jwk_dicts_as_keys(_info["keys"])
+            new_keys = self.jwk_dicts_as_keys(_info["keys"])
         else:
-            res = self.jwk_dicts_as_keys([_info])
+            new_keys = self.jwk_dicts_as_keys([_info])
 
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True, res
+        return True, new_keys
 
     def _do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
@@ -431,12 +427,12 @@ class KeyBundle:
         if kid:
             key_args["kid"] = kid
 
-        res = self.jwk_dicts_as_keys([key_args])
+        new_keys = self.jwk_dicts_as_keys([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True, res
+        return True, new_keys
 
-    def _do_remote(self):
+    def _do_remote(self, set_keys=True):
         """
         Load a JWKS from a webpage.
 
@@ -451,7 +447,7 @@ class KeyBundle:
                 self.source,
                 datetime.fromtimestamp(self.ignore_errors_until),
             )
-            return False
+            return False, None
 
         LOGGER.info("Reading remote JWKS from %s", self.source)
         try:
@@ -500,11 +496,12 @@ class KeyBundle:
             self.ignore_errors_until = time.time() + self.ignore_errors_period
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
 
-        if new_keys is not None:
+        if set_keys and new_keys:
             self._keys = new_keys
+
         self.last_updated = time.time()
         self.ignore_errors_until = None
-        return load_successful
+        return load_successful, new_keys
 
     def _parse_remote_response(self, response):
         """
@@ -545,38 +542,31 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-            _old_keys = self._keys  # just in case
-
-            # reread everything
-            self._keys = []
+            new_keys = []
             updated = None
 
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
                         updated, k = self._do_local_jwk(self.source)
-                        if k:
-                            self._keys.extend(k)
                     elif self.fileformat == "der":
                         updated, k = self._do_local_der(self.source, self.keytype, self.keyusage)
-                        if k:
-                            self._keys.extend(k)
                 elif self.remote:
-                    updated = self._do_remote()
+                    updated, k  = self._do_remote(set_keys=False)
+                if k:
+                    new_keys.extend(k)
             except Exception as err:
                 LOGGER.error("Key bundle update failed: %s", err)
-                self._keys = _old_keys  # restore
                 return False
 
             if updated:
                 now = time.time()
-                for _key in _old_keys:
-                    if _key not in self._keys:
+                for _key in self._keys:
+                    if _key not in new_keys:
                         if not _key.inactive_since:  # If already marked don't mess
                             _key.inactive_since = now
-                        self._keys.append(_key)
-            else:
-                self._keys = _old_keys
+                            new_keys.append(_key)
+                self._keys = new_keys
 
         return True
 
@@ -592,9 +582,9 @@ class KeyBundle:
 
         if typ:
             _typs = [typ.lower(), typ.upper()]
-            _keys = [k for k in self._keys[:] if k.kty in _typs]
+            _keys = [k for k in self._keys if k.kty in _typs]
         else:
-            _keys = self._keys[:]
+            _keys = self._keys
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -609,7 +599,7 @@ class KeyBundle:
         """
         if update:
             self._uptodate()
-        return self._keys[:]
+        return self._keys
 
     def active_keys(self):
         """Return the set of active keys."""
@@ -836,9 +826,11 @@ class KeyBundle:
         :param spec: Dictionary with attributes and value to populate the instance with
         :return: The instance itself
         """
+
         _keys = spec.get("keys", [])
         if _keys:
-            self._add_jwk_dicts(_keys)
+            self._keys.extend(self.jwk_dicts_as_keys(_keys))
+            self.last_updated = time.time()
 
         for attr, default in self.params.items():
             val = spec.get(attr)

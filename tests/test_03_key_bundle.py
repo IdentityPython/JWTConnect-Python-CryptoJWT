@@ -480,7 +480,8 @@ def test_httpc_params_1():
         rsps.add(method=responses.GET, url=source, json=JWKS_DICT, status=200)
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
-        assert kb._do_remote()
+        updated, _ = kb._do_remote()
+        assert updated == True
 
 
 @pytest.mark.network
@@ -920,7 +921,7 @@ def test_export_inactive():
 
 
 def test_remote():
-    source = "https://example.com/keys.json"
+    source = "https://example.com/test_remote/keys.json"
     # Mock response
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
@@ -941,7 +942,7 @@ def test_remote():
 
 
 def test_remote_not_modified():
-    source = "https://example.com/keys.json"
+    source = "https://example.com/test_remote_not_modified/keys.json"
     headers = {
         "Date": "Fri, 15 Mar 2019 10:14:25 GMT",
         "Last-Modified": "Fri, 1 Jan 1970 00:00:00 GMT",
@@ -954,13 +955,15 @@ def test_remote_not_modified():
 
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
-        assert kb._do_remote()
+        updated, _ = kb._do_remote()
+        assert updated == True
         assert kb.last_remote == headers.get("Last-Modified")
         timeout1 = kb.time_out
 
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, status=304, headers=headers)
-        assert not kb._do_remote()
+        updated, _ = kb._do_remote()
+        assert not updated
         assert kb.last_remote == headers.get("Last-Modified")
         timeout2 = kb.time_out
 
@@ -980,8 +983,8 @@ def test_remote_not_modified():
 
 
 def test_ignore_errors_period():
-    source_good = "https://example.com/keys.json"
-    source_bad = "https://example.com/keys-bad.json"
+    source_good = "https://example.com/test_ignore_errors_period/keys.json"
+    source_bad = "https://example.com/test_ignore_errors_period/keys-bad.json"
     ignore_errors_period = 1
     # Mock response
     with responses.RequestsMock() as rsps:
@@ -994,19 +997,19 @@ def test_ignore_errors_period():
             httpc_params=httpc_params,
             ignore_errors_period=ignore_errors_period,
         )
-        res = kb._do_remote()
+        res, _ = kb._do_remote()
         assert res == True
         assert kb.ignore_errors_until is None
 
         # refetch, but fail by using a bad source
         kb.source = source_bad
         try:
-            res = kb._do_remote()
+            res, _ = kb._do_remote()
         except UpdateFailed:
             pass
 
         # retry should fail silently as we're in holddown
-        res = kb._do_remote()
+        res, _ = kb._do_remote()
         assert kb.ignore_errors_until is not None
         assert res == False
 
@@ -1015,7 +1018,7 @@ def test_ignore_errors_period():
 
         # try again
         kb.source = source_good
-        res = kb._do_remote()
+        res, _ = kb._do_remote()
         assert res == True
 
 
@@ -1031,7 +1034,7 @@ def test_ignore_invalid_keys():
 
 
 def test_exclude_attributes():
-    source = "https://example.com/keys.json"
+    source = "https://example.com/test_exclude_attributes/keys.json"
     # Mock response
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200)
