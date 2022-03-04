@@ -263,7 +263,6 @@ class KeyBundle:
             if self.local:
                 self._keys = self._do_local(kid)
 
-
     def _set_source(self, source, fileformat):
         if source.startswith("file://"):
             self.source = source[7:]
@@ -552,7 +551,7 @@ class KeyBundle:
                     elif self.fileformat == "der":
                         updated, k = self._do_local_der(self.source, self.keytype, self.keyusage)
                 elif self.remote:
-                    updated, k  = self._do_remote(set_keys=False)
+                    updated, k = self._do_remote(set_keys=False)
                 if k:
                     new_keys.extend(k)
             except Exception as err:
