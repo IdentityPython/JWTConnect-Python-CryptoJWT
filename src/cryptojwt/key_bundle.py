@@ -30,6 +30,7 @@ from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
+from .utils import check_content_type
 from .utils import httpc_params_loader
 
 __author__ = "Roland Hedberg"
@@ -513,8 +514,8 @@ class KeyBundle:
         """
         # Check if the content type is the right one.
         try:
-            if response.headers["Content-Type"] != "application/json":
-                LOGGER.warning("Wrong Content_type (%s)", response.headers["Content-Type"])
+            if not check_content_type(response.headers["Content-Type"], "application/json"):
+                LOGGER.warning("Wrong Content_type (%s)", respeonse.headers["Content-Type"])
         except KeyError:
             pass
 
