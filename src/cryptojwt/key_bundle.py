@@ -546,7 +546,9 @@ class KeyBundle:
                     if self.fileformat in ["jwks", "jwk"]:
                         updated, new_keys = self._do_local_jwk(self.source)
                     elif self.fileformat == "der":
-                        updated, new_keys = self._do_local_der(self.source, self.keytype, self.keyusage)
+                        updated, new_keys = self._do_local_der(
+                            self.source, self.keytype, self.keyusage
+                        )
                 elif self.remote:
                     updated, new_keys = self._do_remote(set_keys=False)
                 else:
