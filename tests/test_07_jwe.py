@@ -21,6 +21,7 @@ from cryptojwt.jwe.exception import NoSuitableDecryptionKey
 from cryptojwt.jwe.exception import NoSuitableEncryptionKey
 from cryptojwt.jwe.exception import UnsupportedBitLength
 from cryptojwt.jwe.exception import WrongEncryptionAlgorithm
+from cryptojwt.jwe.fernet import FernetEncrypter
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwe.jwe import factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
@@ -138,7 +139,8 @@ def test_jwe_09_a1():
 
     b64_ejek = (
         b"ApfOLCaDbqs_JXPYy2I937v_xmrzj"
-        b"-Iss1mG6NAHmeJViM6j2l0MHvfseIdHVyU2BIoGVu9ohvkkWiRq5DL2jYZTPA9TAdwq3FUIVyoH-Pedf6elHIVFi2KGDEspYMtQARMMSBcS7pslx6flh1Cfh3GBKysztVMEhZ_maFkm4PYVCsJsvq6Ct3fg2CJPOs0X1DHuxZKoIGIqcbeK4XEO5a0h5TAuJObKdfO0dKwfNSSbpu5sFrpRFwV2FTTYoqF4zI46N9-_hMIznlEpftRXhScEJuZ9HG8C8CHB1WRZ_J48PleqdhF4o7fB5J1wFqUXBtbtuGJ_A2Xe6AEhrlzCOw"
+        b"-Iss1mG6NAHmeJViM6j2l0MHvfseIdHVyU2BIoGVu9ohvkkWiRq5DL2jYZTPA9TAdwq3FUIVyoH"
+        b"-Pedf6elHIVFi2KGDEspYMtQARMMSBcS7pslx6flh1Cfh3GBKysztVMEhZ_maFkm4PYVCsJsvq6Ct3fg2CJPOs0X1DHuxZKoIGIqcbeK4XEO5a0h5TAuJObKdfO0dKwfNSSbpu5sFrpRFwV2FTTYoqF4zI46N9-_hMIznlEpftRXhScEJuZ9HG8C8CHB1WRZ_J48PleqdhF4o7fB5J1wFqUXBtbtuGJ_A2Xe6AEhrlzCOw"
     )
 
     iv = intarr2bytes([227, 197, 117, 252, 2, 219, 233, 68, 180, 225, 77, 219])
@@ -243,7 +245,8 @@ def test_jwe_09_a1():
         [
             b"eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ",
             b"ApfOLCaDbqs_JXPYy2I937v_xmrzj"
-            b"-Iss1mG6NAHmeJViM6j2l0MHvfseIdHVyU2BIoGVu9ohvkkWiRq5DL2jYZTPA9TAdwq3FUIVyoH-Pedf6elHIVFi2KGDEspYMtQARMMSBcS7pslx6flh1Cfh3GBKysztVMEhZ_maFkm4PYVCsJsvq6Ct3fg2CJPOs0X1DHuxZKoIGIqcbeK4XEO5a0h5TAuJObKdfO0dKwfNSSbpu5sFrpRFwV2FTTYoqF4zI46N9-_hMIznlEpftRXhScEJuZ9HG8C8CHB1WRZ_J48PleqdhF4o7fB5J1wFqUXBtbtuGJ_A2Xe6AEhrlzCOw",
+            b"-Iss1mG6NAHmeJViM6j2l0MHvfseIdHVyU2BIoGVu9ohvkkWiRq5DL2jYZTPA9TAdwq3FUIVyoH"
+            b"-Pedf6elHIVFi2KGDEspYMtQARMMSBcS7pslx6flh1Cfh3GBKysztVMEhZ_maFkm4PYVCsJsvq6Ct3fg2CJPOs0X1DHuxZKoIGIqcbeK4XEO5a0h5TAuJObKdfO0dKwfNSSbpu5sFrpRFwV2FTTYoqF4zI46N9-_hMIznlEpftRXhScEJuZ9HG8C8CHB1WRZ_J48PleqdhF4o7fB5J1wFqUXBtbtuGJ_A2Xe6AEhrlzCOw",
             b"48V1_ALb6US04U3b",
             b"5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6jiSdiwkIr3ajwQzaBtQD_A",
             b"ghEgxninkHEAMp4xZtB2mA",
@@ -643,3 +646,38 @@ def test_invalid():
     decrypter = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
     with pytest.raises(BadSyntax):
         decrypter.decrypt("a.b.c.d.e", keys=[encryption_key])
+
+
+def test_fernet():
+    encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
+
+    encrypter = FernetEncrypter(encryption_key.key)
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
+
+
+def test_fernet_sha512():
+    encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
+
+    encrypter = FernetEncrypter(encryption_key.key, hash_alg="SHA512")
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
+
+
+def test_fernet_blake2s():
+    encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
+
+    encrypter = FernetEncrypter(
+        encryption_key.key, hash_alg="BLAKE2s", digest_size=32, iterations=1000
+    )
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
