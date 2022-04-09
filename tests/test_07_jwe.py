@@ -21,6 +21,7 @@ from cryptojwt.jwe.exception import NoSuitableDecryptionKey
 from cryptojwt.jwe.exception import NoSuitableEncryptionKey
 from cryptojwt.jwe.exception import UnsupportedBitLength
 from cryptojwt.jwe.exception import WrongEncryptionAlgorithm
+from cryptojwt.jwe.fernet import FernetEncrypter
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwe.jwe import factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
@@ -643,3 +644,14 @@ def test_invalid():
     decrypter = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
     with pytest.raises(BadSyntax):
         decrypter.decrypt("a.b.c.d.e", keys=[encryption_key])
+
+
+def test_fernet():
+    encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
+
+    encrypter = FernetEncrypter(encryption_key.key)
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
