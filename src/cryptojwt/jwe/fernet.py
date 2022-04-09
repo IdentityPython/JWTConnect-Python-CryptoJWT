@@ -20,11 +20,7 @@ class FernetEncrypter(Encrypter):
         else:
             salt = as_bytes(salt)
 
-        kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
-            length=32,
-            salt=salt,
-            iterations=390000)
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=390000)
         self.key = base64.urlsafe_b64encode(kdf.derive(as_bytes(password)))
         self.core = Fernet(self.key)
 
