@@ -6,9 +6,9 @@ import random
 import string
 import sys
 
+import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-import pytest
 
 from cryptojwt.exception import BadSyntax
 from cryptojwt.exception import HeaderError
@@ -673,8 +673,9 @@ def test_fernet_sha512():
 def test_fernet_blake2s():
     encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
 
-    encrypter = FernetEncrypter(encryption_key.key, hash_alg="BLAKE2s", digest_size=32,
-                                iterations=1000)
+    encrypter = FernetEncrypter(
+        encryption_key.key, hash_alg="BLAKE2s", digest_size=32, iterations=1000
+    )
     _token = encrypter.encrypt(plain)
 
     decrypter = encrypter

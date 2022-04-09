@@ -10,17 +10,18 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptojwt.jwe import Encrypter
 from cryptojwt.utils import as_bytes
 
-
 DEFAULT_ITERATIONS = 390000
 
 
 class FernetEncrypter(Encrypter):
-    def __init__(self,
-                 password: str,
-                 salt: Optional[bytes] = "",
-                 hash_alg: Optional[str] = "SHA256",
-                 digest_size: Optional[int] = 0,
-                 iterations: Optional[int] = DEFAULT_ITERATIONS):
+    def __init__(
+        self,
+        password: str,
+        salt: Optional[bytes] = "",
+        hash_alg: Optional[str] = "SHA256",
+        digest_size: Optional[int] = 0,
+        iterations: Optional[int] = DEFAULT_ITERATIONS,
+    ):
         Encrypter.__init__(self)
         if not salt:
             salt = os.urandom(16)
