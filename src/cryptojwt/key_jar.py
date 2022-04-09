@@ -13,6 +13,7 @@ from .key_issuer import KeyIssuer
 from .key_issuer import build_keyissuer
 from .key_issuer import init_key_issuer
 from .utils import deprecated_alias
+from .utils import httpc_params_loader
 from .utils import importer
 from .utils import qualified_name
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class KeyJar(object):
-    """ A keyjar contains a number of KeyBundles sorted by owner/issuer """
+    """A keyjar contains a number of KeyBundles sorted by owner/issuer"""
 
     def __init__(
         self,
@@ -50,7 +51,8 @@ class KeyJar(object):
         self.keybundle_cls = keybundle_cls
         self.remove_after = remove_after
         self.httpc = httpc or request
-        self.httpc_params = httpc_params or {}
+        self.httpc_params = httpc_params_loader(httpc_params)
+
         # Now part of httpc_params
         # self.verify_ssl = verify_ssl
         if not self.httpc_params:  # backward compatibility
@@ -318,7 +320,6 @@ class KeyJar(object):
             should be replace.
         :return: Dictionary with usage as key and keys as values
         """
-
         logger.debug("Initiating key bundle for issuer: %s" % issuer_id)
 
         _issuer = self.return_issuer(issuer_id)

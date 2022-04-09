@@ -1,6 +1,8 @@
 import logging
 import os
 
+from cryptojwt.exception import KeyNotFound
+
 from ..exception import JWKException
 from ..exception import UnsupportedAlgorithm
 from ..exception import WrongUsage
@@ -148,6 +150,12 @@ class SYMKey(JWK):
                 return False
 
         return True
+
+    def key_len(self):
+        if self.key:
+            return len(self.key)
+        else:
+            raise KeyNotFound
 
 
 def new_sym_key(use="", bytes=24, kid=""):

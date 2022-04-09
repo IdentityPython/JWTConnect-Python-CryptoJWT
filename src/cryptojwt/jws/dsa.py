@@ -1,9 +1,10 @@
+import sys
+
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric.utils import decode_dss_signature
 from cryptography.hazmat.primitives.asymmetric.utils import encode_dss_signature
-from cryptography.utils import int_to_bytes
 
 from ..exception import BadSignature
 from ..exception import Unsupported
@@ -46,7 +47,7 @@ class ECDSASigner(Signer):
         # Cryptography returns ASN.1-encoded signature data; decode as JWS
         # uses raw signatures (r||s)
         (r, s) = decode_dss_signature(asn1sig)
-        return int_to_bytes(r, num_bytes) + int_to_bytes(s, num_bytes)
+        return int.to_bytes(r, num_bytes, "big") + int.to_bytes(s, num_bytes, "big")
 
     def verify(self, msg, sig, key):
         """

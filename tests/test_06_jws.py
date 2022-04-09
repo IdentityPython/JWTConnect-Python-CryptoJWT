@@ -225,6 +225,79 @@ JWK_b = {
     ]
 }
 
+JWKS_WITH_USE = {
+    "keys": [
+        {
+            "e": "AQAB",
+            "kid": "R3NJRW1EVHRsaUcwSXVydi14cVVoTmxhaU4zckU1MlFPa05NWGNpUUZtcw",
+            "kty": "RSA",
+            "n": "rp7aJD9FKKHQgLTeXLMyjB5TS51x_KqA15gBJHF2Ps-rrmcBujpMAi39D7w4"
+            "SArr9X7DPgHekTPRV6-i46TyqnY1EXPGRb0nCg0rCmkyOAMysXhhuexu3vS7"
+            "Fa2YPvX2zpl5svdkOOwLmHBplCTtvScz-L7N1xeknauOLF5Ct39C5Ipv-BWx"
+            "bNrqD68uIPSOH9ZsoGKVArSI0MSmw5LB7B3i30D8FvmlJyxcEPZOFVahFCmS"
+            "qqUXHuXV2Z0BpvgvDhzB5cSNO12clwD_fZ4CnbvuvfbBAgpVg774smz2z3ov"
+            "6SsZ6ZD5Tc_9gE2ryLW6x0RS1y2KSME8EUI2sdJYZw",
+            "x5c": [
+                "MIIDOjCCAiKgAwIBAgIUJACZrVNr3gHJrde3OkQwy1lXL6owDQYJKoZIhvcN"
+                "AQELBQAwSjELMAkGA1UEBhMCU0UxDjAMBgNVBAcMBVVtZcOlMRgwFgYDVQQK"
+                "DA9JZGVudGl0eSBQeXRob24xETAPBgNVBAMMCGlkcHkub3JnMB4XDTIxMTEw"
+                "MjA5MzIzOFoXDTIxMTExMjA5MzIzOFowSjELMAkGA1UEBhMCU0UxDjAMBgNV"
+                "BAcMBVVtZcOlMRgwFgYDVQQKDA9JZGVudGl0eSBQeXRob24xETAPBgNVBAMM"
+                "CGlkcHkub3JnMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArp7a"
+                "JD9FKKHQgLTeXLMyjB5TS51x/KqA15gBJHF2Ps+rrmcBujpMAi39D7w4SArr"
+                "9X7DPgHekTPRV6+i46TyqnY1EXPGRb0nCg0rCmkyOAMysXhhuexu3vS7Fa2Y"
+                "PvX2zpl5svdkOOwLmHBplCTtvScz+L7N1xeknauOLF5Ct39C5Ipv+BWxbNrq"
+                "D68uIPSOH9ZsoGKVArSI0MSmw5LB7B3i30D8FvmlJyxcEPZOFVahFCmSqqUX"
+                "HuXV2Z0BpvgvDhzB5cSNO12clwD/fZ4CnbvuvfbBAgpVg774smz2z3ov6SsZ"
+                "6ZD5Tc/9gE2ryLW6x0RS1y2KSME8EUI2sdJYZwIDAQABoxgwFjAUBgNVHREE"
+                "DTALgglsb2NhbGhvc3QwDQYJKoZIhvcNAQELBQADggEBAARJIf6TZrhGjI/g"
+                "QnvOybc6o3lv4nPCJojRoHjFtTd9uk9Eve4Ba7NG8goCs9l3Cq4tPUpqfW42"
+                "iSr+1Vd9O+cozJAa6PVGwTCfHrtBvQWgM9gk+09lmP8kO73KBcmK9lcwYThJ"
+                "NNVmZgEwV37hP6sUmyfmuAsxgePPSQqahCej1ORN9YGSH2aeXw+1rhyfTZ6c"
+                "Kl791b+6So8bDEhfQcFmwNJ/75tr++dRnEdPfSLfid13PFT0W6uxQqeSpCh6"
+                "TtRiqTb47SIKKnG4YPta2eVOnMNOvy2Lw4nl95V7RSvVw6VbPOx9XXYaONdm"
+                "mSpbgK1tK1XMkhrp95sU3q1OS8I="
+            ],
+            "x5t": "ScM0uv4bxGMJ7bbrc1scc_uOyLI",
+            "use": ["sig"],
+        },
+        {
+            "e": "AQAB",
+            "kid": "d1Z6RTJHQmh0NnBaeHpfYVd0U1dIb25fUTQ1aVhjNXFhWHEyTE4wbVh5bw",
+            "kty": "RSA",
+            "n": "zpQAmVzABLrRWV6HiBVbFeho_KhQhm8T_r6LvGP-Znnewpr6J7lBYD9gfVJo2_"
+            "lOpCqitJvoMJoZxoULJ1xU_Am4padc-as8Sk9vb3FkvxoDrZFByNgmbrNTJCco"
+            "wUBLTgb1wWde1CPNmr_U_-VBODOy17uTrt7DNEMqEwUi3Qb76J8duHVQT0ECcw"
+            "crGXbsfV74jSaBAehHxlTt4tG4-LVC9I0IFs9bBykdZVh59uwtaKTlBNuC5frt"
+            "kGyn_2TM1zCWSVparxqQ_T3e_g2NOr3v5fW_gjDsYZ2543DrE8ta_OCyrqw4wz"
+            "fBEOb6raI6wCyqFQ5My1bz-qVTap-4hQ",
+            "x5c": [
+                "MIIDPjCCAiagAwIBAgIUB70yEjwKX+/dUw4YvP61BKpDHJQwDQYJKoZIhvcNAQ"
+                "ELBQAwTDELMAkGA1UEBhMCVVMxEDAOBgNVBAcMB1NlYXR0bGUxGDAWBgNVBAoM"
+                "D0lkZW50aXR5IFB5dGhvbjERMA8GA1UEAwwIaWRweS5vcmcwHhcNMjExMTAyMD"
+                "kzMjM4WhcNMjExMTEyMDkzMjM4WjBMMQswCQYDVQQGEwJVUzEQMA4GA1UEBwwH"
+                "U2VhdHRsZTEYMBYGA1UECgwPSWRlbnRpdHkgUHl0aG9uMREwDwYDVQQDDAhpZH"
+                "B5Lm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAM6UAJlcwAS6"
+                "0Vleh4gVWxXoaPyoUIZvE/6+i7xj/mZ53sKa+ie5QWA/YH1SaNv5TqQqorSb6D"
+                "CaGcaFCydcVPwJuKWnXPmrPEpPb29xZL8aA62RQcjYJm6zUyQnKMFAS04G9cFn"
+                "XtQjzZq/1P/lQTgzste7k67ewzRDKhMFIt0G++ifHbh1UE9BAnMHKxl27H1e+I"
+                "0mgQHoR8ZU7eLRuPi1QvSNCBbPWwcpHWVYefbsLWik5QTbguX67ZBsp/9kzNcw"
+                "lklaWq8akP093v4NjTq97+X1v4Iw7GGdueNw6xPLWvzgsq6sOMM3wRDm+q2iOs"
+                "AsqhUOTMtW8/qlU2qfuIUCAwEAAaMYMBYwFAYDVR0RBA0wC4IJbG9jYWxob3N0"
+                "MA0GCSqGSIb3DQEBCwUAA4IBAQAyRDDxQcaNDP93SCmZaCnRgpQU8ZnrNk+QpF"
+                "LPlzUM+CopC5KnJuqBX3C54/uQve54/YpNTbBGGYgqB07381L7z7hn9aNylyFf"
+                "N9Ck51/lMnG2YYjdwDwhskfsekOA9H44N3GdxYhVuSrZDr+DuS8Sve26HRzh1Z"
+                "r+1PqSanM7pTJngGFDor7Hn02mKwAYk2HduT7ulYXxzLBcDhgagGTT86P3Jmwm"
+                "eM6PvsICMpP/6ewzRnsfJ+tmT/WXSS9IX1ZL/UxSEiNYPyJdls83stnjAxpS41"
+                "IKNMtebp/78p/BGG5Tm+YUPES4h5YwBUsJi3ehhdzzQXjdqSF8xe2wjs6y"
+            ],
+            "x5t": "WlQYbhnE2ZQvZKF45tqK5Lwmt8k",
+            "use": ["sig"],
+        },
+    ]
+}
+
+
 SIGJWKS = KeyBundle(JWKS_b)
 
 
@@ -568,7 +641,7 @@ def test_signer_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
+    protected = dict(header1="header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
 
     exp_protected = protected.copy()
@@ -592,14 +665,14 @@ def test_verify_protected_headers():
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
-    protected = dict(header1=u"header1 is protected", header2="header2 is protected too", a=1)
+    protected = dict(header1="header1 is protected", header2="header2 is protected too", a=1)
     _jwt = _jws.sign_compact(keys, protected=protected)
     protectedHeader, enc_payload, sig = _jwt.split(".")
     data = dict(
         payload=enc_payload,
         signatures=[
             dict(
-                header=dict(alg=u"ES256", jwk=_key.serialize()),
+                header=dict(alg="ES256", jwk=_key.serialize()),
                 protected=protectedHeader,
                 signature=sig,
             )
@@ -733,8 +806,10 @@ def test_is_jws_recognize_flattened_json_serialized_jws():
 
 
 def test_pick_use():
-    keys = KeyBundle(JWK_b)
-    _jws = JWS("foobar", alg="RS256", kid="MnC_VZcATfM5pOYiJHMba9goEKY")
+    keys = KeyBundle(JWKS_WITH_USE)
+    _jws = JWS(
+        "foobar", alg="RS256", kid="R3NJRW1EVHRsaUcwSXVydi14cVVoTmxhaU4zckU1MlFPa05NWGNpUUZtcw"
+    )
     _keys = _jws.pick_keys(keys, use="sig")
     assert len(_keys) == 1
 

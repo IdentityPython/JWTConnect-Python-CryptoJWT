@@ -1,8 +1,10 @@
 """Implementation of a Key Bundle."""
+
 import copy
 import json
 import logging
 import os
+import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
@@ -10,7 +12,6 @@ from typing import List
 from typing import Optional
 
 import requests
-from readerwriterlock import rwlock
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
@@ -29,6 +30,8 @@ from .jwk.jwk import import_jwk
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
+from .utils import check_content_type
+from .utils import httpc_params_loader
 
 __author__ = "Roland Hedberg"
 
@@ -151,14 +154,6 @@ def ec_init(spec):
     return _kb
 
 
-def keys_reader(func):
-    def wrapper(self, *args, **kwargs):
-        with self._lock_reader:
-            return func(self, *args, **kwargs)
-
-    return wrapper
-
-
 def keys_writer(func):
     def wrapper(self, *args, **kwargs):
         with self._lock_writer:
@@ -244,30 +239,29 @@ class KeyBundle:
         self.source = None
         self.time_out = 0
 
-        self._lock = rwlock.RWLockFairD()
-        self._lock_reader = self._lock.gen_rlock()
-        self._lock_writer = self._lock.gen_wlock()
+        self._lock_writer = threading.Lock()
 
         if httpc:
             self.httpc = httpc
         else:
             self.httpc = requests.request
 
-        self.httpc_params = httpc_params or {}
+        self.httpc_params = httpc_params_loader(httpc_params)
 
         if keys:
             self.source = None
             if isinstance(keys, dict):
                 if "keys" in keys:
-                    self._do_keys(keys["keys"])
+                    initial_keys = keys["keys"]
                 else:
-                    self._do_keys([keys])
+                    initial_keys = [keys]
             else:
-                self._do_keys(keys)
+                initial_keys = keys
+            self._keys = self.jwk_dicts_as_keys(initial_keys)
         else:
             self._set_source(source, fileformat)
             if self.local:
-                self._do_local(kid)
+                self._keys = self._do_local(kid)
 
     def _set_source(self, source, fileformat):
         if source.startswith("file://"):
@@ -290,9 +284,10 @@ class KeyBundle:
 
     def _do_local(self, kid):
         if self.fileformat in ["jwks", "jwk"]:
-            self._do_local_jwk(self.source)
+            updated, keys = self._do_local_jwk(self.source)
         elif self.fileformat == "der":
-            self._do_local_der(self.source, self.keytype, self.keyusage, kid)
+            updated, keys = self._do_local_der(self.source, self.keytype, self.keyusage, kid)
+        return keys
 
     def _local_update_required(self) -> bool:
         stat = os.stat(self.source)
@@ -304,18 +299,29 @@ class KeyBundle:
             self.last_local = stat.st_mtime
             return True
 
-    @keys_writer
     def do_keys(self, keys):
-        return self._do_keys(keys)
+        """Compatibility function for add_jwk_dicts()"""
+        self.add_jwk_dicts(keys)
 
-    def _do_keys(self, keys):
+    @keys_writer
+    def add_jwk_dicts(self, keys):
         """
-        Go from JWK description to binary keys
+        Add JWK dictionaries
 
-        :param keys:
+        :param keys: List of JWK dictionaries
         :return:
         """
-        _new_key = []
+        self._keys.extend(self.jwk_dicts_as_keys(keys))
+        self.last_updated = time.time()
+
+    def jwk_dicts_as_keys(self, keys):
+        """
+        Return JWK dictionaries as list of JWK objects
+
+        :param keys: List of JWK dictionaries
+        :return: List of JWK objects
+        """
+        _new_keys = []
 
         for inst in keys:
             if inst["kty"].lower() in K2C:
@@ -356,19 +362,15 @@ class KeyBundle:
                     LOGGER.warning("While loading keys: %s", err)
                     _error = str(err)
                 else:
-                    if _key not in self._keys:
-                        if not _key.kid:
-                            _key.add_kid()
-                        _new_key.append(_key)
+                    if not _key.kid:
+                        _key.add_kid()
+                    _new_keys.append(_key)
                     _error = ""
 
             if _error:
                 LOGGER.warning("While loading keys, %s", _error)
 
-        if _new_key:
-            self._keys.extend(_new_key)
-
-        self.last_updated = time.time()
+        return _new_keys
 
     def _do_local_jwk(self, filename):
         """
@@ -378,18 +380,19 @@ class KeyBundle:
         :return: True if load was successful or False if file hasn't been modified
         """
         if not self._local_update_required():
-            return False
+            return False, None
 
         LOGGER.info("Reading local JWKS from %s", filename)
         with open(filename) as input_file:
             _info = json.load(input_file)
         if "keys" in _info:
-            self._do_keys(_info["keys"])
+            new_keys = self.jwk_dicts_as_keys(_info["keys"])
         else:
-            self._do_keys([_info])
+            new_keys = self.jwk_dicts_as_keys([_info])
+
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True
+        return True, new_keys
 
     def _do_local_der(self, filename, keytype, keyusage=None, kid=""):
         """
@@ -401,7 +404,7 @@ class KeyBundle:
         :return: True if load was successful or False if file hasn't been modified
         """
         if not self._local_update_required():
-            return False
+            return False, None
 
         LOGGER.info("Reading local DER from %s", filename)
         key_args = {}
@@ -422,12 +425,12 @@ class KeyBundle:
         if kid:
             key_args["kid"] = kid
 
-        self._do_keys([key_args])
+        new_keys = self.jwk_dicts_as_keys([key_args])
         self.last_local = time.time()
         self.time_out = self.last_local + self.cache_time
-        return True
+        return True, new_keys
 
-    def do_remote(self):
+    def _do_remote(self, set_keys=True):
         """
         Load a JWKS from a webpage.
 
@@ -442,7 +445,7 @@ class KeyBundle:
                 self.source,
                 datetime.fromtimestamp(self.ignore_errors_until),
             )
-            return False
+            return False, None
 
         LOGGER.info("Reading remote JWKS from %s", self.source)
         try:
@@ -457,6 +460,7 @@ class KeyBundle:
             LOGGER.error(err)
             raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err)))
 
+        new_keys = None
         load_successful = _http_resp.status_code == 200
         not_modified = _http_resp.status_code == 304
 
@@ -469,7 +473,7 @@ class KeyBundle:
 
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
-                self._do_keys(self.imp_jwks["keys"])
+                new_keys = self.jwk_dicts_as_keys(self.imp_jwks["keys"])
             except KeyError:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
@@ -490,9 +494,12 @@ class KeyBundle:
             self.ignore_errors_until = time.time() + self.ignore_errors_period
             raise UpdateFailed(REMOTE_FAILED.format(self.source, _http_resp.status_code))
 
+        if set_keys and new_keys:
+            self._keys = new_keys
+
         self.last_updated = time.time()
         self.ignore_errors_until = None
-        return load_successful
+        return load_successful, new_keys
 
     def _parse_remote_response(self, response):
         """
@@ -505,7 +512,7 @@ class KeyBundle:
         """
         # Check if the content type is the right one.
         try:
-            if response.headers["Content-Type"] != "application/json":
+            if not check_content_type(response.headers["Content-Type"], "application/json"):
                 LOGGER.warning("Wrong Content_type (%s)", response.headers["Content-Type"])
         except KeyError:
             pass
@@ -533,34 +540,32 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-            _old_keys = self._keys  # just in case
-
-            # reread everything
-            self._keys = []
-            updated = None
 
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
-                        updated = self._do_local_jwk(self.source)
+                        updated, new_keys = self._do_local_jwk(self.source)
                     elif self.fileformat == "der":
-                        updated = self._do_local_der(self.source, self.keytype, self.keyusage)
+                        updated, new_keys = self._do_local_der(
+                            self.source, self.keytype, self.keyusage
+                        )
                 elif self.remote:
-                    updated = self.do_remote()
+                    updated, new_keys = self._do_remote(set_keys=False)
+                else:
+                    new_keys = None
+                    updated = False
             except Exception as err:
                 LOGGER.error("Key bundle update failed: %s", err)
-                self._keys = _old_keys  # restore
                 return False
 
             if updated:
                 now = time.time()
-                for _key in _old_keys:
-                    if _key not in self._keys:
+                for _key in self._keys:
+                    if _key not in new_keys:
                         if not _key.inactive_since:  # If already marked don't mess
                             _key.inactive_since = now
-                        self._keys.append(_key)
-            else:
-                self._keys = _old_keys
+                        new_keys.append(_key)
+                self._keys = new_keys
 
         return True
 
@@ -574,12 +579,11 @@ class KeyBundle:
         """
         self._uptodate()
 
-        with self._lock_reader:
-            if typ:
-                _typs = [typ.lower(), typ.upper()]
-                _keys = [k for k in self._keys if k.kty in _typs]
-            else:
-                _keys = copy.copy(self._keys)
+        if typ:
+            _typs = [typ.lower(), typ.upper()]
+            _keys = [k for k in self._keys if k.kty in _typs]
+        else:
+            _keys = self._keys
 
         if only_active:
             return [k for k in _keys if not k.inactive_since]
@@ -594,8 +598,7 @@ class KeyBundle:
         """
         if update:
             self._uptodate()
-        with self._lock_reader:
-            return copy.copy(self._keys)
+        return self._keys
 
     def active_keys(self):
         """Return the set of active keys."""
@@ -667,7 +670,6 @@ class KeyBundle:
         except ValueError:
             pass
 
-    @keys_reader
     def __len__(self):
         """
         The number of keys.
@@ -689,18 +691,12 @@ class KeyBundle:
         :return: The key or None
         """
         self._uptodate()
-        with self._lock_reader:
-            return self._get_key_with_kid(kid)
+        return self._get_key_with_kid(kid)
 
     def _get_key_with_kid(self, kid):
         for key in self._keys:
             if key.kid == kid:
                 return key
-
-        for key in self._keys:
-            if key.kid == kid:
-                return key
-
         return None
 
     def kids(self):
@@ -722,9 +718,7 @@ class KeyBundle:
         """
         k = self._get_key_with_kid(kid)
         if k:
-            self._keys.remove(k)
             k.inactive_since = time.time()
-            self._keys.append(k)
             return True
         else:
             return False
@@ -752,30 +746,18 @@ class KeyBundle:
             before it should be removed.
         :param when: To make it easier to test
         """
-        if when:
-            now = when
-        else:
-            now = time.time()
+        now = when or time.time()
 
         if not isinstance(after, float):
             after = float(after)
 
-        _kl = []
-        changed = False
-        for k in self._keys:
-            if k.inactive_since and k.inactive_since + after < now:
-                changed = True
-                continue
-
-            _kl.append(k)
-
-        self._keys = _kl
-        return changed
+        self._keys = [
+            k for k in self._keys if not k.inactive_since or k.inactive_since + after > now
+        ]
 
     def __contains__(self, key):
         return key in self.keys()
 
-    @keys_reader
     def copy(self):
         """
         Make deep copy of this KeyBundle
@@ -843,9 +825,11 @@ class KeyBundle:
         :param spec: Dictionary with attributes and value to populate the instance with
         :return: The instance itself
         """
+
         _keys = spec.get("keys", [])
         if _keys:
-            self._do_keys(_keys)
+            self._keys.extend(self.jwk_dicts_as_keys(_keys))
+            self.last_updated = time.time()
 
         for attr, default in self.params.items():
             val = spec.get(attr)

@@ -65,21 +65,23 @@ class TestVerifyJWTKeys(object):
         self.bob_keyjar["Bob"] = self.bob_keyjar[""]
 
         # To Alice's keyjar add Bob's public keys
-        self.alice_keyjar.import_jwks(self.bob_keyjar.export_jwks(issuer="Bob"), "Bob")
+        self.alice_keyjar.import_jwks(self.bob_keyjar.export_jwks(issuer_id="Bob"), "Bob")
 
         # To Bob's keyjar add Alice's public keys
-        self.bob_keyjar.import_jwks(self.alice_keyjar.export_jwks(issuer="Alice"), "Alice")
+        self.bob_keyjar.import_jwks(self.alice_keyjar.export_jwks(issuer_id="Alice"), "Alice")
 
         _jws = JWS('{"aud": "Bob", "iss": "Alice"}', alg="RS256")
-        sig_key = self.alice_keyjar.get_signing_key("rsa", owner="Alice")[0]
+        sig_key = self.alice_keyjar.get_signing_key("rsa", issuer_id="Alice")[0]
         self.sjwt_a = _jws.sign_compact([sig_key])
 
         _jws = JWS('{"aud": "Alice", "iss": "Bob"}', alg="RS256")
-        sig_key = self.bob_keyjar.get_signing_key("rsa", owner="Bob")[0]
+        sig_key = self.bob_keyjar.get_signing_key("rsa", issuer_id="Bob")[0]
         self.sjwt_b = _jws.sign_compact([sig_key])
 
     def test_no_kid_multiple_keys_no_kid_issuer(self):
-        a_kids = [k.kid for k in self.alice_keyjar.get_verify_key(owner="Alice", key_type="RSA")]
+        a_kids = [
+            k.kid for k in self.alice_keyjar.get_verify_key(issuer_id="Alice", key_type="RSA")
+        ]
         no_kid_issuer = {"Alice": a_kids}
         _jwt = factory(self.sjwt_a)
         _jwt.jwt.headers["kid"] = ""
@@ -87,11 +89,11 @@ class TestVerifyJWTKeys(object):
         assert len(keys) == 3
 
     def test_aud(self):
-        self.alice_keyjar.import_jwks(JWK1, issuer="D")
-        self.bob_keyjar.import_jwks(JWK1, issuer="D")
+        self.alice_keyjar.import_jwks(JWK1, issuer_id="D")
+        self.bob_keyjar.import_jwks(JWK1, issuer_id="D")
 
         _jws = JWS('{"iss": "D", "aud": "A"}', alg="HS256")
-        sig_key = self.alice_keyjar.get_signing_key("oct", owner="D")[0]
+        sig_key = self.alice_keyjar.get_signing_key("oct", issuer_id="D")[0]
         _sjwt = _jws.sign_compact([sig_key])
 
         no_kid_issuer = {"D": []}
@@ -121,7 +123,9 @@ def test_init_key_jar_dump_private():
             os.unlink(_file)
 
     # New set of keys, JWKSs with keys and public written to file
-    _keyjar = init_key_jar(private_path=PRIVATE_FILE, key_defs=KEYSPEC, owner="https://example.com")
+    _keyjar = init_key_jar(
+        private_path=PRIVATE_FILE, key_defs=KEYSPEC, issuer_id="https://example.com"
+    )
     assert list(_keyjar.owners()) == ["https://example.com"]
 
     # JWKS will be read from disc, not created new
@@ -138,7 +142,7 @@ def test_init_key_jar_update():
     _keyjar_1 = init_key_jar(
         private_path=PRIVATE_FILE,
         key_defs=KEYSPEC,
-        owner="https://example.com",
+        issuer_id="https://example.com",
         public_path=PUBLIC_FILE,
         read_only=False,
     )
