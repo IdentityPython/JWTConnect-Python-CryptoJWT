@@ -16,7 +16,8 @@ DEFAULT_ITERATIONS = 390000
 class FernetEncrypter(Encrypter):
     def __init__(
         self,
-        password: str,
+        password: Optional[str] = None,
+        key: Optional[bytes] = None,
         salt: Optional[bytes] = "",
         hash_alg: Optional[str] = "SHA256",
         digest_size: Optional[int] = 0,
@@ -28,14 +29,22 @@ class FernetEncrypter(Encrypter):
         else:
             salt = as_bytes(salt)
 
-        _alg = getattr(hashes, hash_alg)
-        # A bit special for SHAKE* and BLAKE* hashes
-        if hash_alg.startswith("SHAKE") or hash_alg.startswith("BLAKE"):
-            _algorithm = _alg(digest_size)
+        if password is not None:
+            _alg = getattr(hashes, hash_alg)
+            # A bit special for SHAKE* and BLAKE* hashes
+            if hash_alg.startswith("SHAKE") or hash_alg.startswith("BLAKE"):
+                _algorithm = _alg(digest_size)
+            else:
+                _algorithm = _alg()
+            kdf = PBKDF2HMAC(algorithm=_algorithm, length=32, salt=salt, iterations=iterations)
+            self.key = base64.urlsafe_b64encode(kdf.derive(as_bytes(password)))
+        elif key is not None:
+            if len(key) != 32:
+                raise ValueError("Raw key must be 32 bytes")
+            self.key = base64.urlsafe_b64encode(as_bytes(key))
         else:
-            _algorithm = _alg()
-        kdf = PBKDF2HMAC(algorithm=_algorithm, length=32, salt=salt, iterations=iterations)
-        self.key = base64.urlsafe_b64encode(kdf.derive(as_bytes(password)))
+            self.key = Fernet.generate_key()
+
         self.core = Fernet(self.key)
 
     def encrypt(self, msg: Union[str, bytes], **kwargs) -> bytes:

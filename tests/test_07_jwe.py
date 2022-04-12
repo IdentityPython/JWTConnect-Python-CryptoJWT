@@ -648,10 +648,39 @@ def test_invalid():
         decrypter.decrypt("a.b.c.d.e", keys=[encryption_key])
 
 
-def test_fernet():
+def test_fernet_password():
+    encrypter = FernetEncrypter(password="DukeofHazardpass")
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
+
+
+def test_fernet_symkey():
     encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
 
-    encrypter = FernetEncrypter(encryption_key.key)
+    encrypter = FernetEncrypter(password=encryption_key.key)
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
+
+
+def test_fernet_bytes():
+    key = os.urandom(32)
+
+    encrypter = FernetEncrypter(key=key)
+    _token = encrypter.encrypt(plain)
+
+    decrypter = encrypter
+    resp = decrypter.decrypt(_token)
+    assert resp == plain
+
+
+def test_fernet_default_key():
+    encrypter = FernetEncrypter()
     _token = encrypter.encrypt(plain)
 
     decrypter = encrypter
@@ -662,7 +691,7 @@ def test_fernet():
 def test_fernet_sha512():
     encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
 
-    encrypter = FernetEncrypter(encryption_key.key, hash_alg="SHA512")
+    encrypter = FernetEncrypter(password=encryption_key.key, hash_alg="SHA512")
     _token = encrypter.encrypt(plain)
 
     decrypter = encrypter
@@ -674,7 +703,7 @@ def test_fernet_blake2s():
     encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
 
     encrypter = FernetEncrypter(
-        encryption_key.key, hash_alg="BLAKE2s", digest_size=32, iterations=1000
+        password=encryption_key.key, hash_alg="BLAKE2s", digest_size=32, iterations=1000
     )
     _token = encrypter.encrypt(plain)
 
