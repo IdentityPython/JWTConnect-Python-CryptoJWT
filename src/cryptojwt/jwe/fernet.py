@@ -17,17 +17,13 @@ class FernetEncrypter(Encrypter):
     def __init__(
         self,
         password: Optional[str] = None,
-        key: Optional[bytes] = None,
         salt: Optional[bytes] = "",
+        key: Optional[bytes] = None,
         hash_alg: Optional[str] = "SHA256",
         digest_size: Optional[int] = 0,
         iterations: Optional[int] = DEFAULT_ITERATIONS,
     ):
         Encrypter.__init__(self)
-        if not salt:
-            salt = os.urandom(16)
-        else:
-            salt = as_bytes(salt)
 
         if password is not None:
             _alg = getattr(hashes, hash_alg)
@@ -36,12 +32,15 @@ class FernetEncrypter(Encrypter):
                 _algorithm = _alg(digest_size)
             else:
                 _algorithm = _alg()
+            salt = as_bytes(salt) if salt else os.urandom(16)
             kdf = PBKDF2HMAC(algorithm=_algorithm, length=32, salt=salt, iterations=iterations)
             self.key = base64.urlsafe_b64encode(kdf.derive(as_bytes(password)))
         elif key is not None:
+            if not isinstance(key, bytes):
+                raise TypeError("Raw key must be bytes")
             if len(key) != 32:
                 raise ValueError("Raw key must be 32 bytes")
-            self.key = base64.urlsafe_b64encode(as_bytes(key))
+            self.key = base64.urlsafe_b64encode(key)
         else:
             self.key = Fernet.generate_key()
 

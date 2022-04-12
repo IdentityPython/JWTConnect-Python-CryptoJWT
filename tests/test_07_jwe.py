@@ -668,6 +668,13 @@ def test_fernet_symkey():
     assert resp == plain
 
 
+def test_fernet_bad():
+    with pytest.raises(TypeError):
+        encrypter = FernetEncrypter(key="xyzzy")
+    with pytest.raises(ValueError):
+        encrypter = FernetEncrypter(key=os.urandom(16))
+
+
 def test_fernet_bytes():
     key = os.urandom(32)
 
