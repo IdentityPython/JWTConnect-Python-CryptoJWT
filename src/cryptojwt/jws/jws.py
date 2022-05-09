@@ -228,12 +228,12 @@ class JWS(JWx):
             try:
                 if not verifier.verify(jwt.sign_input(), jwt.signature(), _key):
                     continue
-            except (BadSignature, IndexError):
-                pass
+            except (BadSignature, IndexError) as err:
+                logger.warning(f'BadSignature caught with {jwt}: "{err}"')
             except (ValueError, TypeError) as err:
-                logger.warning('Exception "{}" caught'.format(err))
+                logger.warning(f'Exception with {jwt.headers}: "{err}"')
             else:
-                logger.debug("Verified message using key with kid=%s" % key.kid)
+                logger.debug(f"Verified message using key with kid={key.kid}")
                 self.msg = jwt.payload()
                 self.key = key
                 self._protected_headers = jwt.headers.copy()
