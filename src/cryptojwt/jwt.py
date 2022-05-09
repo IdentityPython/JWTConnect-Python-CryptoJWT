@@ -88,7 +88,7 @@ class JWT:
         sign_alg="RS256",
         encrypt=False,
         enc_enc="A128CBC-HS256",
-        enc_alg="RSA1_5",
+        enc_alg="RSA-OAEP-256",
         msg_cls=None,
         iss2msg_cls=None,
         skew=15,
