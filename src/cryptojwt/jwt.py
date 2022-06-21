@@ -374,9 +374,7 @@ class JWT:
         else:
             _msg_cls = self.iss2msg_cls.get(_info["iss"], None)
             if not _msg_cls:
-                LOGGER.debug(
-                    f"both msg_cls and iss2msg are None for the issuer {_info['iss']}"
-                )
+                LOGGER.debug(f"both msg_cls and iss2msg are None for the issuer {_info['iss']}")
 
         if _msg_cls:
             vp_args = {"skew": self.skew}
