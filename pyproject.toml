@@ -38,7 +38,7 @@ jwkconv = "cryptojwt.tools.keyconv:main"
 jwtpeek = "cryptojwt.tools.jwtpeek:main"
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
+python = "^3.7"
 cryptography = ">=3.4.6"
 requests = "^2.25.1"
 
@@ -54,7 +54,7 @@ sphinx = "^3.5.2"
 sphinx-autobuild = "^2021.3.14"
 pytest-cov = "^2.11.1"
 codecov = "^2.1.11"
-coverage = "^5.5"
+coverage = "^6.4"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
