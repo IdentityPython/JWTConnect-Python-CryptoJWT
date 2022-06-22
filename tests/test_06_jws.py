@@ -308,13 +308,14 @@ def P256():
 def test_1():
     claimset = {"iss": "joe", "exp": 1300819380, "http://example.com/is_root": True}
 
-    _jws = JWS(claimset, cty="JWT", alg="none")
+    _jws = JWS(claimset, cty="JWT", alg="none", typ="JWT")
     _jwt = _jws.sign_compact()
 
     _jr = JWS()
     _msg = _jr.verify_compact(_jwt, allow_none=True)
     print(_jr)
     assert _jr.jwt.headers["alg"] == "none"
+    assert _jr.jwt.headers["typ"] == "JWT"
     assert _msg == claimset
 
 
