@@ -136,3 +136,6 @@ tests/ms_path_6/
 tests/pyoidc
 tests/pyoidc.pub
 tests/xtest_usage.py
+
+# Poetry
+poetry.lock
