@@ -1,5 +1,5 @@
 import base64
-import cgi
+from email.message import EmailMessage
 import functools
 import importlib
 import json
@@ -269,5 +269,7 @@ def httpc_params_loader(httpc_params):
 
 def check_content_type(content_type, mime_type):
     """Return True if the content type contains the MIME type"""
-    mt, _ = cgi.parse_header(content_type)
+    msg = EmailMessage()
+    msg['content-type'] = content_type
+    mt = msg.get_content_type()
     return mime_type == mt
