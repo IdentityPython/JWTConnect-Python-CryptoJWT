@@ -1,17 +1,18 @@
 import base64
+from binascii import unhexlify
 import cgi
 import functools
 import importlib
 import json
 import re
 import struct
-import warnings
-from binascii import unhexlify
 from typing import List
+import warnings
 
 from cryptojwt.exception import BadSyntax
 
 DEFAULT_HTTPC_TIMEOUT = 10
+
 
 # ---------------------------------------------------------------------------
 # Helper functions
@@ -193,7 +194,7 @@ def split_token(token):
 
 def deser(val):
     """
-    Deserialize from a string representation of an long integer
+    Deserialize from a string representation of a long integer
     to the python representation of a long integer.
 
     :param val: The string representation of the long integer.
@@ -212,12 +213,12 @@ def modsplit(name):
     if ":" in name:
         _part = name.split(":")
         if len(_part) != 2:
-            raise ValueError(f"Syntax error: {s}")
+            raise ValueError(f"Syntax error: {name}")
         return _part[0], _part[1]
 
     _part = name.split(".")
     if len(_part) < 2:
-        raise ValueError(f"Syntax error: {s}")
+        raise ValueError(f"Syntax error: {name}")
 
     return ".".join(_part[:-1]), _part[-1]
 
@@ -271,3 +272,84 @@ def check_content_type(content_type, mime_type):
     """Return True if the content type contains the MIME type"""
     mt, _ = cgi.parse_header(content_type)
     return mime_type == mt
+
+
+def is_compact_jws(token):
+    token = as_bytes(token)
+
+    try:
+        part = split_token(token)
+    except BadSyntax:
+        return False
+
+    # Should be three parts
+    if len(part) != 3:
+        return False
+
+    # All base64 encoded
+    try:
+        part = [b64d(p) for p in part]
+    except Exception:
+        return False
+
+    # header should be a JSON object, 'alg' most be one parameter
+    try:
+        _header = json.loads(part[0])
+    except Exception:
+        return False
+
+    if 'alg' not in _header:
+        return False
+
+    return True
+
+def is_jwe(token):
+    token = as_bytes(token)
+
+    try:
+        part = split_token(token)
+    except BadSyntax:
+        return False
+
+    # Should be five parts
+    if len(part) != 5:
+        return False
+
+    # All base64 encoded
+    try:
+        part = [b64d(p) for p in part]
+    except Exception:
+        return False
+
+    # header should be a JSON object, 'alg' most be one parameter
+    try:
+        _header = json.loads(part[0])
+    except Exception:
+        return False
+
+    if 'alg' not in _header or 'enc' not in _header:
+        return False
+
+    return True
+
+def is_json_jws(token):
+    if isinstance(token, str):
+        try:
+            token = json.loads(token)
+        except Exception:
+            return False
+
+    for arg in ['payload', 'signatures']:
+        if arg not in token:
+            return False
+
+    if not isinstance(token['signatures'], list):
+        return False
+
+    for sign in token['signatures']:
+        if not isinstance(sign, dict):
+            return False
+        if 'signature' not in sign:
+            return False
+
+    return True
