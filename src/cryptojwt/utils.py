@@ -1,11 +1,12 @@
 import base64
-from binascii import unhexlify
-import cgi
 import functools
 import importlib
 import json
 import re
 import struct
+import warnings
+from binascii import unhexlify
+from email.message import EmailMessage
 from typing import List
 import warnings
 
@@ -270,7 +271,9 @@ def httpc_params_loader(httpc_params):
 
 def check_content_type(content_type, mime_type):
     """Return True if the content type contains the MIME type"""
-    mt, _ = cgi.parse_header(content_type)
+    msg = EmailMessage()
+    msg["content-type"] = content_type
+    mt = msg.get_content_type()
     return mime_type == mt
 
 
