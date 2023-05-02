@@ -5,7 +5,6 @@ import os.path
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
-from jwkest import as_bytes
 import pytest
 
 from cryptojwt import as_unicode
@@ -33,6 +32,7 @@ from cryptojwt.utils import b64e
 from cryptojwt.utils import intarr2bin
 from cryptojwt.utils import is_compact_jws
 from cryptojwt.utils import is_json_jws
+from cryptojwt.utils import as_bytes
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
