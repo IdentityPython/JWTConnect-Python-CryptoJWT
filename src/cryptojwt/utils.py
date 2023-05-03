@@ -1,13 +1,13 @@
 import base64
-from binascii import unhexlify
 import cgi
 import functools
 import importlib
 import json
 import re
 import struct
-from typing import List
 import warnings
+from binascii import unhexlify
+from typing import List
 
 from cryptojwt.exception import BadSyntax
 
@@ -298,10 +298,11 @@ def is_compact_jws(token):
     except Exception:
         return False
 
-    if 'alg' not in _header:
+    if "alg" not in _header:
         return False
 
     return True
+
 
 def is_jwe(token):
     token = as_bytes(token)
@@ -327,10 +328,11 @@ def is_jwe(token):
     except Exception:
         return False
 
-    if 'alg' not in _header or 'enc' not in _header:
+    if "alg" not in _header or "enc" not in _header:
         return False
 
     return True
+
 
 def is_json_jws(token):
     if isinstance(token, str):
@@ -339,17 +341,17 @@ def is_json_jws(token):
         except Exception:
             return False
 
-    for arg in ['payload', 'signatures']:
+    for arg in ["payload", "signatures"]:
         if arg not in token:
             return False
 
-    if not isinstance(token['signatures'], list):
+    if not isinstance(token["signatures"], list):
         return False
 
-    for sign in token['signatures']:
+    for sign in token["signatures"]:
         if not isinstance(sign, dict):
             return False
-        if 'signature' not in sign:
+        if "signature" not in sign:
             return False
 
     return True

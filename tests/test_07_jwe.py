@@ -720,6 +720,7 @@ def test_fernet_blake2s():
     resp = decrypter.decrypt(_token)
     assert resp == plain
 
+
 def test_is_jwe():
     encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
     jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
