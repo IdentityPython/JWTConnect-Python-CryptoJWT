@@ -1,13 +1,13 @@
 import base64
-from binascii import unhexlify
-from email.message import EmailMessage
 import functools
 import importlib
 import json
 import re
 import struct
-from typing import List
 import warnings
+from binascii import unhexlify
+from email.message import EmailMessage
+from typing import List
 
 from cryptojwt.exception import BadSyntax
 
@@ -361,7 +361,7 @@ def is_json_jws(token):
 
 def is_jws(token):
     if is_json_jws(token):
-        return 'json'
+        return "json"
     elif is_compact_jws(token):
-        return 'compact'
+        return "compact"
     return False
