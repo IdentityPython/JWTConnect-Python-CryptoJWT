@@ -37,6 +37,8 @@ from cryptojwt.utils import b64e
 
 __author__ = "rohe0002"
 
+from cryptojwt.utils import is_jwe
+
 
 def rndstr(size=16):
     """
@@ -717,3 +719,10 @@ def test_fernet_blake2s():
     decrypter = encrypter
     resp = decrypter.decrypt(_token)
     assert resp == plain
+
+
+def test_is_jwe():
+    encryption_key = SYMKey(use="enc", key="DukeofHazardpass", kid="some-key-id")
+    jwe = JWE(plain, alg="A128KW", enc="A128CBC-HS256")
+    _jwe = jwe.encrypt(keys=[encryption_key], kid="some-key-id")
+    assert is_jwe(_jwe)

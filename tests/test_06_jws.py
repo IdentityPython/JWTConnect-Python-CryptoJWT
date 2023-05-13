@@ -7,6 +7,7 @@ import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
+from cryptojwt import as_unicode
 from cryptojwt.exception import BadSignature
 from cryptojwt.exception import UnknownAlgorithm
 from cryptojwt.exception import WrongNumberOfParts
@@ -25,10 +26,13 @@ from cryptojwt.jws.rsa import RSASigner
 from cryptojwt.jws.utils import left_hash
 from cryptojwt.jws.utils import parse_rsa_algorithm
 from cryptojwt.key_bundle import KeyBundle
+from cryptojwt.utils import as_bytes
 from cryptojwt.utils import b64d
 from cryptojwt.utils import b64d_enc_dec
 from cryptojwt.utils import b64e
 from cryptojwt.utils import intarr2bin
+from cryptojwt.utils import is_compact_jws
+from cryptojwt.utils import is_json_jws
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -296,7 +300,6 @@ JWKS_WITH_USE = {
         },
     ]
 }
-
 
 SIGJWKS = KeyBundle(JWKS_b)
 
@@ -1020,3 +1023,50 @@ def test_verify_json_missing_key():
 
     # With both
     assert JWS().verify_json(_jwt, keys=[vkeys[0], sym_key])
+
+
+def test_is_compact_jws():
+    _header = {"foo": "bar", "alg": "HS384"}
+    _payload = "hello world"
+    _sym_key = SYMKey(key=b"My hollow echo chamber", alg="HS384")
+
+    _jwt = JWS(msg=_payload, alg="HS384").sign_compact(keys=[_sym_key])
+
+    assert is_compact_jws(_jwt)
+
+    # Faulty examples
+
+    # to few parts
+    assert is_compact_jws("abc.def") is False
+
+    # right number of parts but not base64
+
+    assert is_compact_jws("abc.def.ghi") is False
+
+    # not base64 illegal characters
+    assert is_compact_jws("abc.::::.ghi") is False
+
+    # Faulty header
+    _faulty_header = {"foo": "bar"}  # alg is a MUST
+    _jwt = ".".join([as_unicode(b64e(as_bytes(json.dumps(_faulty_header)))), "def", "ghi"])
+    assert is_compact_jws(_jwt) is False
+
+
+def test_is_json_jws():
+    ec_key = ECKey().load_key(P256())
+    sym_key = SYMKey(key=b"My hollow echo chamber", alg="HS384")
+
+    protected_headers_1 = {"foo": "bar", "alg": "ES256"}
+    unprotected_headers_1 = {"abc": "xyz"}
+    protected_headers_2 = {"foo": "bar", "alg": "HS384"}
+    unprotected_headers_2 = {"abc": "zeb"}
+    payload = "hello world"
+    _jwt = JWS(msg=payload).sign_json(
+        headers=[
+            (protected_headers_1, unprotected_headers_1),
+            (protected_headers_2, unprotected_headers_2),
+        ],
+        keys=[ec_key, sym_key],
+    )
+
+    assert is_json_jws(_jwt)
