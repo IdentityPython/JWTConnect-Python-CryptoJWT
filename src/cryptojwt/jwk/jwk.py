@@ -5,6 +5,8 @@ import os
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ed448
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
@@ -17,6 +19,7 @@ from ..utils import base64url_to_long
 from .ec import NIST2SEC
 from .ec import ECKey
 from .hmac import SYMKey
+from .okp import OKPKey
 from .rsa import RSAKey
 
 EC_PUBLIC_REQUIRED = frozenset(["crv", "x", "y"])
@@ -24,6 +27,12 @@ EC_PUBLIC = EC_PUBLIC_REQUIRED
 EC_PRIVATE_REQUIRED = frozenset(["d"])
 EC_PRIVATE_OPTIONAL = frozenset()
 EC_PRIVATE = EC_PRIVATE_REQUIRED | EC_PRIVATE_OPTIONAL
+
+OKP_PUBLIC_REQUIRED = frozenset(["crv", "x"])
+OKP_PUBLIC = OKP_PUBLIC_REQUIRED
+OKP_PRIVATE_REQUIRED = frozenset(["d"])
+OKP_PRIVATE_OPTIONAL = frozenset()
+OKP_PRIVATE = OKP_PRIVATE_REQUIRED | OKP_PRIVATE_OPTIONAL
 
 RSA_PUBLIC_REQUIRED = frozenset(["e", "n"])
 RSA_PUBLIC = RSA_PUBLIC_REQUIRED
@@ -40,6 +49,16 @@ def ensure_ec_params(jwk_dict, private):
     else:
         required = EC_PUBLIC_REQUIRED
     return ensure_params("EC", provided, required)
+
+
+def ensure_okp_params(jwk_dict, private):
+    """Ensure all required OKP parameters are present in dictionary"""
+    provided = frozenset(jwk_dict.keys())
+    if private is not None and private:
+        required = OKP_PUBLIC_REQUIRED | OKP_PRIVATE_REQUIRED
+    else:
+        required = OKP_PUBLIC_REQUIRED
+    return ensure_params("OKP", provided, required)
 
 
 def ensure_rsa_params(jwk_dict, private):
@@ -140,6 +159,15 @@ def key_from_jwk_dict(jwk_dict, private=None):
         if _jwk_dict["kty"] != "RSA":
             raise WrongKeyType('"{}" should have been "RSA"'.format(_jwk_dict["kty"]))
         return RSAKey(**_jwk_dict)
+    elif _jwk_dict["kty"] == "OKP":
+        ensure_okp_params(_jwk_dict, private)
+
+        if private is not None and not private:
+            # remove private components
+            for v in OKP_PRIVATE:
+                _jwk_dict.pop(v, None)
+
+        return OKPKey(**_jwk_dict)
     elif _jwk_dict["kty"] == "oct":
         if "key" not in _jwk_dict and "k" not in _jwk_dict:
             raise MissingValue('There has to be one of "k" or "key" in a symmetric key')
@@ -164,6 +192,8 @@ def jwk_wrap(key, use="", kid=""):
         kspec = SYMKey(key=key, use=use, kid=kid)
     elif isinstance(key, ec.EllipticCurvePublicKey):
         kspec = ECKey(use=use, kid=kid).load_key(key)
+    elif isinstance(key, (ed25519.Ed25519PublicKey, ed448.Ed448PublicKey)):
+        kspec = OKPKey(use=use, kid=kid).load_key(key)
     else:
         raise Exception("Unknown key type:key=" + str(type(key)))
 
