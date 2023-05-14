@@ -4,9 +4,9 @@ import os
 
 from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
 from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
