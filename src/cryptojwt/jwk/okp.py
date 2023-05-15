@@ -3,13 +3,14 @@ from typing import Union
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.asymmetric import x448
+from cryptography.hazmat.primitives.asymmetric import x25519
 
 from cryptojwt.exception import KeyNotFound
 
 from ..exception import DeSerializationNotPossible
 from ..exception import JWKESTException
 from ..exception import UnsupportedOKPCurve
-from ..utils import as_unicode
 from ..utils import b64d
 from ..utils import b64e
 from .asym import AsymmetricKey
@@ -17,18 +18,52 @@ from .x509 import import_private_key_from_pem_file
 from .x509 import import_public_key_from_pem_data
 from .x509 import import_public_key_from_pem_file
 
-OKPPublicKey = Union[ed25519.Ed25519PublicKey, ed448.Ed448PublicKey]
-OKPPrivateKey = Union[ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey]
+OKPPublicKey = Union[
+    ed25519.Ed25519PublicKey, ed448.Ed448PublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+]
+OKPPrivateKey = Union[
+    ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+]
 
-CRV2PUBLIC = {"Ed25519": ed25519.Ed25519PublicKey, "Ed448": ed448.Ed448PublicKey}
+CRV2PUBLIC = {
+    "Ed25519": ed25519.Ed25519PublicKey,
+    "Ed448": ed448.Ed448PublicKey,
+    "X25519": x25519.X25519PublicKey,
+    "X448": x448.X448PublicKey,
+}
 
-CRV2PRIVATE = {"Ed25519": ed25519.Ed25519PrivateKey, "Ed448": ed448.Ed448PrivateKey}
+CRV2PRIVATE = {
+    "Ed25519": ed25519.Ed25519PrivateKey,
+    "Ed448": ed448.Ed448PrivateKey,
+    "X25519": x25519.X25519PrivateKey,
+    "X448": x448.X448PrivateKey,
+}
+
+CRV_SIGN = ["Ed25519", "Ed448"]
+CRV_ENCR = ["X25519", "X448"]
 
 
 def is_private_key(key) -> bool:
-    if isinstance(key, (ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey)):
+    if isinstance(
+        key,
+        (
+            ed25519.Ed25519PrivateKey,
+            ed448.Ed448PrivateKey,
+            x25519.X25519PrivateKey,
+            x448.X448PrivateKey,
+        ),
+    ):
         return True
-    elif isinstance(key, (ed25519.Ed25519PublicKey, ed448.Ed448PublicKey)):
+    elif isinstance(
+        key,
+        (
+            ed25519.Ed25519PublicKey,
+            ed448.Ed448PublicKey,
+            ed448.Ed448PublicKey,
+            x25519.X25519PublicKey,
+            x448.X448PublicKey,
+        ),
+    ):
         return False
     raise TypeError
 
@@ -119,51 +154,50 @@ class OKPKey(AsymmetricKey):
             try:
                 self.pub_key = CRV2PUBLIC[self.crv].from_public_bytes(_x)
             except KeyError:
-                raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(num["crv"]))
+                raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
+
+    def _serialize_public(self, key):
+        self.x = b64e(
+            key.public_bytes(
+                encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+            )
+        ).decode("ascii")
+
+    def _serialize_private(self, key):
+        self._serialize_public(key.public_key())
+        self.d = b64e(
+            key.private_bytes(
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PrivateFormat.Raw,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
+        ).decode("ascii")
 
     def _serialize(self, key):
         if isinstance(key, ed25519.Ed25519PublicKey):
-            self.x = b64e(
-                key.public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
-                )
-            ).decode("ascii")
+            self._serialize_public(key)
             self.crv = "Ed25519"
         elif isinstance(key, ed25519.Ed25519PrivateKey):
-            self.x = b64e(
-                key.public_key().public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
-                )
-            ).decode("ascii")
-            self.d = b64e(
-                key.private_bytes(
-                    encoding=serialization.Encoding.Raw,
-                    format=serialization.PrivateFormat.Raw,
-                    encryption_algorithm=serialization.NoEncryption(),
-                )
-            ).decode("ascii")
+            self._serialize_private(key)
             self.crv = "Ed25519"
+        elif isinstance(key, x25519.X25519PublicKey):
+            self._serialize_public(key)
+            self.crv = "X25519"
+        elif isinstance(key, x25519.X25519PrivateKey):
+            self._serialize_private(key)
+            self.crv = "X25519"
         elif isinstance(key, ed448.Ed448PublicKey):
-            self.x = b64e(
-                key.public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
-                )
-            ).decode("ascii")
+            self._serialize_public(key)
             self.crv = "Ed448"
         elif isinstance(key, ed448.Ed448PrivateKey):
-            self.x = b64e(
-                key.public_key().public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
-                )
-            ).decode("ascii")
-            self.d = b64e(
-                key.private_bytes(
-                    encoding=serialization.Encoding.Raw,
-                    format=serialization.PrivateFormat.Raw,
-                    encryption_algorithm=serialization.NoEncryption(),
-                )
-            ).decode("ascii")
+            self._serialize_private(key)
             self.crv = "Ed448"
+        elif isinstance(key, x448.X448PublicKey):
+            self._serialize_public(key)
+            self.crv = "X448"
+        elif isinstance(key, x448.X448PrivateKey):
+            self._serialize_private(key)
+            self.crv = "X448"
 
     def serialize(self, private=False):
         """

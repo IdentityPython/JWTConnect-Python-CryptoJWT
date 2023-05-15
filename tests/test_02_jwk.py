@@ -12,6 +12,8 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import x448
+from cryptography.hazmat.primitives.asymmetric import x25519
 
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
@@ -742,6 +744,18 @@ def test_new_okp_key():
     okp_key = new_okp_key("Ed25519")
     assert isinstance(okp_key, OKPKey)
     assert okp_key.crv == "Ed25519"
+
+    okp_key = new_okp_key("Ed448")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "Ed448"
+
+    okp_key = new_okp_key("X25519")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "X25519"
+
+    okp_key = new_okp_key("X448")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "X448"
 
 
 def test_create_okp_key():
