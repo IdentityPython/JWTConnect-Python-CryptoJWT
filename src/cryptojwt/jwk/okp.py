@@ -49,33 +49,6 @@ def deser(val):
     return b64d(_val)
 
 
-def okp_construct_public(num) -> OKPPublicKey:
-    """
-    Given a set of values on public attributes build a OKP public key instance.
-
-    :param num: A dictionary with public attributes and their values
-    :return: A OKPPublicKey instance.
-    """
-    try:
-        return CRV2PUBLIC[as_unicode(num["crv"])].from_public_bytes(num["x"])
-    except KeyError:
-        raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(num["crv"]))
-
-
-def okp_construct_private(num) -> OKPPrivateKey:
-    """
-    Given a set of values on public and private attributes build a elliptic
-    curve private key instance.
-
-    :param num: A dictionary with public and private attributes and their values
-    :return: A OKPPrivateKey instance.
-    """
-    try:
-        return CRV2PRIVATE[as_unicode(num["crv"])].from_private_bytes(num["d"])
-    except KeyError:
-        raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(num["crv"]))
-
-
 class OKPKey(AsymmetricKey):
     """
     JSON Web key representation of an Octet Key Pair key.
@@ -147,13 +120,18 @@ class OKPKey(AsymmetricKey):
         if self.d:
             try:
                 if isinstance(self.d, (str, bytes)):
-                    _d = deser(self.d)
-                    self.priv_key = okp_construct_private({"x": _x, "crv": self.crv, "d": _d})
+                    try:
+                        self.priv_key = CRV2PRIVATE[self.crv].from_private_bytes(deser(self.d))
+                    except KeyError:
+                        raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
                     self.pub_key = self.priv_key.public_key()
             except ValueError as err:
                 raise DeSerializationNotPossible(str(err))
         else:
-            self.pub_key = okp_construct_public({"x": _x, "crv": self.crv})
+            try:
+                self.pub_key = CRV2PUBLIC[self.crv].from_public_bytes(_x)
+            except KeyError:
+                raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(num["crv"]))
 
     def _serialize(self, key):
         if isinstance(key, ed25519.Ed25519PublicKey):
