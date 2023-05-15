@@ -34,19 +34,7 @@ def is_private_key(key) -> bool:
 
 
 def deser(val):
-    """
-    Deserialize from a string representation of a long integer
-    to the python representation of a long integer.
-
-    :param val: The string representation of the long integer.
-    :return: The long integer.
-    """
-    if isinstance(val, str):
-        _val = val.encode("utf-8")
-    else:
-        _val = val
-
-    return b64d(_val)
+    return b64d(val.encode()) if isinstance(val, str) else b64d(val)
 
 
 class OKPKey(AsymmetricKey):
