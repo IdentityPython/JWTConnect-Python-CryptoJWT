@@ -55,6 +55,6 @@ jobs:
         run: |
           poetry run pytest -vvv -ra --cov=cryptojwt --cov-report=xml --isort --black
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
