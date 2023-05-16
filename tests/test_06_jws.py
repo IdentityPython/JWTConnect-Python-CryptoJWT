@@ -6,6 +6,7 @@ import os.path
 import pytest
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from cryptojwt import as_unicode
 from cryptojwt.exception import BadSignature
@@ -13,6 +14,7 @@ from cryptojwt.exception import UnknownAlgorithm
 from cryptojwt.exception import WrongNumberOfParts
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.okp import OKPKey
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jws.exception import FormatError
@@ -599,6 +601,39 @@ def test_signer_ps512():
     info = _rj.verify_compact(_jwt, vkeys)
     assert info == payload
     assert _rj.verify_alg("PS512")
+
+
+def test_signer_eddsa():
+    payload = "Please take a moment to register today"
+    okp = ed25519.Ed25519PrivateKey.generate()
+    _key = OKPKey().load_key(okp)
+    keys = [_key]
+    _jws = JWS(payload, alg="EdDSA")
+    _jwt = _jws.sign_compact(keys)
+
+    _pubkey = OKPKey().load_key(okp.public_key())
+    _rj = JWS(alg="EdDSA")
+    info = _rj.verify_compact(_jwt, [_pubkey])
+    assert info == payload
+
+
+def test_signer_eddsa_fail():
+    payload = "Please take a moment to register today"
+    okp = ed25519.Ed25519PrivateKey.generate()
+    _key = OKPKey().load_key(okp)
+    keys = [_key]
+    _jws = JWS(payload, alg="EdDSA")
+    _jwt = _jws.sign_compact(keys)
+
+    okp2 = ed25519.Ed25519PrivateKey.generate()
+    _pubkey = OKPKey().load_key(okp2.public_key())
+    _rj = JWS(alg="EdDSA")
+    try:
+        info = _rj.verify_compact(_jwt, [_pubkey])
+    except BadSignature:
+        pass
+    else:
+        assert False
 
 
 def test_no_alg_and_alg_none_same():
