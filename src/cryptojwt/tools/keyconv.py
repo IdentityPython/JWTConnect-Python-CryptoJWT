@@ -14,6 +14,9 @@ from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import import_private_ec_key_from_file
 from cryptojwt.jwk.ec import import_public_ec_key_from_file
 from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.okp import OKPKey
+from cryptojwt.jwk.okp import import_private_okp_key_from_file
+from cryptojwt.jwk.okp import import_public_okp_key_from_file
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
@@ -59,6 +62,22 @@ def pem2ec(
     return jwk
 
 
+def pem2okp(
+    filename: str,
+    kid: Optional[str] = None,
+    private: bool = False,
+    passphrase: Optional[str] = None,
+) -> JWK:
+    """Convert OKP key from PEM to JWK"""
+    if private:
+        key = import_private_okp_key_from_file(filename, passphrase)
+    else:
+        key = import_public_okp_key_from_file(filename)
+    jwk = OKPKey(kid=kid)
+    jwk.load_key(key)
+    return jwk
+
+
 def bin2jwk(filename: str, kid: str) -> JWK:
     """Read raw key from filename and return JWK"""
     with open(filename, "rb") as file:
@@ -91,6 +110,8 @@ def pem2jwk(
             jwk = pem2ec(filename, kid, private=False)
         elif kty is not None and kty == "RSA":
             jwk = pem2rsa(filename, kid, private=False)
+        elif kty is not None and kty == "OKP":
+            jwk = pem2okp(filename, kid, private=False)
         else:
             raise ValueError("Unknown key type")
     elif "BEGIN PRIVATE KEY" in header:
@@ -98,6 +119,8 @@ def pem2jwk(
             jwk = pem2ec(filename, kid, private=True, passphrase=passphrase)
         elif kty is not None and kty == "RSA":
             jwk = pem2rsa(filename, kid, private=True, passphrase=passphrase)
+        elif kty is not None and kty == "OKP":
+            jwk = pem2okp(filename, kid, private=True, passphrase=passphrase)
         else:
             raise ValueError("Unknown key type")
     elif "BEGIN EC PRIVATE KEY" in header:
