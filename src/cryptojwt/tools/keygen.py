@@ -8,6 +8,8 @@ import sys
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.okp import OKP_CRV2PUBLIC
+from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import new_rsa_key
 from cryptojwt.utils import b64e
 
@@ -28,7 +30,7 @@ def main():
         dest="crv",
         metavar="curve",
         help="EC curve",
-        choices=NIST2SEC.keys(),
+        choices=list(NIST2SEC.keys()) + list(OKP_CRV2PUBLIC.keys()),
         default=DEFAULT_EC_CURVE,
     )
     parser.add_argument(
@@ -51,6 +53,11 @@ def main():
             print("Unknown curve: {0}".format(args.crv), file=sys.stderr)
             exit(1)
         jwk = new_ec_key(crv=args.crv, kid=args.kid)
+    elif args.kty.upper() == "OKP":
+        if args.crv not in OKP_CRV2PUBLIC:
+            print("Unknown curve: {0}".format(args.crv), file=sys.stderr)
+            exit(1)
+        jwk = new_okp_key(crv=args.crv, kid=args.kid)
     elif args.kty.upper() == "SYM" or args.kty.upper() == "OCT":
         if args.keysize is None:
             args.keysize = DEFAULT_SYM_KEYSIZE
