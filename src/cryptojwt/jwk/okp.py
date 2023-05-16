@@ -25,14 +25,14 @@ OKPPrivateKey = Union[
     ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
 ]
 
-CRV2PUBLIC = {
+OKP_CRV2PUBLIC = {
     "Ed25519": ed25519.Ed25519PublicKey,
     "Ed448": ed448.Ed448PublicKey,
     "X25519": x25519.X25519PublicKey,
     "X448": x448.X448PublicKey,
 }
 
-CRV2PRIVATE = {
+OKP_CRV2PRIVATE = {
     "Ed25519": ed25519.Ed25519PrivateKey,
     "Ed448": ed448.Ed448PrivateKey,
     "X25519": x25519.X25519PrivateKey,
@@ -144,7 +144,7 @@ class OKPKey(AsymmetricKey):
             try:
                 if isinstance(self.d, (str, bytes)):
                     try:
-                        self.priv_key = CRV2PRIVATE[self.crv].from_private_bytes(deser(self.d))
+                        self.priv_key = OKP_CRV2PRIVATE[self.crv].from_private_bytes(deser(self.d))
                     except KeyError:
                         raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
                     self.pub_key = self.priv_key.public_key()
@@ -152,7 +152,7 @@ class OKPKey(AsymmetricKey):
                 raise DeSerializationNotPossible(str(err))
         else:
             try:
-                self.pub_key = CRV2PUBLIC[self.crv].from_public_bytes(_x)
+                self.pub_key = OKP_CRV2PUBLIC[self.crv].from_public_bytes(_x)
             except KeyError:
                 raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
 
@@ -272,8 +272,8 @@ class OKPKey(AsymmetricKey):
         if self.__class__ != other.__class__:
             return False
 
-        _public_cls = CRV2PUBLIC[self.crv]
-        _private_cls = CRV2PRIVATE[self.crv]
+        _public_cls = OKP_CRV2PUBLIC[self.crv]
+        _private_cls = OKP_CRV2PRIVATE[self.crv]
         if cmp_keys(self.pub_key, other.pub_key, _public_cls):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, _private_cls):
@@ -322,7 +322,7 @@ def cmp_keys(a, b, key_type):
 
 def new_okp_key(crv, kid="", **kwargs):
 
-    _key = CRV2PRIVATE[crv].generate()
+    _key = OKP_CRV2PRIVATE[crv].generate()
 
     _rk = OKPKey(priv_key=_key, kid=kid, **kwargs)
     if not kid:
