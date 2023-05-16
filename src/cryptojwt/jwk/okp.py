@@ -39,8 +39,8 @@ OKP_CRV2PRIVATE = {
     "X448": x448.X448PrivateKey,
 }
 
-CRV_SIGN = ["Ed25519", "Ed448"]
-CRV_ENCR = ["X25519", "X448"]
+OKP_CRV_SIGN = ["Ed25519", "Ed448"]
+OKP_CRV_ENCR = ["X25519", "X448"]
 
 
 def is_private_key(key) -> bool:
