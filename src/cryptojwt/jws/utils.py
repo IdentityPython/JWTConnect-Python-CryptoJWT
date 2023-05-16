@@ -49,6 +49,8 @@ def alg2keytype(alg):
         return "oct"
     elif alg.startswith("ES") or alg.startswith("ECDH-ES"):
         return "EC"
+    elif alg == "EdDSA":
+        return "OKP"
     else:
         return None
 

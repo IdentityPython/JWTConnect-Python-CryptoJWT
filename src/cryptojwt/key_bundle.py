@@ -1267,7 +1267,7 @@ def key_rollover(bundle):
     key_spec = []
     for key in bundle.get():
         _spec = {"type": key.kty, "use": [key.use]}
-        if key.kty in ["EC", "OKP"):
+        if key.kty in ["EC", "OKP"]:
             _spec["crv"] = key.crv
 
         key_spec.append(_spec)
