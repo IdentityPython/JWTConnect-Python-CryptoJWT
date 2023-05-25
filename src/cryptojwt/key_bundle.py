@@ -15,6 +15,7 @@ import requests
 
 from cryptojwt.jwk.ec import NIST2SEC
 from cryptojwt.jwk.hmac import new_sym_key
+from cryptojwt.jwk.okp import OKP_CRV2PUBLIC
 from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 
 from .exception import JWKException
@@ -27,6 +28,8 @@ from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
 from .jwk.jwk import dump_jwk
 from .jwk.jwk import import_jwk
+from .jwk.okp import OKPKey
+from .jwk.okp import new_okp_key
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
 from .utils import as_unicode
@@ -46,7 +49,7 @@ LOGGER = logging.getLogger(__name__)
 #     raise excep(_err, 'application/json')
 
 # Make sure the keys are all uppercase
-K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey}
+K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey, "OKP": OKPKey}
 
 MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
 
@@ -149,6 +152,29 @@ def ec_init(spec):
             _kb.append(eck)
     else:
         eck = new_ec_key(crv=curve)
+        _kb.append(eck)
+
+    return _kb
+
+
+def okp_init(spec):
+    """
+    Initiate a key bundle with an Octet Key Pair.
+
+    :param spec: Key specifics of the form::
+        {"type": "OKP", "crv": "Ed25519", "use": ["sig"]}
+
+    :return: A KeyBundle instance
+    """
+    curve = spec.get("crv", "Ed25519")
+
+    _kb = KeyBundle(keytype="OKP")
+    if "use" in spec:
+        for use in spec["use"]:
+            eck = new_okp_key(crv=curve, use=use)
+            _kb.append(eck)
+    else:
+        eck = new_okp_key(crv=curve)
         _kb.append(eck)
 
     return _kb
@@ -1003,6 +1029,17 @@ def build_key_bundle(key_conf, kid_template=""):
                     )
             else:
                 _bundle = ec_init(spec)
+        elif typ == "OKP":
+            if "key" in spec and spec["key"]:
+                if os.path.isfile(spec["key"]):
+                    _bundle = KeyBundle(
+                        source="file://%s" % spec["key"],
+                        fileformat="der",
+                        keytype=typ,
+                        keyusage=spec["use"],
+                    )
+            else:
+                _bundle = okp_init(spec)
         elif typ.lower() == "oct":
             _bundle = sym_init(spec)
         else:
@@ -1047,7 +1084,7 @@ def type_order(kd1, kd2):
     if _l:
         return _l
 
-    if kd1["type"] == "EC":
+    if kd1["type"] in ["EC", "OKP"]:
         _l = _cmp(kd1["crv"], kd2["crv"])
         if _l:
             return _l
@@ -1155,8 +1192,8 @@ def key_diff(key_bundle, key_defs):
             if key.kty != key_def["type"]:
                 continue
 
-            if key.kty == "EC":
-                # special test only for EC keys
+            if key.kty in ["EC", "OKP"]:
+                # special test only for EC and OKP keys
                 if key.crv != key_def["crv"]:
                     continue
 
@@ -1230,7 +1267,7 @@ def key_rollover(bundle):
     key_spec = []
     for key in bundle.get():
         _spec = {"type": key.kty, "use": [key.use]}
-        if key.kty == "EC":
+        if key.kty in ["EC", "OKP"]:
             _spec["crv"] = key.crv
 
         key_spec.append(_spec)
@@ -1264,6 +1301,7 @@ DEFAULT_SYM_KEYSIZE = 32
 DEFAULT_RSA_KEYSIZE = 2048
 DEFAULT_RSA_EXP = 65537
 DEFAULT_EC_CURVE = "P-256"
+DEFAULT_OKP_CURVE = "Ed25519"
 
 
 def key_gen(type, **kwargs):
@@ -1290,6 +1328,12 @@ def key_gen(type, **kwargs):
             logging.error("Unknown curve: %s", crv)
             raise ValueError("Unknown curve: {}".format(crv))
         _key = new_ec_key(crv=crv, **kargs)
+    elif type.upper() == "OKP":
+        crv = kwargs.get("crv", DEFAULT_OKP_CURVE)
+        if crv not in OKP_CRV2PUBLIC:
+            logging.error("Unknown curve: %s", crv)
+            raise ValueError("Unknown curve: {}".format(crv))
+        _key = new_okp_key(crv=crv, **kargs)
     elif type.lower() in ["sym", "oct"]:
         keysize = kwargs.get("bytes", 24)
         randomkey = os.urandom(keysize)
@@ -1324,6 +1368,8 @@ def key_by_alg(alg: str):
             return key_gen("EC", crv="P-384")
         elif alg == "ES512":
             return key_gen("EC", crv="P-521")
+    elif alg == "EdDSA":
+        return key_gen("OKP", crv=DEFAULT_OKP_CURVE)
     elif alg.startswith("HS"):
         return key_gen("sym")
 
