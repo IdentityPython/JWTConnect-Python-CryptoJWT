@@ -41,6 +41,7 @@ SIGNER_ALGS = {
     "RS384": RSASigner("RS384"),
     "RS512": RSASigner("RS512"),
     "ES256": ECDSASigner("ES256"),
+    "ES256K": ECDSASigner("ES256K"),
     "ES384": ECDSASigner("ES384"),
     "ES512": ECDSASigner("ES512"),
     "PS256": PSSSigner("SHA256"),

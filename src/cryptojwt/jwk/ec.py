@@ -28,6 +28,7 @@ NIST2SEC = {
     "P-256": ec.SECP256R1,
     "P-224": ec.SECP224R1,
     "P-192": ec.SECP192R1,
+    "P-256K": ec.SECP256K1,
 }
 
 # Inverted NIST2SEC dictionary
