@@ -14,6 +14,8 @@ from cryptojwt.exception import UnknownKeyType
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
+from cryptojwt.jwk.okp import OKPKey
+from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
@@ -620,6 +622,13 @@ JWKS_DICT = {
             "y": "GOd2jL_6wa0cfnyA0SmEhok9fkYEnAHFKLLM79BZ8_E",
             "crv": "P-256",
         },
+        {
+            "kty": "OKP",
+            "kid": "xyzzy",
+            "use": "sig",
+            "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+            "crv": "Ed25519",
+        },
     ]
 }
 
@@ -627,17 +636,19 @@ JWKS_DICT = {
 def test_keys():
     kb = KeyBundle(JWKS_DICT)
 
-    assert len(kb) == 3
+    assert len(kb) == 4
 
     assert len(kb.get("rsa")) == 1
     assert len(kb.get("oct")) == 1
     assert len(kb.get("ec")) == 1
+    assert len(kb.get("okp")) == 1
 
 
 EXPECTED = [
     b"iA7PvG_DfJIeeqQcuXFmvUGjqBkda8In_uMpZrcodVA",
     b"akXzyGlXg8yLhsCczKb_r8VERLx7-iZBUMIVgg2K7p4",
     b"kLsuyGef1kfw5-t-N9CJLIHx_dpZ79-KemwqjwdrvTI",
+    b"kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k",
 ]
 
 
@@ -860,6 +871,15 @@ def test_key_gen_rsa():
     assert isinstance(_jwk, RSAKey)
 
 
+def test_key_gen_okp():
+    _jwk = key_gen("OKP", kid="kid1")
+    assert _jwk
+    assert _jwk.kty == "OKP"
+    assert _jwk.kid == "kid1"
+
+    assert isinstance(_jwk, OKPKey)
+
+
 def test_init_key():
     spec = {"type": "RSA", "kid": "one"}
 
@@ -932,10 +952,11 @@ def test_remote():
     exp = kb.dump()
     kb2 = KeyBundle().load(exp)
     assert kb2.source == source
-    assert len(kb2.keys()) == 3
+    assert len(kb2.keys()) == 4
     assert len(kb2.get("rsa")) == 1
     assert len(kb2.get("oct")) == 1
     assert len(kb2.get("ec")) == 1
+    assert len(kb2.get("okp")) == 1
     assert kb2.httpc_params == {"timeout": (2, 2)}
     assert kb2.imp_jwks
     assert kb2.last_updated
@@ -972,11 +993,12 @@ def test_remote_not_modified():
     exp = kb.dump()
     kb2 = KeyBundle().load(exp)
     assert kb2.source == source
-    assert len(kb2.keys()) == 3
-    assert len(kb2.active_keys()) == 3
+    assert len(kb2.keys()) == 4
+    assert len(kb2.active_keys()) == 4
     assert len(kb2.get("rsa")) == 1
     assert len(kb2.get("oct")) == 1
     assert len(kb2.get("ec")) == 1
+    assert len(kb2.get("okp")) == 1
     assert kb2.httpc_params == {"timeout": (2, 2)}
     assert kb2.imp_jwks
     assert kb2.last_updated

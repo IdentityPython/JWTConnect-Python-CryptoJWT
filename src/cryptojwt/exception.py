@@ -117,3 +117,7 @@ class HTTPException(JWKESTException):
 
 class UnsupportedECurve(Unsupported):
     pass
+
+
+class UnsupportedOKPCurve(Unsupported):
+    pass

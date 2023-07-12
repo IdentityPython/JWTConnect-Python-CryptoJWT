@@ -14,6 +14,7 @@ from ..utils import b64d_enc_dec
 from ..utils import b64e_enc_dec
 from ..utils import b64encode_item
 from .dsa import ECDSASigner
+from .eddsa import EDDSASigner
 from .exception import FormatError
 from .exception import NoSuitableSigningKeys
 from .exception import SignerAlgError
@@ -45,6 +46,7 @@ SIGNER_ALGS = {
     "PS256": PSSSigner("SHA256"),
     "PS384": PSSSigner("SHA384"),
     "PS512": PSSSigner("SHA512"),
+    "EdDSA": EDDSASigner(),
     "none": None,
 }
 

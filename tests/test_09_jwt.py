@@ -235,3 +235,26 @@ def test_pick_key():
 
     _k = pick_key(keys, "enc", "ECDH-ES")
     assert len(_k) == 0
+
+
+def test_eddsa_jwt():
+    JWKS_DICT = {
+        "keys": [
+            {
+                "kty": "OKP",
+                "kid": "-1909572257",
+                "crv": "Ed25519",
+                "x": "XWxGtApfcqmKI7p0OKnF5JSEWMVoLsytFXLEP7xZ_l8",
+            }
+        ]
+    }
+    JWT_TEST = (
+        "eyJraWQiOiItMTkwOTU3MjI1NyIsImFsZyI6IkVkRFNBIn0."
+        + "eyJqdGkiOiIyMjkxNmYzYy05MDkzLTQ4MTMtODM5Ny1mMTBlNmI3MDRiNjgiLCJkZWxlZ2F0aW9uSWQiOiJiNGFlNDdhNy02MjVhLTQ2MzAtOTcyNy00NTc2NGE3MTJjY2UiLCJleHAiOjE2NTUyNzkxMDksIm5iZiI6MTY1NTI3ODgwOSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6Imh0dHBzOi8vaWRzdnIuZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VybmFtZSIsImF1ZCI6ImFwaS5leGFtcGxlLmNvbSIsImlhdCI6MTY1NTI3ODgwOSwicHVycG9zZSI6ImFjY2Vzc190b2tlbiJ9."
+        + "rjeE8D_e4RYzgvpu-nOwwx7PWMiZyDZwkwO6RiHR5t8g4JqqVokUKQt-oST1s45wubacfeDSFogOrIhe3UHDAg"
+    )
+    ISSUER = "https://idsvr.example.com"
+    kj = KeyJar()
+    kj.add_kb(ISSUER, KeyBundle(JWKS_DICT))
+    jwt = JWT(key_jar=kj)
+    _ = jwt.unpack(JWT_TEST)

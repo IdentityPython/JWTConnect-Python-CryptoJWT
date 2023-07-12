@@ -9,7 +9,11 @@ from collections import Counter
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import ed448
+from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import x448
+from cryptography.hazmat.primitives.asymmetric import x25519
 
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
@@ -27,6 +31,8 @@ from cryptojwt.jwk.jwk import dump_jwk
 from cryptojwt.jwk.jwk import import_jwk
 from cryptojwt.jwk.jwk import jwk_wrap
 from cryptojwt.jwk.jwk import key_from_jwk_dict
+from cryptojwt.jwk.okp import OKPKey
+from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
 from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
@@ -723,3 +729,79 @@ def test_import_public_key_from_pem_file(filename, key_type):
     _file = full_path(filename)
     pub_key = import_public_key_from_pem_file(_file)
     assert isinstance(pub_key, key_type)
+
+
+OKPKEY = {"crv": "Ed25519", "kty": "OKP", "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}
+OKPKEY_SHA256 = "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
+
+
+def test_new_okp_thumbprint():
+    okp_key = OKPKey(**OKPKEY)
+    assert okp_key.thumbprint("SHA-256").decode() == OKPKEY_SHA256
+
+
+def test_new_okp_key():
+    okp_key = new_okp_key("Ed25519")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "Ed25519"
+
+    okp_key = new_okp_key("Ed448")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "Ed448"
+
+    okp_key = new_okp_key("X25519")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "X25519"
+
+    okp_key = new_okp_key("X448")
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "X448"
+
+
+def test_create_okp_key():
+    okp = new_okp_key("Ed25519")
+    exp_key = okp.serialize()
+    assert _eq(list(exp_key.keys()), ["x", "crv", "kty", "kid"])
+
+
+def test_create_okp_wrap():
+    key = ed25519.Ed25519PrivateKey.generate()
+    okp_key = jwk_wrap(key.public_key())
+    assert isinstance(okp_key, OKPKey)
+    assert okp_key.crv == "Ed25519"
+
+
+def test_cmp_neq_okp():
+    okp_key = new_okp_key("Ed25519")
+    _key1 = OKPKey(priv_key=okp_key.priv_key)
+    _key2 = OKPKey(**OKPKEY)
+
+    assert _key1 != _key2
+
+
+def test_cmp_eq_okp():
+    okp_key = new_okp_key("Ed25519")
+    _key1 = OKPKey(priv_key=okp_key.priv_key)
+    _key2 = OKPKey(priv_key=okp_key.priv_key)
+
+    assert _key1 == _key2
+
+
+def test_key_from_jwk_dict_okp_ed25519():
+    key = OKPKey().load(full_path("ed25519.pem"))
+    assert key.has_private_key()
+    jwk = key.serialize(private=True)
+    assert jwk["crv"] == "Ed25519"
+    _key = key_from_jwk_dict(jwk)
+    assert isinstance(_key, OKPKey)
+    assert _key.has_private_key()
+
+
+def test_key_from_jwk_dict_okp_ed448():
+    key = OKPKey().load(full_path("ed448.pem"))
+    assert key.has_private_key()
+    jwk = key.serialize(private=True)
+    assert jwk["crv"] == "Ed448"
+    _key = key_from_jwk_dict(jwk)
+    assert isinstance(_key, OKPKey)
+    assert _key.has_private_key()

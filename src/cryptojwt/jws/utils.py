@@ -1,4 +1,5 @@
 # import struct
+
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -48,6 +49,8 @@ def alg2keytype(alg):
         return "oct"
     elif alg.startswith("ES") or alg.startswith("ECDH-ES"):
         return "EC"
+    elif alg == "EdDSA":
+        return "OKP"
     else:
         return None
 
