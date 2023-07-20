@@ -1364,6 +1364,8 @@ def key_by_alg(alg: str):
     elif alg.startswith("ES"):
         if alg == "ES256":
             return key_gen("EC", crv="P-256")
+        elif alg == "ES256K":
+            return key_gen("EC", crv="P-256K")
         elif alg == "ES384":
             return key_gen("EC", crv="P-384")
         elif alg == "ES512":

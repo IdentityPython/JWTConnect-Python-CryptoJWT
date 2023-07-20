@@ -16,6 +16,9 @@ class ECDSASigner(Signer):
         if algorithm == "ES256":
             self.hash_algorithm = hashes.SHA256
             self.curve_name = "secp256r1"
+        elif algorithm == "ES256K":
+            self.hash_algorithm = hashes.SHA256
+            self.curve_name = "secp256k1"
         elif algorithm == "ES384":
             self.hash_algorithm = hashes.SHA384
             self.curve_name = "secp384r1"

@@ -212,6 +212,7 @@ KEY_DEFS = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "RSA", "use": ["enc"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
+    {"type": "EC", "crv": "P-256K", "use": ["sig"]},
     {"type": "EC", "crv": "P-384", "use": ["sig"]},
 ]
 
@@ -228,6 +229,9 @@ def test_pick_key():
     assert len(_k) == 1
 
     _k = pick_key(keys, "sig", "ES384")
+    assert len(_k) == 1
+
+    _k = pick_key(keys, "sig", "ES256K")
     assert len(_k) == 1
 
     _k = pick_key(keys, "enc", "RSA-OAEP-256")
