@@ -47,8 +47,6 @@ jobs:
         run: |
           pip install poetry
           poetry config virtualenvs.in-project true
-      - name: Python 3.10 workaround
-        run: poetry config experimental.new-installer false
       - name: Install dependencies
         run: poetry install
       - name: Run pytest
