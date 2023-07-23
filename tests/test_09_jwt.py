@@ -5,6 +5,7 @@ import pytest
 from cryptojwt.exception import IssuerNotFound
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
+from cryptojwt.jwt import VerificationError, utc_time_sans_frac
 from cryptojwt.jwt import pick_key
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_jar import KeyJar
@@ -79,6 +80,59 @@ def test_jwt_pack_and_unpack():
     info = bob.unpack(_jwt)
 
     assert set(info.keys()) == {"iat", "iss", "sub"}
+
+
+def test_jwt_pack_and_unpack_valid():
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256")
+    t = utc_time_sans_frac()
+    payload = {"sub": "sub", "nbf": t, "exp": t + 3600}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"])
+    info = bob.unpack(_jwt)
+
+    assert set(info.keys()) == {"iat", "iss", "sub", "nbf", "exp"}
+
+
+def test_jwt_pack_and_unpack_not_yet_valid():
+    lifetime = 3600
+    skew = 15
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
+    timestamp = utc_time_sans_frac()
+    payload = {"sub": "sub", "nbf": timestamp}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], skew=skew)
+    _ = bob.unpack(_jwt, timestamp=timestamp - skew)
+    with pytest.raises(VerificationError):
+        _ = bob.unpack(_jwt, timestamp=timestamp - skew - 1)
+
+
+def test_jwt_pack_and_unpack_expired():
+    lifetime = 3600
+    skew = 15
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
+    payload = {"sub": "sub"}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], skew=skew)
+    iat = bob.unpack(_jwt)["iat"]
+    _ = bob.unpack(_jwt, timestamp=iat + lifetime + skew - 1)
+    with pytest.raises(VerificationError):
+        _ = bob.unpack(_jwt, timestamp=iat + lifetime + skew)
+
+
+def test_jwt_pack_and_unpack_max_lifetime_exceeded():
+    lifetime = 3600
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
+    payload = {"sub": "sub"}
+    _jwt = alice.pack(payload=payload)
+
+    bob = JWT(
+        key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], allowed_max_lifetime=lifetime - 1
+    )
+    with pytest.raises(VerificationError):
+        _ = bob.unpack(_jwt)
 
 
 def test_jwt_pack_and_unpack_unknown_issuer():
@@ -261,4 +315,4 @@ def test_eddsa_jwt():
     kj = KeyJar()
     kj.add_kb(ISSUER, KeyBundle(JWKS_DICT))
     jwt = JWT(key_jar=kj)
-    _ = jwt.unpack(JWT_TEST)
+    _ = jwt.unpack(JWT_TEST, timestamp=1655278809)

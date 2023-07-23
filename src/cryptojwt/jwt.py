@@ -1,6 +1,7 @@
 """Basic JSON Web Token implementation."""
 import json
 import logging
+import time
 import uuid
 from datetime import datetime
 from datetime import timezone
@@ -95,6 +96,7 @@ class JWT:
         allowed_sign_algs=None,
         allowed_enc_algs=None,
         allowed_enc_encs=None,
+        allowed_max_lifetime=None,
         zip="",
     ):
         self.key_jar = key_jar  # KeyJar instance
@@ -115,6 +117,7 @@ class JWT:
         self.allowed_sign_algs = allowed_sign_algs
         self.allowed_enc_algs = allowed_enc_algs
         self.allowed_enc_encs = allowed_enc_encs
+        self.allowed_max_lifetime = allowed_max_lifetime
         self.zip = zip
 
     def receiver_keys(self, recv, use):
@@ -304,11 +307,12 @@ class JWT:
             raise VerificationError()
         return _msg
 
-    def unpack(self, token):
+    def unpack(self, token, timestamp=None):
         """
         Unpack a received signed or signed and encrypted Json Web Token
 
         :param token: The Json Web Token
+        :param t: Time for evaluation (default now)
         :return: If decryption and signature verification work the payload
             will be returned as a Message instance if possible.
         """
@@ -377,6 +381,26 @@ class JWT:
                 _msg_cls = self.iss2msg_cls[_info["iss"]]
             except KeyError:
                 _msg_cls = None
+
+        timestamp = timestamp or time.time()
+
+        if "nbf" in _info:
+            nbf = int(_info["nbf"])
+            if timestamp < nbf - self.skew:
+                raise VerificationError("Token not yet valid")
+
+        if "exp" in _info:
+            exp = int(_info["exp"])
+            if timestamp >= exp + self.skew:
+                raise VerificationError("Token expired")
+        else:
+            exp = None
+
+        if "iat" in _info:
+            iat = int(_info["iat"])
+            if self.allowed_max_lifetime and exp:
+                if abs(exp - iat) > self.allowed_max_lifetime:
+                    raise VerificationError("Token lifetime exceeded")
 
         if _msg_cls:
             vp_args = {"skew": self.skew}
