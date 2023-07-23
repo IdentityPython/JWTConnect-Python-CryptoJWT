@@ -1,7 +1,6 @@
 """Basic JSON Web Token implementation."""
 import json
 import logging
-import time
 import uuid
 from datetime import datetime
 from datetime import timezone
@@ -383,7 +382,7 @@ class JWT:
             except KeyError:
                 _msg_cls = None
 
-        timestamp = timestamp or time.time()
+        timestamp = timestamp or utc_time_sans_frac()
 
         if "nbf" in _info:
             nbf = int(_info["nbf"])

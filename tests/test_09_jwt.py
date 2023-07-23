@@ -5,8 +5,9 @@ import pytest
 from cryptojwt.exception import IssuerNotFound
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
-from cryptojwt.jwt import VerificationError, utc_time_sans_frac
+from cryptojwt.jwt import VerificationError
 from cryptojwt.jwt import pick_key
+from cryptojwt.jwt import utc_time_sans_frac
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_jar import KeyJar
 from cryptojwt.key_jar import init_key_jar
