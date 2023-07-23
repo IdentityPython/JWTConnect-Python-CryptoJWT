@@ -179,13 +179,13 @@ class JWT:
 
         return _aud
 
-    def pack_init(self, recv, aud):
+    def pack_init(self, recv, aud, iat=None):
         """
         Gather initial information for the payload.
 
         :return: A dictionary with claims and values
         """
-        argv = {"iss": self.iss, "iat": utc_time_sans_frac()}
+        argv = {"iss": self.iss, "iat": iat or utc_time_sans_frac()}
         if self.lifetime:
             argv["exp"] = argv["iat"] + self.lifetime
 
@@ -210,7 +210,7 @@ class JWT:
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, **kwargs):
+    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, iat=None, **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
@@ -219,13 +219,14 @@ class JWT:
         :param recv: The intended immediate receiver
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
+        :param iat: Override issued at (default current timestamp)
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted Json Web Token
         """
         _args = {}
         if payload is not None:
             _args.update(payload)
-        _args.update(self.pack_init(recv, aud))
+        _args.update(self.pack_init(recv, aud, iat))
 
         try:
             _encrypt = kwargs["encrypt"]

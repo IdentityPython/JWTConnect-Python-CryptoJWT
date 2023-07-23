@@ -135,15 +135,29 @@ def test_jwt_pack_and_unpack_max_lifetime_exceeded():
         _ = bob.unpack(_jwt)
 
 
-def test_jwt_pack_and_unpack_unknown_issuer():
-    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256")
+def test_jwt_pack_and_unpack_max_lifetime_exceeded():
+    lifetime = 3600
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
     payload = {"sub": "sub"}
     _jwt = alice.pack(payload=payload)
 
-    kj = KeyJar()
-    bob = JWT(key_jar=kj, iss=BOB, allowed_sign_algs=["RS256"])
-    with pytest.raises(IssuerNotFound):
-        info = bob.unpack(_jwt)
+    bob = JWT(
+        key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], allowed_max_lifetime=lifetime - 1
+    )
+    with pytest.raises(VerificationError):
+        _ = bob.unpack(_jwt)
+
+
+def test_jwt_pack_and_unpack_timestamp():
+    lifetime = 3600
+    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
+    payload = {"sub": "sub"}
+    _jwt = alice.pack(payload=payload, iat=42)
+
+    bob = JWT(key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"])
+    _ = bob.unpack(_jwt, timestamp=42)
+    with pytest.raises(VerificationError):
+        _ = bob.unpack(_jwt)
 
 
 def test_jwt_pack_and_unpack_unknown_key():
