@@ -312,7 +312,7 @@ class JWT:
         Unpack a received signed or signed and encrypted Json Web Token
 
         :param token: The Json Web Token
-        :param t: Time for evaluation (default now)
+        :param timestamp: Time for evaluation (default now)
         :return: If decryption and signature verification work the payload
             will be returned as a Message instance if possible.
         """
