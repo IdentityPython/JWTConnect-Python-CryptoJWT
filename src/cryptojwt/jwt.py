@@ -1,9 +1,8 @@
 """Basic JSON Web Token implementation."""
 import json
 import logging
+import time
 import uuid
-from datetime import datetime
-from datetime import timezone
 from json import JSONDecodeError
 
 from .exception import HeaderError
@@ -28,9 +27,7 @@ def utc_time_sans_frac():
 
     :return: A number of seconds
     """
-
-    now_timestampt = int(datetime.now(timezone.utc).timestamp())
-    return now_timestampt
+    return int(time.time())
 
 
 def pick_key(keys, use, alg="", key_type="", kid=""):
