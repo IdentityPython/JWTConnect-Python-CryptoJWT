@@ -8,12 +8,12 @@ from json import JSONDecodeError
 
 from .exception import HeaderError
 from .exception import VerificationError
-from .jwe.jwe import JWE
 from .jwe.jwe import factory as jwe_factory
+from .jwe.jwe import JWE
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.exception import NoSuitableSigningKeys
-from .jws.jws import JWS
 from .jws.jws import factory as jws_factory
+from .jws.jws import JWS
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .utils import as_unicode
 
@@ -80,22 +80,22 @@ class JWT:
     """The basic JSON Web Token class."""
 
     def __init__(
-        self,
-        key_jar=None,
-        iss="",
-        lifetime=0,
-        sign=True,
-        sign_alg="RS256",
-        encrypt=False,
-        enc_enc="A128GCM",
-        enc_alg="RSA-OAEP-256",
-        msg_cls=None,
-        iss2msg_cls=None,
-        skew=15,
-        allowed_sign_algs=None,
-        allowed_enc_algs=None,
-        allowed_enc_encs=None,
-        zip="",
+            self,
+            key_jar=None,
+            iss="",
+            lifetime=0,
+            sign=True,
+            sign_alg="RS256",
+            encrypt=False,
+            enc_enc="A128GCM",
+            enc_alg="RSA-OAEP-256",
+            msg_cls=None,
+            iss2msg_cls=None,
+            skew=15,
+            allowed_sign_algs=None,
+            allowed_enc_algs=None,
+            allowed_enc_encs=None,
+            zip="",
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -207,12 +207,16 @@ class JWT:
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, **kwargs):
+    def message(self, signing_key, **kwargs):
+        return json.dumps(kwargs)
+
+    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None,
+             jws_headers: dict = None, **kwargs):
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
-        :param issuer_id: The owner of the the keys that are to be used for signing
+        :param issuer_id: The owner of the keys that are to be used for signing
         :param recv: The intended immediate receiver
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
@@ -249,7 +253,12 @@ class JWT:
             else:
                 _key = None
 
-            _jws = JWS(json.dumps(_args), alg=self.alg)
+            _msg = self.message(_key, **_args)
+            if jws_headers:
+                _jws = JWS(_msg, alg=self.alg, **jws_headers)
+            else:
+                _jws = JWS(_msg, alg=self.alg)
+
             _sjwt = _jws.sign_compact([_key])
         else:
             _sjwt = json.dumps(_args)
@@ -388,6 +397,9 @@ class JWT:
             return _info
         else:
             return _info
+
+    def set_jws_headers(self, **kwargs):
+        self.jws_headers = kwargs
 
 
 def remove_jwt_parameters(arg):
