@@ -4,6 +4,8 @@ import logging
 import time
 import uuid
 from json import JSONDecodeError
+from typing import Dict
+from typing import Optional
 
 from .exception import HeaderError
 from .exception import VerificationError
@@ -97,7 +99,7 @@ class JWT:
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
-        self.lifetime = lifetime  # default life time of the signature
+        self.lifetime = lifetime  # default lifetime of the signature
         self.sign = sign  # default signing or not
         self.alg = sign_alg  # default signing algorithm
         self.encrypt = encrypt  # default encrypting or not
@@ -206,16 +208,30 @@ class JWT:
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, iat=None, **kwargs):
+    def message(self, signing_key, **kwargs):
+        return json.dumps(kwargs)
+
+    def pack(
+        self,
+        payload: Optional[dict] = None,
+        kid: Optional[str] = "",
+        issuer_id: Optional[str] = "",
+        recv: Optional[str] = "",
+        aud: Optional[str] = None,
+        iat: Optional[int] = None,
+        jws_headers: Dict[str, str] = None,
+        **kwargs
+    ) -> str:
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
-        :param issuer_id: The owner of the the keys that are to be used for signing
+        :param issuer_id: The owner of the keys that are to be used for signing
         :param recv: The intended immediate receiver
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
         :param iat: Override issued at (default current timestamp)
+        :param jws_headers: JWS headers
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted Json Web Token
         """
@@ -249,10 +265,10 @@ class JWT:
             else:
                 _key = None
 
-            _jws = JWS(json.dumps(_args), alg=self.alg)
+            _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg, **jws_headers)
             _sjwt = _jws.sign_compact([_key])
         else:
-            _sjwt = json.dumps(_args)
+            _sjwt = self.message(signing_key=None, **_args)
 
         if _encrypt:
             if not self.sign:
