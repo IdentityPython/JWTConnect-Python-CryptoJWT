@@ -265,6 +265,9 @@ class JWT:
             else:
                 _key = None
 
+            if jws_headers is None:
+                jws_headers = {}
+
             _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg, **jws_headers)
             _sjwt = _jws.sign_compact([_key])
         else:
