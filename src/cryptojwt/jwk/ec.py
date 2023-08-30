@@ -55,7 +55,7 @@ def ec_construct_public(num):
 
 def ec_construct_private(num):
     """
-    Given a set of values on public and private attributes build a elliptic
+    Given a set of values on public and private attributes build an elliptic
     curve private key instance.
 
     :param num: A dictionary with public and private attributes and their values

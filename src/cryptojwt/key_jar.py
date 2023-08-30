@@ -3,6 +3,7 @@ import logging
 from typing import List
 from typing import Optional
 
+from cryptojwt.jwk import JWK
 from requests import request
 
 from .exception import IssuerNotFound
@@ -160,6 +161,11 @@ class KeyJar(object):
         issuer = self.return_issuer(issuer_id)
         issuer.add_kb(kb)
         self._issuers[issuer_id] = issuer
+
+    def add_keys(self, issuer_id: str, keys: List[JWK], **kwargs):
+        _kb = KeyBundle(**kwargs)
+        _kb.extend(keys)
+        self.add_kb(issuer_id, _kb)
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get(self, key_use, key_type="", issuer_id="", kid=None, **kwargs):

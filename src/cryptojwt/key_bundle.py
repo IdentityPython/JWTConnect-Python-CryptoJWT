@@ -681,7 +681,7 @@ class KeyBundle:
 
     @keys_writer
     def extend(self, keys):
-        """Add a key to the list of keys."""
+        """Add a list of keys to the list of keys."""
         self._keys.extend(keys)
 
     @keys_writer
