@@ -4,15 +4,14 @@ import logging
 import warnings
 
 import requests
-
 from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
 
 from .exception import HeaderError
 from .jwe import DEPRECATED
 from .jwk.jwk import key_from_jwk_dict
-from .jwk.rsa import RSAKey
 from .jwk.rsa import import_rsa_key
+from .jwk.rsa import RSAKey
 from .jwk.x509 import load_x509_cert
 from .utils import as_bytes
 from .utils import as_unicode
@@ -50,7 +49,7 @@ class JWx:
     :return: A class instance
     """
 
-    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty", "crit"]
+    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty", "crit", "trust_chain"]
 
     def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
         self.msg = msg
