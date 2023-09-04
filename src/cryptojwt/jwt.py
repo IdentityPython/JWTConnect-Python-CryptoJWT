@@ -112,6 +112,7 @@ class JWT:
         self.with_jti = False  # If a jti should be added
         # A map between issuers and the message classes they use
         self.iss2msg_cls = iss2msg_cls or {}
+        self.typ2msg_cls = typ2msg_cls or {}
         # Allowed time skew
         self.skew = skew
         # When verifying/decrypting
@@ -396,7 +397,7 @@ class JWT:
         else:
             # try to find an issuer specific message class
             _msg_cls = self.iss2msg_cls.get(_info["iss"])
-            if not _msg_cls:
+            if not _msg_cls and 'typ' in _jws_header:
                 _msg_cls = self.typ2msg_cls.get(_jws_header['typ'])
 
         timestamp = timestamp or utc_time_sans_frac()
