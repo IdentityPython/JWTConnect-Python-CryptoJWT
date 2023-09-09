@@ -395,9 +395,11 @@ class JWT:
         if self.msg_cls:
             _msg_cls = self.msg_cls
         else:
+            _msg_cls = None
             # try to find an issuer specific message class
-            _msg_cls = self.iss2msg_cls.get(_info["iss"])
-            if not _msg_cls and 'typ' in _jws_header:
+            if "iss" in _info:
+                _msg_cls = self.iss2msg_cls.get(_info["iss"])
+            if not _msg_cls and _jws_header and 'typ' in _jws_header:
                 _msg_cls = self.typ2msg_cls.get(_jws_header['typ'])
 
         timestamp = timestamp or utc_time_sans_frac()
