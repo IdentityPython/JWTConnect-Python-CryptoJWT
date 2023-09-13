@@ -564,7 +564,7 @@ JWKS_EDDSA = {
         {
             "kid": "OF9xVk9NWE5iQ2N6OGhILTVGcXg4RE1FRk5NWVVsaXZLcFNRNUxCYk9vQQ",
             "use": "sig",
-            "alg": "ES25519",
+            "alg": "Ed25519",
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "M_D8nslNSecjPwiP6DwuNhWRdrgqp02U7f5xo4GhdlY",
@@ -572,7 +572,7 @@ JWKS_EDDSA = {
         {
             "kid": "RUpoaXktM1JwT0hON3lzNWNfN0RUbVpiWExwbnJnNDRfYWhZY3htaTZ1Zw",
             "use": "sig",
-            "alg": "ES448",
+            "alg": "Ed448",
             "kty": "OKP",
             "crv": "Ed448",
             "x": "C3y5YN00IxyadHXm4NApPGAzv5w8s9e-fbGu2svYrrCuJDYDDZe-uEOPSobII6psCZCEvo2howmA",
@@ -605,9 +605,9 @@ def test_get_eddsa():
     kj = KeyJar()
     kj.import_jwks(JWKS_EDDSA, "")
     assert len(kj.get_issuer_keys("")) == 4
-    k = kj.get("sig", "OKP", alg="ES25519")
+    k = kj.get("sig", "OKP", alg="Ed25519")
     assert k
-    k = kj.get("sig", "OKP", alg="ES448")
+    k = kj.get("sig", "OKP", alg="Ed448")
     assert k
 
 

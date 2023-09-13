@@ -47,9 +47,9 @@ def alg2keytype(alg):
         return "RSA"
     elif alg.startswith("HS") or alg.startswith("A"):
         return "oct"
-    elif alg == "ES25519":
+    elif alg == "Ed25519":
         return "OKP"
-    elif alg == "ES448":
+    elif alg == "Ed448":
         return "OKP"
     elif alg.startswith("ES") or alg.startswith("ECDH-ES"):
         return "EC"

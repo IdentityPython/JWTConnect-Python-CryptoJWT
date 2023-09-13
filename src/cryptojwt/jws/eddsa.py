@@ -24,9 +24,9 @@ class EDDSASigner(Signer):
         """
 
         if self.algorithm:
-            if self.algorithm == "ES25519" and not isinstance(key, ed25519.Ed25519PrivateKey):
+            if self.algorithm == "Ed25519" and not isinstance(key, ed25519.Ed25519PrivateKey):
                 raise TypeError("The private key must be an instance of Ed25519PrivateKey")
-            if self.algorithm == "ES448" and not isinstance(key, ed448.Ed448PrivateKey):
+            if self.algorithm == "Ed448" and not isinstance(key, ed448.Ed448PrivateKey):
                 raise TypeError("The private key must be an instance of Ed448PrivateKey")
 
         if not isinstance(key, (ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey)):
@@ -53,9 +53,9 @@ class EDDSASigner(Signer):
         """
 
         if self.algorithm:
-            if self.algorithm == "ES25519" and not isinstance(key, ed25519.Ed25519PublicKey):
+            if self.algorithm == "Ed25519" and not isinstance(key, ed25519.Ed25519PublicKey):
                 raise TypeError("The public key must be an instance of Ed25519PublicKey")
-            if self.algorithm == "ES448" and not isinstance(key, ed448.Ed448PublicKey):
+            if self.algorithm == "Ed448" and not isinstance(key, ed448.Ed448PublicKey):
                 raise TypeError("The public key must be an instance of Ed448PublicKey")
 
         if not isinstance(key, (ed25519.Ed25519PublicKey, ed448.Ed448PublicKey)):
