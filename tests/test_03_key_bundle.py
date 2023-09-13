@@ -225,7 +225,7 @@ def test_ignore_unknown_types():
             "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
             "use": "sig",
             "alg": "EdDSA",
-            "kty": "OKP",
+            "kty": "XXX",
             "crv": "Ed25519",
             "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ",
         }
