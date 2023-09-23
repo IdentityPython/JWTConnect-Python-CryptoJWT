@@ -90,7 +90,7 @@ class JWT:
             encrypt: bool = False,
             enc_enc: str = "A128GCM",
             enc_alg: str = "RSA-OAEP-256",
-            msg_cls: MutableMapping = None,
+            msg_cls: Optional[MutableMapping] = None,
             iss2msg_cls: Dict[str, str] = None,
             skew: int = 15,
             allowed_sign_algs: List[str] = None,
