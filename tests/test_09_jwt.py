@@ -1,16 +1,14 @@
 import os
 
 import pytest
-
-from cryptojwt.exception import IssuerNotFound
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
-from cryptojwt.jwt import VerificationError
 from cryptojwt.jwt import pick_key
 from cryptojwt.jwt import utc_time_sans_frac
+from cryptojwt.jwt import VerificationError
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import KeyJar
 from cryptojwt.key_jar import init_key_jar
+from cryptojwt.key_jar import KeyJar
 
 __author__ = "Roland Hedberg"
 
@@ -136,19 +134,6 @@ def test_jwt_pack_and_unpack_max_lifetime_exceeded():
         _ = bob.unpack(_jwt)
 
 
-def test_jwt_pack_and_unpack_max_lifetime_exceeded():
-    lifetime = 3600
-    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
-    payload = {"sub": "sub"}
-    _jwt = alice.pack(payload=payload)
-
-    bob = JWT(
-        key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], allowed_max_lifetime=lifetime - 1
-    )
-    with pytest.raises(VerificationError):
-        _ = bob.unpack(_jwt)
-
-
 def test_jwt_pack_and_unpack_timestamp():
     lifetime = 3600
     alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
@@ -255,9 +240,11 @@ def test_with_jti():
 
 
 class DummyMsg(object):
+
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
+        self.jws_headers = {}
 
     def verify(self, **kwargs):
         return True
@@ -322,12 +309,26 @@ def test_eddsa_jwt():
         ]
     }
     JWT_TEST = (
-        "eyJraWQiOiItMTkwOTU3MjI1NyIsImFsZyI6IkVkRFNBIn0."
-        + "eyJqdGkiOiIyMjkxNmYzYy05MDkzLTQ4MTMtODM5Ny1mMTBlNmI3MDRiNjgiLCJkZWxlZ2F0aW9uSWQiOiJiNGFlNDdhNy02MjVhLTQ2MzAtOTcyNy00NTc2NGE3MTJjY2UiLCJleHAiOjE2NTUyNzkxMDksIm5iZiI6MTY1NTI3ODgwOSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6Imh0dHBzOi8vaWRzdnIuZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VybmFtZSIsImF1ZCI6ImFwaS5leGFtcGxlLmNvbSIsImlhdCI6MTY1NTI3ODgwOSwicHVycG9zZSI6ImFjY2Vzc190b2tlbiJ9."
-        + "rjeE8D_e4RYzgvpu-nOwwx7PWMiZyDZwkwO6RiHR5t8g4JqqVokUKQt-oST1s45wubacfeDSFogOrIhe3UHDAg"
+            "eyJraWQiOiItMTkwOTU3MjI1NyIsImFsZyI6IkVkRFNBIn0."
+            + "eyJqdGkiOiIyMjkxNmYzYy05MDkzLTQ4MTMtODM5Ny1mMTBlNmI3MDRiNjgiLCJkZWxlZ2F0aW9uSWQiOiJiNGFlNDdhNy02MjVhLTQ2MzAtOTcyNy00NTc2NGE3MTJjY2UiLCJleHAiOjE2NTUyNzkxMDksIm5iZiI6MTY1NTI3ODgwOSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6Imh0dHBzOi8vaWRzdnIuZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VybmFtZSIsImF1ZCI6ImFwaS5leGFtcGxlLmNvbSIsImlhdCI6MTY1NTI3ODgwOSwicHVycG9zZSI6ImFjY2Vzc190b2tlbiJ9."
+            + "rjeE8D_e4RYzgvpu-nOwwx7PWMiZyDZwkwO6RiHR5t8g4JqqVokUKQt-oST1s45wubacfeDSFogOrIhe3UHDAg"
     )
     ISSUER = "https://idsvr.example.com"
     kj = KeyJar()
     kj.add_kb(ISSUER, KeyBundle(JWKS_DICT))
     jwt = JWT(key_jar=kj)
     _ = jwt.unpack(JWT_TEST, timestamp=1655278809)
+
+
+def test_extra_headers():
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, "hemligt ordsprak", usage=["sig"])
+
+    alice = JWT(key_jar=_kj, iss=ALICE, sign_alg="HS256")
+    payload = {"sub": "sub2"}
+    _jwt = alice.pack(payload=payload, jws_headers={"xtra": "header", "typ": "dummy"})
+
+    bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256", typ2msg_cls={"dummy": DummyMsg})
+    info = bob.unpack(_jwt)
+    assert isinstance(info, DummyMsg)
+    assert set(info.jws_headers.keys()) == {'xtra', 'typ', 'alg', 'kid'}

@@ -98,7 +98,7 @@ class JWT:
             allowed_enc_encs: List[str] = None,
             allowed_max_lifetime: int = None,
             zip: str = "",
-            typ2msg_cls: Dict[str, str] = None
+            typ2msg_cls: Dict = None
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -272,8 +272,8 @@ class JWT:
             if jws_headers is None:
                 jws_headers = {}
 
-            _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg, **jws_headers)
-            _sjwt = _jws.sign_compact([_key])
+            _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg)
+            _sjwt = _jws.sign_compact([_key], protected=jws_headers)
         else:
             _sjwt = self.message(signing_key=None, **_args)
 
