@@ -31,7 +31,6 @@ class JWK(object):
     def __init__(
         self, kty="", alg="", use="", kid="", x5c=None, x5t="", x5u="", key_ops=None, **kwargs
     ):
-
         self.extra_args = kwargs
 
         # want kty, alg, use and kid to be strings

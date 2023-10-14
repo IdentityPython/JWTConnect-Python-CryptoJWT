@@ -3,8 +3,9 @@ import logging
 from typing import List
 from typing import Optional
 
-from cryptojwt.jwk import JWK
 from requests import request
+
+from cryptojwt.jwk import JWK
 
 from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
@@ -481,7 +482,6 @@ class KeyJar(object):
         no_kid_issuer=None,
         allow_missing_kid=False,
     ):
-
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
             logger.error('Issuer "{}" not in keyjar'.format(issuer_id))

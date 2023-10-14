@@ -4,14 +4,15 @@ import logging
 import warnings
 
 import requests
+
 from cryptojwt.jwk import JWK
 from cryptojwt.key_bundle import KeyBundle
 
 from .exception import HeaderError
 from .jwe import DEPRECATED
 from .jwk.jwk import key_from_jwk_dict
-from .jwk.rsa import import_rsa_key
 from .jwk.rsa import RSAKey
+from .jwk.rsa import import_rsa_key
 from .jwk.x509 import load_x509_cert
 from .utils import as_bytes
 from .utils import as_unicode

@@ -118,7 +118,7 @@ class JWS(JWx):
 
         key, xargs, _alg = self.alg_keys(keys, "sig", protected)
 
-        for param in ['typ']:
+        for param in ["typ"]:
             if param in self:
                 xargs[param] = self[param]
 

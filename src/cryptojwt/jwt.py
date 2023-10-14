@@ -1,13 +1,13 @@
 """Basic JSON Web Token implementation."""
 import json
-from json import JSONDecodeError
 import logging
 import time
+import uuid
+from json import JSONDecodeError
 from typing import Dict
 from typing import List
 from typing import MutableMapping
 from typing import Optional
-import uuid
 
 from .exception import HeaderError
 from .exception import VerificationError
@@ -81,24 +81,24 @@ class JWT:
     """The basic JSON Web Token class."""
 
     def __init__(
-            self,
-            key_jar=None,
-            iss: str="",
-            lifetime: int = 0,
-            sign: bool = True,
-            sign_alg: str = "RS256",
-            encrypt: bool = False,
-            enc_enc: str = "A128GCM",
-            enc_alg: str = "RSA-OAEP-256",
-            msg_cls: Optional[MutableMapping] = None,
-            iss2msg_cls: Optional[Dict[str, str]] = None,
-            skew: Optional[int] = 15,
-            allowed_sign_algs: Optional[List[str]] = None,
-            allowed_enc_algs: Optional[List[str]] = None,
-            allowed_enc_encs: Optional[List[str]] = None,
-            allowed_max_lifetime: Optional[int] = None,
-            zip: Optional[str] = "",
-            typ2msg_cls: Optional[Dict] = None
+        self,
+        key_jar=None,
+        iss: str = "",
+        lifetime: int = 0,
+        sign: bool = True,
+        sign_alg: str = "RS256",
+        encrypt: bool = False,
+        enc_enc: str = "A128GCM",
+        enc_alg: str = "RSA-OAEP-256",
+        msg_cls: Optional[MutableMapping] = None,
+        iss2msg_cls: Optional[Dict[str, str]] = None,
+        skew: Optional[int] = 15,
+        allowed_sign_algs: Optional[List[str]] = None,
+        allowed_enc_algs: Optional[List[str]] = None,
+        allowed_enc_encs: Optional[List[str]] = None,
+        allowed_max_lifetime: Optional[int] = None,
+        zip: Optional[str] = "",
+        typ2msg_cls: Optional[Dict] = None,
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -216,15 +216,15 @@ class JWT:
         return json.dumps(kwargs)
 
     def pack(
-            self,
-            payload: Optional[dict] = None,
-            kid: Optional[str] = "",
-            issuer_id: Optional[str] = "",
-            recv: Optional[str] = "",
-            aud: Optional[str] = None,
-            iat: Optional[int] = None,
-            jws_headers: Optional[Dict[str, str]] = None,
-            **kwargs
+        self,
+        payload: Optional[dict] = None,
+        kid: Optional[str] = "",
+        issuer_id: Optional[str] = "",
+        recv: Optional[str] = "",
+        aud: Optional[str] = None,
+        iat: Optional[int] = None,
+        jws_headers: Optional[Dict[str, str]] = None,
+        **kwargs
     ) -> str:
         """
 
@@ -398,8 +398,8 @@ class JWT:
             # try to find an issuer specific message class
             if "iss" in _info:
                 _msg_cls = self.iss2msg_cls.get(_info["iss"])
-            if not _msg_cls and _jws_header and 'typ' in _jws_header:
-                _msg_cls = self.typ2msg_cls.get(_jws_header['typ'])
+            if not _msg_cls and _jws_header and "typ" in _jws_header:
+                _msg_cls = self.typ2msg_cls.get(_jws_header["typ"])
 
         timestamp = timestamp or utc_time_sans_frac()
 
