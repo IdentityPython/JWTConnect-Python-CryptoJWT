@@ -91,14 +91,14 @@ class JWT:
             enc_enc: str = "A128GCM",
             enc_alg: str = "RSA-OAEP-256",
             msg_cls: Optional[MutableMapping] = None,
-            iss2msg_cls: Dict[str, str] = None,
-            skew: int = 15,
-            allowed_sign_algs: List[str] = None,
-            allowed_enc_algs: List[str] = None,
-            allowed_enc_encs: List[str] = None,
-            allowed_max_lifetime: int = None,
-            zip: str = "",
-            typ2msg_cls: Dict = None
+            iss2msg_cls: Optional[Dict[str, str]] = None,
+            skew: Optional[int] = 15,
+            allowed_sign_algs: Optional[List[str]] = None,
+            allowed_enc_algs: Optional[List[str]] = None,
+            allowed_enc_encs: Optional[List[str]] = None,
+            allowed_max_lifetime: Optional[int] = None,
+            zip: Optional[str] = "",
+            typ2msg_cls: Optional[Dict] = None
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -223,7 +223,7 @@ class JWT:
             recv: Optional[str] = "",
             aud: Optional[str] = None,
             iat: Optional[int] = None,
-            jws_headers: Dict[str, str] = None,
+            jws_headers: Optional[Dict[str, str]] = None,
             **kwargs
     ) -> str:
         """
@@ -269,8 +269,7 @@ class JWT:
             else:
                 _key = None
 
-            if jws_headers is None:
-                jws_headers = {}
+            jws_headers = jws_headers or {}
 
             _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg)
             _sjwt = _jws.sign_compact([_key], protected=jws_headers)
