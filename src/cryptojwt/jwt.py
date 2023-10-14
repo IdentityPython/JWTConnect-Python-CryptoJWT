@@ -373,11 +373,9 @@ class JWT:
         if self.msg_cls:
             _msg_cls = self.msg_cls
         else:
-            try:
-                # try to find a issuer specific message class
-                _msg_cls = self.iss2msg_cls[_info["iss"]]
-            except KeyError:
-                _msg_cls = None
+            _msg_cls = self.iss2msg_cls.get(_info["iss"], None)
+            if not _msg_cls:
+                LOGGER.debug(f"both msg_cls and iss2msg are None for the issuer {_info['iss']}")
 
         timestamp = timestamp or utc_time_sans_frac()
 
