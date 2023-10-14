@@ -331,4 +331,4 @@ def test_extra_headers():
     bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256", typ2msg_cls={"dummy": DummyMsg})
     info = bob.unpack(_jwt)
     assert isinstance(info, DummyMsg)
-    assert set(info.jws_headers.keys()) == {'xtra', 'typ', 'alg', 'kid'}
+    assert set(info.jws_header.keys()) == {'xtra', 'typ', 'alg', 'kid'}
