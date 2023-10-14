@@ -75,6 +75,9 @@ class JWK(object):
                     "PS256",
                     "PS384",
                     "PS512",
+                    "EdDSA",
+                    "Ed25519",
+                    "Ed448",
                     "none",
                 ]:
                     raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
@@ -93,6 +96,9 @@ class JWK(object):
                     "PS256",
                     "PS384",
                     "PS512",
+                    "EdDSA",
+                    "Ed25519",
+                    "Ed448",
                     "none",
                     "RSA1_5",
                     "RSA-OAEP",

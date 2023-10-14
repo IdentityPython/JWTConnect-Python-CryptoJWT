@@ -538,6 +538,11 @@ JWKS_SPO = {
             "n": "68be-nJp46VLj4Ci1V36IrVGYqkuBfYNyjQTZD_7yRYcERZebowOnwr3w0DoIQpl8iL2X8OXUo7rUW_LMzLxKx2hEmdJfUn4LL2QqA3KPgjYz8hZJQPG92O14w9IZ-8bdDUgXrg9216H09yq6ZvJrn5Nwvap3MXgECEzsZ6zQLRKdb_R96KFFgCiI3bEiZKvZJRA7hM2ePyTm15D9En_Wzzfn_JLMYgE_DlVpoKR1MsTinfACOlwwdO9U5Dm-5elapovILTyVTgjN75i-wsPU2TqzdHFKA-4hJNiWGrYPiihlAFbA2eUSXuEYFkX43ahoQNpeaf0mc17Jt5kp7pM2w",
             "e": "AQAB",
         },
+    ]
+}
+
+JWKS_EDDSA = {
+    "keys": [
         {
             "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
             "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
@@ -555,6 +560,22 @@ JWKS_SPO = {
             "kty": "OKP",
             "crv": "Ed25519",
             "x": "CS01DGXDBPV9cFmd8tgFu3E7eHn1UcP7N1UCgd_JgZo",
+        },
+        {
+            "kid": "OF9xVk9NWE5iQ2N6OGhILTVGcXg4RE1FRk5NWVVsaXZLcFNRNUxCYk9vQQ",
+            "use": "sig",
+            "alg": "Ed25519",
+            "kty": "OKP",
+            "crv": "Ed25519",
+            "x": "M_D8nslNSecjPwiP6DwuNhWRdrgqp02U7f5xo4GhdlY",
+        },
+        {
+            "kid": "RUpoaXktM1JwT0hON3lzNWNfN0RUbVpiWExwbnJnNDRfYWhZY3htaTZ1Zw",
+            "use": "sig",
+            "alg": "Ed448",
+            "kty": "OKP",
+            "crv": "Ed448",
+            "x": "C3y5YN00IxyadHXm4NApPGAzv5w8s9e-fbGu2svYrrCuJDYDDZe-uEOPSobII6psCZCEvo2howmA",
         },
     ]
 }
@@ -578,6 +599,16 @@ def test_get_ec_wrong_alg():
     kj.import_jwks(JWKS_SPO, "")
     k = kj.get("sig", "EC", alg="ES512")
     assert k == []
+
+
+def test_get_eddsa():
+    kj = KeyJar()
+    kj.import_jwks(JWKS_EDDSA, "")
+    assert len(kj.get_issuer_keys("")) == 4
+    k = kj.get("sig", "OKP", alg="Ed25519")
+    assert k
+    k = kj.get("sig", "OKP", alg="Ed448")
+    assert k
 
 
 def test_keyjar_eq():
