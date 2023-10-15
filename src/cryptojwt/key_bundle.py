@@ -566,7 +566,6 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:
@@ -681,7 +680,7 @@ class KeyBundle:
 
     @keys_writer
     def extend(self, keys):
-        """Add a key to the list of keys."""
+        """Add a list of keys to the list of keys."""
         self._keys.extend(keys)
 
     @keys_writer

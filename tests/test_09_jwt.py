@@ -2,7 +2,6 @@ import os
 
 import pytest
 
-from cryptojwt.exception import IssuerNotFound
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
 from cryptojwt.jwt import VerificationError
@@ -136,19 +135,6 @@ def test_jwt_pack_and_unpack_max_lifetime_exceeded():
         _ = bob.unpack(_jwt)
 
 
-def test_jwt_pack_and_unpack_max_lifetime_exceeded():
-    lifetime = 3600
-    alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
-    payload = {"sub": "sub"}
-    _jwt = alice.pack(payload=payload)
-
-    bob = JWT(
-        key_jar=BOB_KEY_JAR, iss=BOB, allowed_sign_algs=["RS256"], allowed_max_lifetime=lifetime - 1
-    )
-    with pytest.raises(VerificationError):
-        _ = bob.unpack(_jwt)
-
-
 def test_jwt_pack_and_unpack_timestamp():
     lifetime = 3600
     alice = JWT(key_jar=ALICE_KEY_JAR, iss=ALICE, sign_alg="RS256", lifetime=lifetime)
@@ -258,6 +244,7 @@ class DummyMsg(object):
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
+        self.jws_headers = {}
 
     def verify(self, **kwargs):
         return True
@@ -331,3 +318,17 @@ def test_eddsa_jwt():
     kj.add_kb(ISSUER, KeyBundle(JWKS_DICT))
     jwt = JWT(key_jar=kj)
     _ = jwt.unpack(JWT_TEST, timestamp=1655278809)
+
+
+def test_extra_headers():
+    _kj = KeyJar()
+    _kj.add_symmetric(ALICE, "hemligt ordsprak", usage=["sig"])
+
+    alice = JWT(key_jar=_kj, iss=ALICE, sign_alg="HS256")
+    payload = {"sub": "sub2"}
+    _jwt = alice.pack(payload=payload, jws_headers={"xtra": "header", "typ": "dummy"})
+
+    bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256", typ2msg_cls={"dummy": DummyMsg})
+    info = bob.unpack(_jwt)
+    assert isinstance(info, DummyMsg)
+    assert set(info.jws_header.keys()) == {"xtra", "typ", "alg", "kid"}

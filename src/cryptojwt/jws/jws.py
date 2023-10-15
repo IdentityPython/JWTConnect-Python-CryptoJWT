@@ -120,8 +120,9 @@ class JWS(JWx):
 
         key, xargs, _alg = self.alg_keys(keys, "sig", protected)
 
-        if "typ" in self:
-            xargs["typ"] = self["typ"]
+        for param in ["typ"]:
+            if param in self:
+                xargs[param] = self[param]
 
         _headers.update(xargs)
         jwt = JWSig(**_headers)

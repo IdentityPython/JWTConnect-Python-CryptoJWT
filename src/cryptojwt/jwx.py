@@ -50,7 +50,7 @@ class JWx:
     :return: A class instance
     """
 
-    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty", "crit"]
+    args = ["alg", "jku", "jwk", "x5u", "x5t", "x5c", "kid", "typ", "cty", "crit", "trust_chain"]
 
     def __init__(self, msg=None, with_digest=False, httpc=None, **kwargs):
         self.msg = msg

@@ -213,7 +213,6 @@ class JWE_EC(JWEKey):
         return jwe.pack(parts=[iv, ctxt, tag])
 
     def decrypt(self, token=None, **kwargs):
-
         if isinstance(token, JWEnc):
             jwe = token
         else:

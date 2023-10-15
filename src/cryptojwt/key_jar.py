@@ -5,6 +5,8 @@ from typing import Optional
 
 from requests import request
 
+from cryptojwt.jwk import JWK
+
 from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
@@ -160,6 +162,11 @@ class KeyJar(object):
         issuer = self.return_issuer(issuer_id)
         issuer.add_kb(kb)
         self._issuers[issuer_id] = issuer
+
+    def add_keys(self, issuer_id: str, keys: List[JWK], **kwargs):
+        _kb = KeyBundle(**kwargs)
+        _kb.extend(keys)
+        self.add_kb(issuer_id, _kb)
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def get(self, key_use, key_type="", issuer_id="", kid=None, **kwargs):
@@ -475,7 +482,6 @@ class KeyJar(object):
         no_kid_issuer=None,
         allow_missing_kid=False,
     ):
-
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
             logger.error('Issuer "{}" not in keyjar'.format(issuer_id))

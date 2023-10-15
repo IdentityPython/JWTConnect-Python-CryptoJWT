@@ -4,6 +4,10 @@ import logging
 import time
 import uuid
 from json import JSONDecodeError
+from typing import Dict
+from typing import List
+from typing import MutableMapping
+from typing import Optional
 
 from .exception import HeaderError
 from .exception import VerificationError
@@ -79,25 +83,26 @@ class JWT:
     def __init__(
         self,
         key_jar=None,
-        iss="",
-        lifetime=0,
-        sign=True,
-        sign_alg="RS256",
-        encrypt=False,
-        enc_enc="A128GCM",
-        enc_alg="RSA-OAEP-256",
-        msg_cls=None,
-        iss2msg_cls=None,
-        skew=15,
-        allowed_sign_algs=None,
-        allowed_enc_algs=None,
-        allowed_enc_encs=None,
-        allowed_max_lifetime=None,
-        zip="",
+        iss: str = "",
+        lifetime: int = 0,
+        sign: bool = True,
+        sign_alg: str = "RS256",
+        encrypt: bool = False,
+        enc_enc: str = "A128GCM",
+        enc_alg: str = "RSA-OAEP-256",
+        msg_cls: Optional[MutableMapping] = None,
+        iss2msg_cls: Optional[Dict[str, str]] = None,
+        skew: Optional[int] = 15,
+        allowed_sign_algs: Optional[List[str]] = None,
+        allowed_enc_algs: Optional[List[str]] = None,
+        allowed_enc_encs: Optional[List[str]] = None,
+        allowed_max_lifetime: Optional[int] = None,
+        zip: Optional[str] = "",
+        typ2msg_cls: Optional[Dict] = None,
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
-        self.lifetime = lifetime  # default life time of the signature
+        self.lifetime = lifetime  # default lifetime of the signature
         self.sign = sign  # default signing or not
         self.alg = sign_alg  # default signing algorithm
         self.encrypt = encrypt  # default encrypting or not
@@ -107,6 +112,7 @@ class JWT:
         self.with_jti = False  # If a jti should be added
         # A map between issuers and the message classes they use
         self.iss2msg_cls = iss2msg_cls or {}
+        self.typ2msg_cls = typ2msg_cls or {}
         # Allowed time skew
         self.skew = skew
         # When verifying/decrypting
@@ -206,16 +212,30 @@ class JWT:
 
         return keys[0]  # Might be more then one if kid == ''
 
-    def pack(self, payload=None, kid="", issuer_id="", recv="", aud=None, iat=None, **kwargs):
+    def message(self, signing_key, **kwargs):
+        return json.dumps(kwargs)
+
+    def pack(
+        self,
+        payload: Optional[dict] = None,
+        kid: Optional[str] = "",
+        issuer_id: Optional[str] = "",
+        recv: Optional[str] = "",
+        aud: Optional[str] = None,
+        iat: Optional[int] = None,
+        jws_headers: Optional[Dict[str, str]] = None,
+        **kwargs
+    ) -> str:
         """
 
         :param payload: Information to be carried as payload in the JWT
         :param kid: Key ID
-        :param issuer_id: The owner of the the keys that are to be used for signing
+        :param issuer_id: The owner of the keys that are to be used for signing
         :param recv: The intended immediate receiver
         :param aud: Intended audience for this JWS/JWE, not expected to
             contain the recipient.
         :param iat: Override issued at (default current timestamp)
+        :param jws_headers: JWS headers
         :param kwargs: Extra keyword arguments
         :return: A signed or signed and encrypted Json Web Token
         """
@@ -249,10 +269,12 @@ class JWT:
             else:
                 _key = None
 
-            _jws = JWS(json.dumps(_args), alg=self.alg)
-            _sjwt = _jws.sign_compact([_key])
+            jws_headers = jws_headers or {}
+
+            _jws = JWS(self.message(signing_key=_key, **_args), alg=self.alg)
+            _sjwt = _jws.sign_compact([_key], protected=jws_headers)
         else:
-            _sjwt = json.dumps(_args)
+            _sjwt = self.message(signing_key=None, **_args)
 
         if _encrypt:
             if not self.sign:
@@ -300,8 +322,7 @@ class JWT:
         :return: The verified message as a msg_cls instance.
         """
         _msg = msg_cls(**info)
-        if not _msg.verify(**kwargs):
-            raise VerificationError()
+        _msg.verify(**kwargs)
         return _msg
 
     def unpack(self, token, timestamp=None):
@@ -373,11 +394,12 @@ class JWT:
         if self.msg_cls:
             _msg_cls = self.msg_cls
         else:
-            try:
-                # try to find a issuer specific message class
-                _msg_cls = self.iss2msg_cls[_info["iss"]]
-            except KeyError:
-                _msg_cls = None
+            _msg_cls = None
+            # try to find an issuer specific message class
+            if "iss" in _info:
+                _msg_cls = self.iss2msg_cls.get(_info["iss"])
+            if not _msg_cls and _jws_header and "typ" in _jws_header:
+                _msg_cls = self.typ2msg_cls.get(_jws_header["typ"])
 
         timestamp = timestamp or utc_time_sans_frac()
 
