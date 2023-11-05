@@ -32,6 +32,7 @@ from .jwk.okp import OKPKey
 from .jwk.okp import new_okp_key
 from .jwk.rsa import RSAKey
 from .jwk.rsa import new_rsa_key
+from .jwk.utils import harmonize_usage
 from .utils import as_unicode
 from .utils import check_content_type
 from .utils import httpc_params_loader
@@ -50,25 +51,6 @@ LOGGER = logging.getLogger(__name__)
 
 # Make sure the keys are all uppercase
 K2C = {"RSA": RSAKey, "EC": ECKey, "oct": SYMKey, "OKP": OKPKey}
-
-MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
-
-
-def harmonize_usage(use):
-    """
-
-    :param use:
-    :return: list of usage
-    """
-    if isinstance(use, str):
-        return [MAP[use]]
-
-    if isinstance(use, list):
-        _ul = list(MAP.keys())
-        _us = {MAP[u] for u in use if u in _ul}
-        return list(_us)
-
-    return None
 
 
 def rsa_init(spec):

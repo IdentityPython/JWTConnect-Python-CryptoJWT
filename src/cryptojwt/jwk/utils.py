@@ -38,3 +38,22 @@ DIGEST_HASH = {
     "SHA-384": sha384_digest,
     "SHA-512": sha512_digest,
 }
+
+MAP = {"dec": "enc", "enc": "enc", "ver": "sig", "sig": "sig"}
+
+
+def harmonize_usage(use):
+    """
+
+    :param use:
+    :return: list of usage
+    """
+    if isinstance(use, str):
+        return [MAP[use]]
+
+    if isinstance(use, list):
+        _ul = list(MAP.keys())
+        _us = {MAP[u] for u in use if u in _ul}
+        return list(_us)
+
+    return None
