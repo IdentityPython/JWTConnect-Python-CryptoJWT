@@ -235,7 +235,7 @@ class KeyBundle:
 
         :param keys: A dictionary or a list of dictionaries
             with the keys ["kty", "key", "alg", "use", "kid"]
-        :param source: Where the key set can be fetch from
+        :param source: Where the key set can be fetched from
         :param fileformat: For a local file either "jwks" or "der"
         :param keytype: Iff local file and 'der' format what kind of key it is.
             presently 'rsa' and 'ec' are supported.
@@ -467,7 +467,7 @@ class KeyBundle:
 
         if self.ignore_errors_until and time.time() < self.ignore_errors_until:
             LOGGER.warning(
-                "Not reading remote JWKS from %s (in error holddown until %s)",
+                "Not reading remote JWKS from %s (in error hold down until %s)",
                 self.source,
                 datetime.fromtimestamp(self.ignore_errors_until),
             )

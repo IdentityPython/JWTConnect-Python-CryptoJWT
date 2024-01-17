@@ -244,7 +244,7 @@ class DummyMsg(object):
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
-        self.jws_headers = {}
+        self.jws_header = {}
 
     def verify(self, **kwargs):
         return True

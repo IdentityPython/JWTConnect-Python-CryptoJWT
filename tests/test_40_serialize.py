@@ -1,10 +1,6 @@
 import os
 
-from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.key_bundle import keybundle_from_local_file
-from cryptojwt.key_bundle import rsa_init
 from cryptojwt.key_issuer import KeyIssuer
 from cryptojwt.serialize import item
 

@@ -324,10 +324,10 @@ class KeyJar(object):
         :param jwks: A dictionary representation of a JWKS
         :param issuer_id: The provider URL
         :param replace: If all previously gathered keys from this provider
-            should be replace.
+            should be replaced.
         :return: Dictionary with usage as key and keys as values
         """
-        logger.debug("Initiating key bundle for issuer: %s" % issuer_id)
+        logger.debug(f"Initiating key bundle for issuer: {issuer_id}")
 
         _issuer = self.return_issuer(issuer_id)
         if replace:
