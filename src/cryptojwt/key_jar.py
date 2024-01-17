@@ -482,7 +482,6 @@ class KeyJar(object):
         no_kid_issuer=None,
         allow_missing_kid=False,
     ):
-
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
             logger.error('Issuer "{}" not in keyjar'.format(issuer_id))

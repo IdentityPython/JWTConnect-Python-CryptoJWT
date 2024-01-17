@@ -613,6 +613,20 @@ def test_signer_eddsa():
     okp = ed25519.Ed25519PrivateKey.generate()
     _key = OKPKey().load_key(okp)
     keys = [_key]
+    _jws = JWS(payload, alg="Ed25519")
+    _jwt = _jws.sign_compact(keys)
+
+    _pubkey = OKPKey().load_key(okp.public_key())
+    _rj = JWS(alg="Ed25519")
+    info = _rj.verify_compact(_jwt, [_pubkey])
+    assert info == payload
+
+
+def test_signer_eddsa_polymorphic():
+    payload = "Please take a moment to register today"
+    okp = ed25519.Ed25519PrivateKey.generate()
+    _key = OKPKey().load_key(okp)
+    keys = [_key]
     _jws = JWS(payload, alg="EdDSA")
     _jwt = _jws.sign_compact(keys)
 
@@ -627,12 +641,12 @@ def test_signer_eddsa_fail():
     okp = ed25519.Ed25519PrivateKey.generate()
     _key = OKPKey().load_key(okp)
     keys = [_key]
-    _jws = JWS(payload, alg="EdDSA")
+    _jws = JWS(payload, alg="Ed25519")
     _jwt = _jws.sign_compact(keys)
 
     okp2 = ed25519.Ed25519PrivateKey.generate()
     _pubkey = OKPKey().load_key(okp2.public_key())
-    _rj = JWS(alg="EdDSA")
+    _rj = JWS(alg="Ed25519")
     try:
         info = _rj.verify_compact(_jwt, [_pubkey])
     except BadSignature:

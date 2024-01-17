@@ -566,7 +566,6 @@ class KeyBundle:
         :return: True if update was ok or False if we encountered an error during update.
         """
         if self.source:
-
             try:
                 if self.local:
                     if self.fileformat in ["jwks", "jwk"]:

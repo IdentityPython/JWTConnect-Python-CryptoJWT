@@ -48,6 +48,8 @@ SIGNER_ALGS = {
     "PS384": PSSSigner("SHA384"),
     "PS512": PSSSigner("SHA512"),
     "EdDSA": EDDSASigner(),
+    "Ed25519": EDDSASigner("Ed25519"),
+    "Ed448": EDDSASigner("Ed448"),
     "none": None,
 }
 

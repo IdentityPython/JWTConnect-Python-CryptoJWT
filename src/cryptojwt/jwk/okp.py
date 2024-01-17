@@ -321,7 +321,6 @@ def cmp_keys(a, b, key_type):
 
 
 def new_okp_key(crv, kid="", **kwargs):
-
     _key = OKP_CRV2PRIVATE[crv].generate()
 
     _rk = OKPKey(priv_key=_key, kid=kid, **kwargs)

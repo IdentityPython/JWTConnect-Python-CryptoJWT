@@ -446,24 +446,6 @@ JWKS_SPO = {
             "n": "68be-nJp46VLj4Ci1V36IrVGYqkuBfYNyjQTZD_7yRYcERZebowOnwr3w0DoIQpl8iL2X8OXUo7rUW_LMzLxKx2hEmdJfUn4LL2QqA3KPgjYz8hZJQPG92O14w9IZ-8bdDUgXrg9216H09yq6ZvJrn5Nwvap3MXgECEzsZ6zQLRKdb_R96KFFgCiI3bEiZKvZJRA7hM2ePyTm15D9En_Wzzfn_JLMYgE_DlVpoKR1MsTinfACOlwwdO9U5Dm-5elapovILTyVTgjN75i-wsPU2TqzdHFKA-4hJNiWGrYPiihlAFbA2eUSXuEYFkX43ahoQNpeaf0mc17Jt5kp7pM2w",
             "e": "AQAB",
         },
-        {
-            "kid": "q-H9y8iuh3BIKZBbK6S0mH_isBlJsk"
-            "-u6VtZ5rAdBo5fCjjy3LnkrsoK_QWrlKB08j_PcvwpAMfTEDHw5spepw",
-            "use": "sig",
-            "alg": "EdDSA",
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "x": "FnbcUAXZ4ySvrmdXK1MrDuiqlqTXvGdAaE4RWZjmFIQ",
-        },
-        {
-            "kid": "bL33HthM3fWaYkY2_pDzUd7a65FV2R2LHAKCOsye8eNmAPDgRgpHWPYpWFVmeaujUUEXRyDLHN"
-            "-Up4QH_sFcmw",
-            "use": "sig",
-            "alg": "EdDSA",
-            "kty": "OKP",
-            "crv": "Ed25519",
-            "x": "CS01DGXDBPV9cFmd8tgFu3E7eHn1UcP7N1UCgd_JgZo",
-        },
     ]
 }
 
