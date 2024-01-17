@@ -1,14 +1,15 @@
 import os
 
 import pytest
+
 from cryptojwt.jws.exception import NoSuitableSigningKeys
 from cryptojwt.jwt import JWT
+from cryptojwt.jwt import VerificationError
 from cryptojwt.jwt import pick_key
 from cryptojwt.jwt import utc_time_sans_frac
-from cryptojwt.jwt import VerificationError
 from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_jar import init_key_jar
 from cryptojwt.key_jar import KeyJar
+from cryptojwt.key_jar import init_key_jar
 
 __author__ = "Roland Hedberg"
 
@@ -240,7 +241,6 @@ def test_with_jti():
 
 
 class DummyMsg(object):
-
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)
@@ -309,9 +309,9 @@ def test_eddsa_jwt():
         ]
     }
     JWT_TEST = (
-            "eyJraWQiOiItMTkwOTU3MjI1NyIsImFsZyI6IkVkRFNBIn0."
-            + "eyJqdGkiOiIyMjkxNmYzYy05MDkzLTQ4MTMtODM5Ny1mMTBlNmI3MDRiNjgiLCJkZWxlZ2F0aW9uSWQiOiJiNGFlNDdhNy02MjVhLTQ2MzAtOTcyNy00NTc2NGE3MTJjY2UiLCJleHAiOjE2NTUyNzkxMDksIm5iZiI6MTY1NTI3ODgwOSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6Imh0dHBzOi8vaWRzdnIuZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VybmFtZSIsImF1ZCI6ImFwaS5leGFtcGxlLmNvbSIsImlhdCI6MTY1NTI3ODgwOSwicHVycG9zZSI6ImFjY2Vzc190b2tlbiJ9."
-            + "rjeE8D_e4RYzgvpu-nOwwx7PWMiZyDZwkwO6RiHR5t8g4JqqVokUKQt-oST1s45wubacfeDSFogOrIhe3UHDAg"
+        "eyJraWQiOiItMTkwOTU3MjI1NyIsImFsZyI6IkVkRFNBIn0."
+        + "eyJqdGkiOiIyMjkxNmYzYy05MDkzLTQ4MTMtODM5Ny1mMTBlNmI3MDRiNjgiLCJkZWxlZ2F0aW9uSWQiOiJiNGFlNDdhNy02MjVhLTQ2MzAtOTcyNy00NTc2NGE3MTJjY2UiLCJleHAiOjE2NTUyNzkxMDksIm5iZiI6MTY1NTI3ODgwOSwic2NvcGUiOiJyZWFkIG9wZW5pZCIsImlzcyI6Imh0dHBzOi8vaWRzdnIuZXhhbXBsZS5jb20iLCJzdWIiOiJ1c2VybmFtZSIsImF1ZCI6ImFwaS5leGFtcGxlLmNvbSIsImlhdCI6MTY1NTI3ODgwOSwicHVycG9zZSI6ImFjY2Vzc190b2tlbiJ9."
+        + "rjeE8D_e4RYzgvpu-nOwwx7PWMiZyDZwkwO6RiHR5t8g4JqqVokUKQt-oST1s45wubacfeDSFogOrIhe3UHDAg"
     )
     ISSUER = "https://idsvr.example.com"
     kj = KeyJar()
@@ -331,4 +331,4 @@ def test_extra_headers():
     bob = JWT(key_jar=_kj, iss=BOB, sign_alg="HS256", typ2msg_cls={"dummy": DummyMsg})
     info = bob.unpack(_jwt)
     assert isinstance(info, DummyMsg)
-    assert set(info.jws_header.keys()) == {'xtra', 'typ', 'alg', 'kid'}
+    assert set(info.jws_header.keys()) == {"xtra", "typ", "alg", "kid"}

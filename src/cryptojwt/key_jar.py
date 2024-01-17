@@ -3,8 +3,9 @@ import logging
 from typing import List
 from typing import Optional
 
-from cryptojwt.jwk import JWK
 from requests import request
+
+from cryptojwt.jwk import JWK
 
 from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
