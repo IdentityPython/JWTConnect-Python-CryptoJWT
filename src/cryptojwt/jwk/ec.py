@@ -113,7 +113,7 @@ class ECKey(AsymmetricKey):
     def deserialize(self):
         """
         Starting with information gathered from the on-the-wire representation
-        of an elliptic curve key (a JWK) initiate an
+        of an elliptic curve key (a JWK) initiate a
         cryptography.hazmat.primitives.asymmetric.ec.EllipticCurvePublicKey
         or EllipticCurvePrivateKey instance. So we have to get from having::
 

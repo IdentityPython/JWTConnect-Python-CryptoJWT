@@ -822,7 +822,7 @@ def test_key_summary():
     kj.add_kb("C", KeyBundle(JWK2["keys"]))
 
     out = kj.key_summary("Alice")
-    assert out
+    assert out == "RSA::abc"
 
 
 PUBLIC_FILE = "{}/public_jwks.json".format(BASEDIR)

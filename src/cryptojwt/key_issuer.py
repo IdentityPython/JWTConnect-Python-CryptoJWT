@@ -91,7 +91,7 @@ class KeyIssuer(object):
         if not url:
             raise KeyError("No url given")
 
-        logger.debug("httpc_params: %s", self.httpc_params)
+        logger.debug(f"add_url: httpc_params: {self.httpc_params}")
 
         if "/localhost:" in url or "/localhost/" in url:
             _params = self.httpc_params.copy()
@@ -433,7 +433,7 @@ class KeyIssuer(object):
 
         self._bundles = kbl
 
-    def key_summary(self):
+    def key_summary(self) -> str:
         """
         Return a text representation of all the keys.
 

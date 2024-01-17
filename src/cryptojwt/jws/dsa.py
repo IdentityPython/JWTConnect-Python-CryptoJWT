@@ -85,7 +85,7 @@ class ECDSASigner(Signer):
     def _cross_check(self, pub_key):
         """
         In Ecdsa, both the key and the algorithm define the curve.
-        Therefore, we must cross check them to make sure they're the same.
+        Therefore, we must crosscheck them to make sure they're the same.
 
         :param key:
         :raises: ValueError is the curves are not the same
