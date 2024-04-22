@@ -2,7 +2,6 @@ import copy
 import json
 import os
 
-from cryptography.hazmat import backends
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
@@ -105,9 +104,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
 
         if _jwk_dict.get("d", None) is not None:
             # Ecdsa private key.
-            _jwk_dict["priv_key"] = ec.derive_private_key(
-                base64url_to_long(_jwk_dict["d"]), curve, backends.default_backend()
-            )
+            _jwk_dict["priv_key"] = ec.derive_private_key(base64url_to_long(_jwk_dict["d"]), curve)
             _jwk_dict["pub_key"] = _jwk_dict["priv_key"].public_key()
         else:
             # Ecdsa public key.
@@ -116,7 +113,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
                 base64url_to_long(_jwk_dict["y"]),
                 curve,
             )
-            _jwk_dict["pub_key"] = ec_pub_numbers.public_key(backends.default_backend())
+            _jwk_dict["pub_key"] = ec_pub_numbers.public_key()
         return ECKey(**_jwk_dict)
     elif _jwk_dict["kty"] == "RSA":
         ensure_rsa_params(_jwk_dict, private)
@@ -151,10 +148,10 @@ def key_from_jwk_dict(jwk_dict, private=None):
             rsa_priv_numbers = rsa.RSAPrivateNumbers(
                 p_long, q_long, d_long, dp_long, dq_long, qi_long, rsa_pub_numbers
             )
-            _jwk_dict["priv_key"] = rsa_priv_numbers.private_key(backends.default_backend())
+            _jwk_dict["priv_key"] = rsa_priv_numbers.private_key()
             _jwk_dict["pub_key"] = _jwk_dict["priv_key"].public_key()
         else:
-            _jwk_dict["pub_key"] = rsa_pub_numbers.public_key(backends.default_backend())
+            _jwk_dict["pub_key"] = rsa_pub_numbers.public_key()
 
         if _jwk_dict["kty"] != "RSA":
             raise WrongKeyType('"{}" should have been "RSA"'.format(_jwk_dict["kty"]))

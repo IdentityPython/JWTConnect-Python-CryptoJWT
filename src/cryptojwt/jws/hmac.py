@@ -1,4 +1,3 @@
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import hmac
 
@@ -26,7 +25,7 @@ class HMACSigner(Signer):
         :param key: The key
         :return: A signature
         """
-        h = hmac.HMAC(key, self.algorithm(), default_backend())
+        h = hmac.HMAC(key, self.algorithm())
         h.update(msg)
         return h.finalize()
 
@@ -41,7 +40,7 @@ class HMACSigner(Signer):
             Exception.
         """
         try:
-            h = hmac.HMAC(key, self.algorithm(), default_backend())
+            h = hmac.HMAC(key, self.algorithm())
             h.update(msg)
             h.verify(sig)
             return True

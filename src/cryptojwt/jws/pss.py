@@ -1,7 +1,6 @@
 import logging
 
 from cryptography.exceptions import InvalidSignature
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import utils
@@ -32,7 +31,7 @@ class PSSSigner(Signer):
         :param key: The key
         :return: A signature
         """
-        hasher = hashes.Hash(self.hash_algorithm(), backend=default_backend())
+        hasher = hashes.Hash(self.hash_algorithm())
         hasher.update(msg)
         digest = hasher.finalize()
         sig = key.sign(

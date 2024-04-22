@@ -1,4 +1,5 @@
 """JSON Web Token"""
+
 import logging
 
 import pkg_resources

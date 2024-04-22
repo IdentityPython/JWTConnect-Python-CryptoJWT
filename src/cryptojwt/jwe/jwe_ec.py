@@ -1,6 +1,5 @@
 import struct
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
@@ -87,7 +86,7 @@ class JWE_EC(JWEKey):
         try:
             _epk = kwargs["epk"]
         except KeyError:
-            _epk = ec.generate_private_key(NIST2SEC[as_unicode(key.crv)], default_backend())
+            _epk = ec.generate_private_key(curve=NIST2SEC[as_unicode(key.crv)]())
             epk = ECKey().load_key(_epk.public_key())
         else:
             if isinstance(_epk, ec.EllipticCurvePrivateKey):
@@ -120,7 +119,7 @@ class JWE_EC(JWEKey):
             klen = int(_post[1:4])
             kek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(_post).encode(), klen)
             cek = self._generate_key(self.enc, cek=cek)
-            encrypted_key = aes_key_wrap(kek, cek, default_backend())
+            encrypted_key = aes_key_wrap(kek, cek)
         else:
             raise Exception("Unsupported algorithm %s" % self.alg)
 
@@ -172,7 +171,7 @@ class JWE_EC(JWEKey):
             _pre, _post = self.headers["alg"].split("+")
             klen = int(_post[1:4])
             kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
-            self.cek = aes_key_unwrap(kek, token.encrypted_key(), default_backend())
+            self.cek = aes_key_unwrap(kek, token.encrypted_key())
         else:
             raise Exception("Unsupported algorithm %s" % self.headers["alg"])
 

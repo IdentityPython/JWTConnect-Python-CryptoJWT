@@ -4,7 +4,6 @@ import json
 import os.path
 
 import pytest
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
@@ -307,7 +306,7 @@ SIGJWKS = KeyBundle(JWKS_b)
 
 
 def P256():
-    return ec.generate_private_key(ec.SECP256R1(), default_backend())
+    return ec.generate_private_key(curve=ec.SECP256R1())
 
 
 def test_1():
@@ -520,7 +519,7 @@ def test_jws_mm():
 )
 def test_signer_es(ec_func, alg):
     payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec_func(), default_backend())
+    eck = ec.generate_private_key(curve=ec_func())
     keys = [ECKey().load_key(eck)]
     _jws = JWS(payload, alg=alg)
     _jwt = _jws.sign_compact(keys)
@@ -533,7 +532,7 @@ def test_signer_es(ec_func, alg):
 
 def test_signer_es256_verbose():
     payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(curve=ec.SECP256R1())
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
@@ -695,7 +694,7 @@ def test_sign_2():
 
 def test_signer_protected_headers():
     payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(curve=ec.SECP256R1())
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
@@ -719,7 +718,7 @@ def test_signer_protected_headers():
 
 def test_verify_protected_headers():
     payload = "Please take a moment to register today"
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(curve=ec.SECP256R1())
     _key = ECKey().load_key(eck)
     keys = [_key]
     _jws = JWS(payload, alg="ES256")
@@ -743,7 +742,7 @@ def test_verify_protected_headers():
 
 
 def test_sign_json():
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(curve=ec.SECP256R1())
     key = ECKey().load_key(eck)
     payload = "hello world"
     unprotected_headers = {"abc": "xyz"}
@@ -759,7 +758,7 @@ def test_sign_json():
 
 
 def test_verify_json():
-    eck = ec.generate_private_key(ec.SECP256R1(), default_backend())
+    eck = ec.generate_private_key(curve=ec.SECP256R1())
     key = ECKey().load_key(eck)
     payload = "hello world"
     unprotected_headers = {"abc": "xyz"}

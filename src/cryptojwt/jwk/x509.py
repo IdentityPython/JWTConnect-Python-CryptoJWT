@@ -3,7 +3,6 @@ import hashlib
 import logging
 
 from cryptography import x509
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -22,7 +21,7 @@ def import_public_key_from_pem_file(filename):
     :return: A public key instance
     """
     with open(filename, "rb") as key_file:
-        public_key = serialization.load_pem_public_key(key_file.read(), backend=default_backend())
+        public_key = serialization.load_pem_public_key(key_file.read())
     return public_key
 
 
@@ -35,9 +34,7 @@ def import_private_key_from_pem_file(filename, passphrase=None):
     :return: A private key instance
     """
     with open(filename, "rb") as key_file:
-        private_key = serialization.load_pem_private_key(
-            key_file.read(), password=passphrase, backend=default_backend()
-        )
+        private_key = serialization.load_pem_private_key(key_file.read(), password=passphrase)
     return private_key
 
 
@@ -56,7 +53,7 @@ def import_public_key_from_pem_data(pem_data):
         pem_data = bytes("{}\n{}\n{}".format(PREFIX, pem_data, POSTFIX), "utf-8")
     else:
         pem_data = bytes(pem_data, "utf-8")
-    cert = x509.load_pem_x509_certificate(pem_data, default_backend())
+    cert = x509.load_pem_x509_certificate(pem_data)
     return cert.public_key()
 
 
@@ -68,7 +65,7 @@ def import_public_key_from_cert_file(filename):
     :return: A public key instance
     """
     with open(filename, "rb") as key_file:
-        cert = x509.load_pem_x509_certificate(key_file.read(), backend=default_backend())
+        cert = x509.load_pem_x509_certificate(key_file.read())
     return cert.public_key()
 
 
@@ -81,7 +78,7 @@ def der_cert(der_data):
     """
     if isinstance(der_data, str):
         der_data = bytes(der_data, "utf-8")
-    return x509.load_der_x509_certificate(der_data, default_backend())
+    return x509.load_der_x509_certificate(der_data)
 
 
 def load_x509_cert(url, httpc, spec2key, **get_args):
