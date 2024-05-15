@@ -1,7 +1,6 @@
 import os
 from struct import pack
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hmac
 from cryptography.hazmat.primitives.ciphers import Cipher
 from cryptography.hazmat.primitives.ciphers import algorithms
@@ -37,7 +36,7 @@ class AES_CBCEncrypter(Encrypter):
 
     def _mac(self, hash_key, hash_func, auth_data, iv, enc_msg, key_len):
         al = pack("!Q", 8 * len(auth_data))
-        h = hmac.HMAC(hash_key, hash_func(), backend=default_backend())
+        h = hmac.HMAC(hash_key, hash_func())
         h.update(auth_data)
         h.update(iv)
         h.update(enc_msg)
@@ -54,7 +53,7 @@ class AES_CBCEncrypter(Encrypter):
 
         hash_key, enc_key, key_len, hash_func = get_keys_seclen_dgst(self.key, iv)
 
-        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv))
         encryptor = cipher.encryptor()
 
         pmsg = self.padder.update(msg)
@@ -77,7 +76,7 @@ class AES_CBCEncrypter(Encrypter):
         if comp_tag != tag:
             raise VerificationError("AES-CBC HMAC")
 
-        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv), backend=default_backend())
+        cipher = Cipher(algorithms.AES(enc_key), modes.CBC(iv))
         decryptor = cipher.decryptor()
 
         ctext = decryptor.update(msg)

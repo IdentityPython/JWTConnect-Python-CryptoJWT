@@ -1,4 +1,5 @@
 """A basic class on which to build the JWS and JWE classes."""
+
 import json
 import logging
 import warnings

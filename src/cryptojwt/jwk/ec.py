@@ -1,4 +1,3 @@
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from cryptojwt.exception import KeyNotFound
@@ -50,7 +49,7 @@ def ec_construct_public(num):
         raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"]))
 
     ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], _sec_crv())
-    return ecpn.public_key(default_backend())
+    return ecpn.public_key()
 
 
 def ec_construct_private(num):
@@ -64,7 +63,7 @@ def ec_construct_private(num):
     """
     pub_ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], NIST2SEC[as_unicode(num["crv"])]())
     priv_ecpn = ec.EllipticCurvePrivateNumbers(num["d"], pub_ecpn)
-    return priv_ecpn.private_key(default_backend())
+    return priv_ecpn.private_key()
 
 
 class ECKey(AsymmetricKey):
@@ -285,7 +284,7 @@ def cmp_keys(a, b, key_type):
 
 
 def new_ec_key(crv, kid="", **kwargs):
-    _key = ec.generate_private_key(curve=NIST2SEC[crv], backend=default_backend())
+    _key = ec.generate_private_key(curve=NIST2SEC[crv]())
 
     _rk = ECKey(priv_key=_key, kid=kid, **kwargs)
     if not kid:

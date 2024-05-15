@@ -1,7 +1,6 @@
 import logging
 import zlib
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
 from cryptography.hazmat.primitives.keywrap import aes_key_wrap
 
@@ -57,7 +56,7 @@ class JWE_SYM(JWEKey):
 
         # The iv for this function must be 64 bit
         # Which is certainly different from the one above
-        jek = aes_key_wrap(kek, cek, default_backend())
+        jek = aes_key_wrap(kek, cek)
 
         _enc = self["enc"]
         _auth_data = jwe.b64_encode_header()
@@ -85,7 +84,7 @@ class JWE_SYM(JWEKey):
                 except AttributeError:
                     key = key.key
             # The iv for this function must be 64 bit
-            cek = aes_key_unwrap(key, jek, default_backend())
+            cek = aes_key_unwrap(key, jek)
 
         auth_data = jwe.b64_protected_header()
         msg = self._decrypt(

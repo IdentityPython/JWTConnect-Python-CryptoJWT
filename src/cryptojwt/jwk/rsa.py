@@ -1,7 +1,6 @@
 import base64
 import logging
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -40,9 +39,7 @@ def generate_and_store_rsa_key(key_size=2048, filename="rsa.key", passphrase="")
     :return: A
         cryptography.hazmat.primitives.asymmetric.rsa.RSAPrivateKey instance
     """
-    private_key = rsa.generate_private_key(
-        public_exponent=65537, key_size=key_size, backend=default_backend()
-    )
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=key_size)
 
     with open(filename, "wb") as keyfile:
         if passphrase:
@@ -141,7 +138,7 @@ def x509_rsa_load(txt):
 
 def rsa_construct_public(numbers):
     rpn = rsa.RSAPublicNumbers(**numbers)
-    return rpn.public_key(default_backend())
+    return rpn.public_key()
 
 
 def rsa_construct_private(numbers):
@@ -181,7 +178,7 @@ def rsa_construct_private(numbers):
 
     rpubn = rsa.RSAPublicNumbers(e=numbers["e"], n=numbers["n"])
     rprivn = rsa.RSAPrivateNumbers(public_numbers=rpubn, **cnum)
-    return rprivn.private_key(default_backend())
+    return rprivn.private_key()
 
 
 def cmp_public_numbers(pn1, pn2):
@@ -492,9 +489,7 @@ def new_rsa_key(key_size=2048, kid="", public_exponent=65537, **kwargs):
     :return: A :py:class:`cryptojwt.jwk.rsa.RSAKey` instance
     """
 
-    _key = rsa.generate_private_key(
-        public_exponent=public_exponent, key_size=key_size, backend=default_backend()
-    )
+    _key = rsa.generate_private_key(public_exponent=public_exponent, key_size=key_size)
 
     _rk = RSAKey(priv_key=_key, kid=kid, **kwargs)
     if not _rk.kid:

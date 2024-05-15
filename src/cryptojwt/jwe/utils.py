@@ -2,7 +2,6 @@ import os
 import struct
 from math import ceil
 
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.hashes import SHA384
@@ -107,7 +106,7 @@ def concat_sha256(secret, dk_len, other_info):
     while len(dkm) < dk_bytes:
         counter += 1
         counter_bytes = struct.pack("!I", counter)
-        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        digest = hashes.Hash(hashes.SHA256())
         digest.update(counter_bytes)
         digest.update(secret)
         digest.update(other_info)

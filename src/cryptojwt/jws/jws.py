@@ -1,4 +1,5 @@
 """JSON Web Token"""
+
 import json
 import logging
 

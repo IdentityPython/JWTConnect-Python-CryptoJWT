@@ -7,7 +7,6 @@ import string
 import sys
 
 import pytest
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import ec
 
 from cryptojwt.exception import BadSyntax
@@ -426,9 +425,9 @@ if __name__ == "__main__":
 
 # Test ECDH-ES
 
-alice = ec.generate_private_key(ec.SECP256R1(), default_backend())
+alice = ec.generate_private_key(curve=ec.SECP256R1())
 eck_alice = ECKey(priv_key=alice)
-bob = ec.generate_private_key(ec.SECP256R1(), default_backend())
+bob = ec.generate_private_key(curve=ec.SECP256R1())
 eck_bob = ECKey(priv_key=bob)
 
 
