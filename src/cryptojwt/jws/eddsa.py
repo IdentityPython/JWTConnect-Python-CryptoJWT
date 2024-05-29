@@ -1,11 +1,8 @@
-import sys
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from ..exception import BadSignature
-from ..exception import Unsupported
 from . import Signer
 
 

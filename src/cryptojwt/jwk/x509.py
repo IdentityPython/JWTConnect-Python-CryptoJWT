@@ -50,7 +50,7 @@ def import_public_key_from_pem_data(pem_data):
     :return: rsa.RSAPublicKey instance
     """
     if not pem_data.startswith(PREFIX):
-        pem_data = bytes("{}\n{}\n{}".format(PREFIX, pem_data, POSTFIX), "utf-8")
+        pem_data = bytes(f"{PREFIX}\n{pem_data}\n{POSTFIX}", "utf-8")
     else:
         pem_data = bytes(pem_data, "utf-8")
     cert = x509.load_pem_x509_certificate(pem_data)

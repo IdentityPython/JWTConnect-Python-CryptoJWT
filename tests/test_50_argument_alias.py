@@ -46,7 +46,7 @@ KEYDEFS = [
 ]
 
 
-class TestVerifyJWTKeys(object):
+class TestVerifyJWTKeys:
     @pytest.fixture(autouse=True)
     def setup(self):
         mkey = [
@@ -104,8 +104,8 @@ class TestVerifyJWTKeys(object):
         assert len(keys) == 1
 
 
-PUBLIC_FILE = "{}/public_jwks.json".format(BASEDIR)
-PRIVATE_FILE = "{}/private_jwks.json".format(BASEDIR)
+PUBLIC_FILE = f"{BASEDIR}/public_jwks.json"
+PRIVATE_FILE = f"{BASEDIR}/private_jwks.json"
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},

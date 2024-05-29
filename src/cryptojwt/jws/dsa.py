@@ -1,5 +1,3 @@
-import sys
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -26,7 +24,7 @@ class ECDSASigner(Signer):
             self.hash_algorithm = hashes.SHA512
             self.curve_name = "secp521r1"
         else:
-            raise Unsupported("algorithm: {}".format(algorithm))
+            raise Unsupported(f"algorithm: {algorithm}")
 
         self.algorithm = algorithm
 
@@ -92,8 +90,8 @@ class ECDSASigner(Signer):
         """
         if self.curve_name != pub_key.curve.name:
             raise ValueError(
-                "The curve in private key {} and in algorithm {} don't "
-                "match".format(pub_key.curve.name, self.curve_name)
+                f"The curve in private key {pub_key.curve.name} and in algorithm {self.curve_name} don't "
+                "match"
             )
 
     @staticmethod

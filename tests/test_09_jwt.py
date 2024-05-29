@@ -240,7 +240,7 @@ def test_with_jti():
     assert "jti" in info
 
 
-class DummyMsg(object):
+class DummyMsg:
     def __init__(self, **kwargs):
         for key, val in kwargs.items():
             setattr(self, key, val)

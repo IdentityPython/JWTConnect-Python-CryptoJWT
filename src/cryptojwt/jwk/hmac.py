@@ -90,7 +90,7 @@ class SYMKey(JWK):
                 else:
                     return self.encryption_key(alg)
 
-            raise WrongUsage("This key can't be used for {}".format(usage))
+            raise WrongUsage(f"This key can't be used for {usage}")
 
     def encryption_key(self, alg, **kwargs):
         """
@@ -121,7 +121,7 @@ class SYMKey(JWK):
         else:
             raise JWKException("No support for symmetric keys > 512 bits")
 
-        logger.debug("Symmetric encryption key: {}".format(as_unicode(b64e(_enc_key))))
+        logger.debug(f"Symmetric encryption key: {as_unicode(b64e(_enc_key))}")
 
         return _enc_key
 

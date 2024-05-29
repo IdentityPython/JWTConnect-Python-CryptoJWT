@@ -74,7 +74,7 @@ def ensure_params(kty, provided, required):
     """Ensure all required parameters are present in dictionary"""
     if not required <= provided:
         missing = required - provided
-        raise MissingValue("Missing properties for kty={}, {}".format(kty, str(list(missing))))
+        raise MissingValue(f"Missing properties for kty={kty}, {str(list(missing))}")
 
 
 def key_from_jwk_dict(jwk_dict, private=None):

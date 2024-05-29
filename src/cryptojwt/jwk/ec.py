@@ -339,5 +339,5 @@ def import_ec_key(pem_data):
 
 
 def import_ec_key_from_cert_file(pem_file):
-    with open(pem_file, "r") as cert_file:
+    with open(pem_file) as cert_file:
         return import_ec_key(cert_file.read())

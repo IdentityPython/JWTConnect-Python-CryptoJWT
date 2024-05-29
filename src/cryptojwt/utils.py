@@ -172,7 +172,7 @@ def bytes2str_conv(item):
     elif isinstance(item, dict):
         return dict([(k, bytes2str_conv(v)) for k, v in item.items()])
 
-    raise ValueError("Can't convert {}.".format(repr(item)))
+    raise ValueError(f"Can't convert {repr(item)}.")
 
 
 def b64encode_item(item):
@@ -256,8 +256,8 @@ def rename_kwargs(func_name, kwargs, aliases):
     for alias, new in aliases.items():
         if alias in kwargs:
             if new in kwargs:
-                raise TypeError("{} received both {} and {}".format(func_name, alias, new))
-            warnings.warn("{} is deprecated; use {}".format(alias, new), DeprecationWarning)
+                raise TypeError(f"{func_name} received both {alias} and {new}")
+            warnings.warn(f"{alias} is deprecated; use {new}", DeprecationWarning)
             kwargs[new] = kwargs.pop(alias)
 
 

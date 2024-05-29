@@ -4,11 +4,9 @@ from ..jwk.asym import AsymmetricKey
 from ..jwk.ec import ECKey
 from ..jwk.hmac import SYMKey
 from ..jwk.jwk import key_from_jwk_dict
-from ..jwk.rsa import RSAKey
 from ..jwx import JWx
 from .exception import DecryptionFailed
 from .exception import NoSuitableDecryptionKey
-from .exception import NoSuitableECDHKey
 from .exception import NoSuitableEncryptionKey
 from .exception import NotSupportedAlgorithm
 from .exception import WrongEncryptionAlgorithm
@@ -133,7 +131,7 @@ class JWE(JWx):
             except TypeError as err:
                 raise err
             else:
-                logger.debug("Encrypted message using key with kid={}".format(key.kid))
+                logger.debug(f"Encrypted message using key with kid={key.kid}")
                 return token
 
         # logger.error("Could not find any suitable encryption key")

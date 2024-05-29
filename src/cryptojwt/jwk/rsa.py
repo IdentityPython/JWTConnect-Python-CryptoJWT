@@ -105,7 +105,7 @@ def import_rsa_key(pem_data):
 
 
 def import_rsa_key_from_cert_file(pem_file):
-    with open(pem_file, "r") as cert_file:
+    with open(pem_file) as cert_file:
         return import_rsa_key(cert_file.read())
 
 
@@ -284,9 +284,7 @@ class RSAKey(AsymmetricKey):
             self.pub_key = self.priv_key.public_key()
         elif self.pub_key:
             self._serialize(self.pub_key)
-        elif has_public_key_parts:
-            self.deserialize()
-        elif has_x509_cert_chain:
+        elif has_public_key_parts or has_x509_cert_chain:
             self.deserialize()
         elif not self.n and not self.e:
             pass

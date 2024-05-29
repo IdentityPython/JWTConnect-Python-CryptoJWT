@@ -15,7 +15,6 @@ from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.okp import OKPKey
-from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
@@ -269,7 +268,7 @@ def test_get_all():
 
 
 def test_keybundle_from_local_der():
-    kb = keybundle_from_local_file("{}".format(RSA0), "der", ["enc"])
+    kb = keybundle_from_local_file(f"{RSA0}", "der", ["enc"])
     assert len(kb) == 1
     keys = kb.get("rsa")
     assert len(keys) == 1
@@ -279,7 +278,7 @@ def test_keybundle_from_local_der():
 
 
 def test_ec_keybundle_from_local_der():
-    kb = keybundle_from_local_file("{}".format(EC0), "der", ["enc"], keytype="EC")
+    kb = keybundle_from_local_file(f"{EC0}", "der", ["enc"], keytype="EC")
     assert len(kb) == 1
     keys = kb.get("ec")
     assert len(keys) == 1
@@ -289,7 +288,7 @@ def test_ec_keybundle_from_local_der():
 
 
 def test_keybundle_from_local_der_update():
-    kb = keybundle_from_local_file("file://{}".format(RSA0), "der", ["enc"])
+    kb = keybundle_from_local_file(f"file://{RSA0}", "der", ["enc"])
     assert len(kb) == 1
     keys = kb.get("rsa")
     assert len(keys) == 1
@@ -433,14 +432,14 @@ def test_copy():
 
 def test_local_jwk():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     assert kb
 
 
 def test_local_jwk_update():
     cache_time = 0.1
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path), cache_time=cache_time)
+    kb = KeyBundle(source=f"file://{_path}", cache_time=cache_time)
     assert kb
     _ = kb.keys()
     last1 = kb.last_local
@@ -456,7 +455,7 @@ def test_local_jwk_update():
 
 def test_local_jwk_copy():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     kb2 = kb.copy()
     assert kb2.source == kb.source
 
@@ -506,7 +505,7 @@ def test_update_2():
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
-    kb = KeyBundle(source="file://{}".format(fname), fileformat="jwks")
+    kb = KeyBundle(source=f"file://{fname}", fileformat="jwks")
     assert len(kb) == 1
 
     # Added one more key
@@ -528,7 +527,7 @@ def test_update_mark_inactive():
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
-    kb = KeyBundle(source="file://{}".format(fname), fileformat="jwks")
+    kb = KeyBundle(source=f"file://{fname}", fileformat="jwks")
     assert len(kb) == 1
 
     # new set of keys

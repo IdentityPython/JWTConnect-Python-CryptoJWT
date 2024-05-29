@@ -7,8 +7,6 @@ from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.hashes import SHA384
 from cryptography.hazmat.primitives.hashes import SHA512
 
-from ..utils import b64e
-
 LENMET = {32: (16, SHA256), 48: (24, SHA384), 64: (32, SHA512)}
 
 

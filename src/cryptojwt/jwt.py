@@ -67,7 +67,7 @@ def pick_key(keys, use, alg="", key_type="", kid=""):
 
         if key.alg == "" and alg:
             if key_type == "EC":
-                if key.crv != "P-{}".format(alg[2:]):
+                if key.crv != f"P-{alg[2:]}":
                     continue
         elif alg and key.alg != alg:
             continue
@@ -209,7 +209,7 @@ class JWT:
         keys = pick_key(self.my_keys(issuer_id, "sig"), "sig", alg=self.alg, kid=kid)
 
         if not keys:
-            raise NoSuitableSigningKeys("kid={}".format(kid))
+            raise NoSuitableSigningKeys(f"kid={kid}")
 
         return keys[0]  # Might be more then one if kid == ''
 
@@ -225,7 +225,7 @@ class JWT:
         aud: Optional[str] = None,
         iat: Optional[int] = None,
         jws_headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
 

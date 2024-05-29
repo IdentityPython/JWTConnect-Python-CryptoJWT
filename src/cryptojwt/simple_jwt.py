@@ -13,7 +13,7 @@ __author__ = "Roland Hedberg"
 logger = logging.getLogger(__name__)
 
 
-class SimpleJWT(object):
+class SimpleJWT:
     """
     Basic JSON Web Token class that doesn't make any assumptions as to what
     can or should be in the payload
@@ -55,9 +55,7 @@ class SimpleJWT(object):
                 raise
             else:
                 if not _ok:
-                    raise HeaderError(
-                        'Expected "{}" to be "{}", was "{}"'.format(key, val, self.headers[key])
-                    )
+                    raise HeaderError(f'Expected "{key}" to be "{val}", was "{self.headers[key]}"')
 
         return self
 
@@ -75,7 +73,7 @@ class SimpleJWT(object):
             else:
                 headers = {"alg": "none"}
 
-        logging.debug("(pack) JWT header: {}".format(headers))
+        logging.debug(f"(pack) JWT header: {headers}")
 
         if not parts:
             return ".".join([a.decode() for a in self.b64part])

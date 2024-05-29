@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from __future__ import print_function
 
 import base64
 import json
@@ -9,11 +8,8 @@ from collections import Counter
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric import x448
-from cryptography.hazmat.primitives.asymmetric import x25519
 
 from cryptojwt.exception import DeSerializationNotPossible
 from cryptojwt.exception import UnsupportedAlgorithm
@@ -566,7 +562,7 @@ def test_jwk_conversion():
 
 def test_str():
     _j = RSAKey(alg="RS512", use="sig", n=N, e=E)
-    s = "{}".format(_j)
+    s = f"{_j}"
     assert s.startswith("{") and s.endswith("}")
     sp = s.replace("'", '"')
     _d = json.loads(sp)

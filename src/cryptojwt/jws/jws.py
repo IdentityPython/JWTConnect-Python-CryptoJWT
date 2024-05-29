@@ -238,7 +238,7 @@ class JWS(JWx):
             except (BadSignature, IndexError):
                 pass
             except (ValueError, TypeError) as err:
-                logger.warning('Exception "{}" caught'.format(err))
+                logger.warning(f'Exception "{err}" caught')
             else:
                 logger.debug("Verified message using key with kid=%s" % key.kid)
                 self.msg = jwt.payload()
@@ -347,13 +347,11 @@ class JWS(JWx):
                 _tmp = self.verify_compact(token, keys, allow_none)
             except NoSuitableSigningKeys:
                 if at_least_one is True:
-                    logger.warning(
-                        "Could not verify signature with headers: {}".format(all_headers)
-                    )
+                    logger.warning(f"Could not verify signature with headers: {all_headers}")
                     continue
                 else:
                     raise
-            except JWSException as err:
+            except JWSException:
                 raise
 
             if _claim is None:
@@ -412,7 +410,7 @@ class JWS(JWx):
         try:
             jwt = JWSig().unpack(jws)
         except Exception as err:
-            logger.warning("Could not parse JWS: {}".format(err))
+            logger.warning(f"Could not parse JWS: {err}")
             return False
 
         if "alg" not in jwt.headers:

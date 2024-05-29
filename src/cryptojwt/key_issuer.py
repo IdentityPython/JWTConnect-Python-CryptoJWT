@@ -21,7 +21,7 @@ __author__ = "Roland Hedberg"
 logger = logging.getLogger(__name__)
 
 
-class KeyIssuer(object):
+class KeyIssuer:
     """A key issuer instance contains a number of KeyBundles."""
 
     params = {
@@ -65,7 +65,7 @@ class KeyIssuer(object):
         self.spec2key = {}
 
     def __repr__(self) -> str:
-        return '<KeyIssuer "{}" {}>'.format(self.name, self.key_summary())
+        return f'<KeyIssuer "{self.name}" {self.key_summary()}>'
 
     def __getitem__(self, item):
         return self.get_bundles()[item]
@@ -327,7 +327,7 @@ class KeyIssuer(object):
         # if elliptic curve, have to check if I have a key of the right curve
         if key_type and key_type.upper() == "EC":
             if alg:
-                name = "P-{}".format(alg[2:])  # the type
+                name = f"P-{alg[2:]}"  # the type
                 _lst = []
                 for key in lst:
                     if name != key.crv:
@@ -443,9 +443,9 @@ class KeyIssuer(object):
         for kb in self._bundles:
             for key in kb.keys():
                 if key.inactive_since:
-                    key_list.append("*{}:{}:{}".format(key.kty, key.use, key.kid))
+                    key_list.append(f"*{key.kty}:{key.use}:{key.kid}")
                 else:
-                    key_list.append("{}:{}:{}".format(key.kty, key.use, key.kid))
+                    key_list.append(f"{key.kty}:{key.use}:{key.kid}")
         return ", ".join(key_list)
 
     def __iter__(self):
@@ -586,7 +586,7 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
 
     if private_path:
         if os.path.isfile(private_path):
-            _jwks = open(private_path, "r").read()
+            _jwks = open(private_path).read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -623,7 +623,7 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
             fp.close()
     elif public_path:
         if os.path.isfile(public_path):
-            _jwks = open(public_path, "r").read()
+            _jwks = open(public_path).read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:

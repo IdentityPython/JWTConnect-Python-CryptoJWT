@@ -208,7 +208,7 @@ def test_build_EC_keyissuer_from_file(tmpdir):
     assert len(key_issuer) == 2
 
 
-class TestKeyJar(object):
+class TestKeyJar:
     def test_keyissuer_add(self):
         issuer = KeyIssuer()
         kb = keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"])
@@ -480,8 +480,8 @@ def test_keyissuer_eq():
     assert kj1 == kj2
 
 
-PUBLIC_FILE = "{}/public_jwks.json".format(BASEDIR)
-PRIVATE_FILE = "{}/private_jwks.json".format(BASEDIR)
+PUBLIC_FILE = f"{BASEDIR}/public_jwks.json"
+PRIVATE_FILE = f"{BASEDIR}/private_jwks.json"
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
@@ -598,17 +598,17 @@ def test_init_key_issuer_update():
 
 
 OIDC_KEYS = {
-    "private_path": "{}/priv/jwks.json".format(BASEDIR),
+    "private_path": f"{BASEDIR}/priv/jwks.json",
     "key_defs": KEYSPEC,
-    "public_path": "{}/public/jwks.json".format(BASEDIR),
+    "public_path": f"{BASEDIR}/public/jwks.json",
 }
 
 
 def test_init_key_issuer_create_directories():
     # make sure the directories are gone
     for _dir in ["priv", "public"]:
-        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
-            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+        if os.path.isdir(f"{BASEDIR}/{_dir}"):
+            shutil.rmtree(f"{BASEDIR}/{_dir}")
 
     _keyissuer = init_key_issuer(**OIDC_KEYS)
     assert len(_keyissuer.get("sig", "RSA")) == 1
@@ -617,7 +617,7 @@ def test_init_key_issuer_create_directories():
 
 OIDC_PUB_KEYS = {
     "key_defs": KEYSPEC,
-    "public_path": "{}/public/jwks.json".format(BASEDIR),
+    "public_path": f"{BASEDIR}/public/jwks.json",
     "read_only": False,
 }
 
@@ -625,8 +625,8 @@ OIDC_PUB_KEYS = {
 def test_init_key_issuer_public_key_only():
     # make sure the directories are gone
     for _dir in ["public"]:
-        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
-            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+        if os.path.isdir(f"{BASEDIR}/{_dir}"):
+            shutil.rmtree(f"{BASEDIR}/{_dir}")
 
     _keyissuer = init_key_issuer(**OIDC_PUB_KEYS)
     assert len(_keyissuer.get("sig", "RSA")) == 1
@@ -639,7 +639,7 @@ def test_init_key_issuer_public_key_only():
 
 OIDC_PUB_KEYS2 = {
     "key_defs": KEYSPEC_3,
-    "public_path": "{}/public/jwks.json".format(BASEDIR),
+    "public_path": f"{BASEDIR}/public/jwks.json",
     "read_only": False,
 }
 
@@ -647,8 +647,8 @@ OIDC_PUB_KEYS2 = {
 def test_init_key_issuer_public_key_only_with_diff():
     # make sure the directories are gone
     for _dir in ["public"]:
-        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
-            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+        if os.path.isdir(f"{BASEDIR}/{_dir}"):
+            shutil.rmtree(f"{BASEDIR}/{_dir}")
 
     _keyissuer = init_key_issuer(**OIDC_PUB_KEYS)
     assert len(_keyissuer.get("sig", "RSA")) == 1

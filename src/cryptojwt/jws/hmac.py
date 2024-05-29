@@ -14,7 +14,7 @@ class HMACSigner(Signer):
         elif algorithm == "SHA512":
             self.algorithm = hashes.SHA512
         else:
-            raise Unsupported("algorithm: {}".format(algorithm))
+            raise Unsupported(f"algorithm: {algorithm}")
 
     def sign(self, msg, key):
         """

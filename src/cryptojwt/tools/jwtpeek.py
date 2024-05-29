@@ -18,7 +18,6 @@ from cryptojwt.jwk.rsa import import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_issuer import KeyIssuer
-from cryptojwt.key_jar import KeyJar
 
 __author__ = "roland"
 
@@ -53,7 +52,7 @@ def process(jwt, keys, quiet):
     if _jw:
         if not quiet:
             print("Encrypted JSON Web Token")
-            print("Headers: {}".format(_jw.jwt.headers))
+            print(f"Headers: {_jw.jwt.headers}")
         if keys:
             res = _jw.decrypt(keys=keys)
             json_object = json.loads(res)
@@ -71,17 +70,15 @@ def process(jwt, keys, quiet):
                 print(highlight(json_str, JsonLexer(), TerminalFormatter()))
             else:
                 print("Signed JSON Web Token")
-                print("Headers: {}".format(_jw.jwt.headers))
+                print(f"Headers: {_jw.jwt.headers}")
                 if keys:
                     res = _jw.verify_compact(keys=keys)
-                    print("Verified message: {}".format(res))
+                    print(f"Verified message: {res}")
                 else:
                     json_object = json.loads(_jw.jwt.part[1].decode("utf-8"))
                     json_str = json.dumps(json_object, indent=2)
                     print(
-                        "Unverified message: {}".format(
-                            highlight(json_str, JsonLexer(), TerminalFormatter())
-                        )
+                        f"Unverified message: {highlight(json_str, JsonLexer(), TerminalFormatter())}"
                     )
 
 
@@ -127,9 +124,7 @@ def main():
         _kb = KeyBundle(source=args.jwks_url)
         keys.extend(_kb.get())
 
-    if not args.msg:  # If nothing specified assume stdin
-        message = sys.stdin.read()
-    elif args.msg == "-":
+    if not args.msg or args.msg == "-":  # If nothing specified assume stdin
         message = sys.stdin.read()
     else:
         if os.path.isfile(args.msg):

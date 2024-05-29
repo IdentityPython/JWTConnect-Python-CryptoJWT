@@ -375,7 +375,7 @@ class KeyBundle:
                 except KeyError:
                     if not self.ignore_invalid_keys:
                         raise UnknownKeyType(inst)
-                    _error = "UnknownKeyType: {}".format(_typ)
+                    _error = f"UnknownKeyType: {_typ}"
                     continue
                 except (UnsupportedECurve, UnsupportedAlgorithm) as err:
                     if not self.ignore_invalid_keys:
@@ -441,7 +441,7 @@ class KeyBundle:
             key_args["priv_key"] = _key
             key_args["pub_key"] = _key.public_key()
         else:
-            raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
+            raise NotImplementedError(f"No support for DER decoding of key type {_kty}")
 
         if not keyusage:
             key_args["use"] = ["enc", "sig"]
@@ -506,7 +506,7 @@ class KeyBundle:
                 raise UpdateFailed(MALFORMED.format(self.source))
 
             if hasattr(_http_resp, "headers"):
-                headers = getattr(_http_resp, "headers")
+                headers = _http_resp.headers
                 self.last_remote = headers.get("last-modified") or headers.get("date")
         elif not_modified:
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
@@ -646,7 +646,7 @@ class KeyBundle:
         :param typ: Type of key (rsa, ec, oct, ..)
         """
         _typs = [typ.lower(), typ.upper()]
-        self._keys = [k for k in self._keys if not k.kty in _typs]
+        self._keys = [k for k in self._keys if k.kty not in _typs]
 
     def __str__(self):
         return str(self.jwks())
@@ -936,7 +936,7 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
 
     try:
         _fp = open(target, "w")
-    except IOError:
+    except OSError:
         head, _ = os.path.split(target)
         os.makedirs(head)
         _fp = open(target, "w")
@@ -1325,13 +1325,13 @@ def key_gen(type, **kwargs):
         crv = kwargs.get("crv", DEFAULT_EC_CURVE)
         if crv not in NIST2SEC:
             logging.error("Unknown curve: %s", crv)
-            raise ValueError("Unknown curve: {}".format(crv))
+            raise ValueError(f"Unknown curve: {crv}")
         _key = new_ec_key(crv=crv, **kargs)
     elif type.upper() == "OKP":
         crv = kwargs.get("crv", DEFAULT_OKP_CURVE)
         if crv not in OKP_CRV2PUBLIC:
             logging.error("Unknown curve: %s", crv)
-            raise ValueError("Unknown curve: {}".format(crv))
+            raise ValueError(f"Unknown curve: {crv}")
         _key = new_okp_key(crv=crv, **kargs)
     elif type.lower() in ["sym", "oct"]:
         keysize = kwargs.get("bytes", 24)
@@ -1339,7 +1339,7 @@ def key_gen(type, **kwargs):
         _key = SYMKey(key=randomkey, **kargs)
     else:
         logging.error("Unknown key type: %s", type)
-        raise ValueError("Unknown key type: %s".format(type))
+        raise ValueError("Unknown key type: %s".format())
 
     return _key
 
@@ -1374,4 +1374,4 @@ def key_by_alg(alg: str):
     elif alg.startswith("HS"):
         return key_gen("sym")
 
-    raise ValueError("Don't know who to create a key to use with '{}'".format(alg))
+    raise ValueError(f"Don't know who to create a key to use with '{alg}'")
