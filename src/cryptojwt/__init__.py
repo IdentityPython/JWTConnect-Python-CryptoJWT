@@ -2,7 +2,7 @@
 
 import logging
 
-import pkg_resources
+from importlib.metadata import version
 
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwk import JWK
@@ -24,7 +24,7 @@ try:
 except ImportError:
     pass
 
-__version__ = pkg_resources.get_distribution("cryptojwt").version
+__version__ = version("cryptojwt")
 
 logger = logging.getLogger(__name__)
 
