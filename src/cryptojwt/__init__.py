@@ -1,7 +1,6 @@
 """JSON Web Token"""
 
 import logging
-
 from importlib.metadata import version
 
 from cryptojwt.jwe.jwe import JWE
