@@ -1,20 +1,14 @@
 import json
 import logging
 import os
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from requests import request
 
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
-from .key_bundle import KeyBundle
-from .key_bundle import build_key_bundle
-from .key_bundle import key_diff
-from .key_bundle import update_key_bundle
-from .utils import httpc_params_loader
-from .utils import importer
-from .utils import qualified_name
+from .key_bundle import KeyBundle, build_key_bundle, key_diff, update_key_bundle
+from .utils import httpc_params_loader, importer, qualified_name
 
 __author__ = "Roland Hedberg"
 
@@ -586,7 +580,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
 
     if private_path:
         if os.path.isfile(private_path):
-            _jwks = open(private_path).read()
+            with open(private_path) as fp:
+                _jwks = fp.read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -599,9 +594,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                     else:
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks(private=True)
-                        fp = open(private_path, "w")
-                        fp.write(json.dumps(jwks))
-                        fp.close()
+                        with open(private_path, "w") as fp:
+                            json.dump(jwks, fp)
         else:
             _issuer = build_keyissuer(key_defs)
             if not read_only:
@@ -609,21 +603,20 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                 head, tail = os.path.split(private_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(private_path, "w")
-                fp.write(json.dumps(jwks))
-                fp.close()
+                with open(private_path, "w") as fp:
+                    json.dump(jwks, fp)
 
         if public_path and not read_only:
             jwks = _issuer.export_jwks()  # public part
             head, tail = os.path.split(public_path)
             if head and not os.path.isdir(head):
                 os.makedirs(head)
-            fp = open(public_path, "w")
-            fp.write(json.dumps(jwks))
-            fp.close()
+            with open(public_path, "w") as fp:
+                json.dump(jwks, fp)
     elif public_path:
         if os.path.isfile(public_path):
-            _jwks = open(public_path).read()
+            with open(public_path) as fp:
+                _jwks = fp.read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -636,9 +629,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                         update_key_bundle(_kb, _diff)
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks()
-                        fp = open(public_path, "w")
-                        fp.write(json.dumps(jwks))
-                        fp.close()
+                        with open(public_path, "w") as fp:
+                            json.dump(jwks, fp)
         else:
             _issuer = build_keyissuer(key_defs)
             if not read_only:
@@ -646,9 +638,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                 head, tail = os.path.split(public_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(public_path, "w")
-                fp.write(json.dumps(_jwks))
-                fp.close()
+                with open(public_path, "w") as fp:
+                    json.dump(_jwks, fp)
     else:
         _issuer = build_keyissuer(key_defs)
 

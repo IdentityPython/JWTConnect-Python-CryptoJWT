@@ -13,8 +13,7 @@ from pygments.lexers.data import JsonLexer
 from cryptojwt.jwe import jwe
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.jwk import key_from_jwk_dict
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_rsa_key
+from cryptojwt.jwk.rsa import RSAKey, import_rsa_key
 from cryptojwt.jws import jws
 from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_issuer import KeyIssuer
@@ -112,12 +111,14 @@ def main():
         keys.append(SYMKey(key=args.hmac_key, kid=_kid))
 
     if args.jwk:
-        _key = key_from_jwk_dict(open(args.jwk).read())
+        with open(args.jwk) as fp:
+            _key = key_from_jwk_dict(fp.read())
         keys.append(_key)
 
     if args.jwks:
         _iss = KeyIssuer()
-        _iss.import_jwks(open(args.jwks).read())
+        with open(args.jwks) as fp:
+            _iss.import_jwks(fp.read())
         keys.extend(_iss.all_keys())
 
     if args.jwks_url:
@@ -128,7 +129,8 @@ def main():
         message = sys.stdin.read()
     else:
         if os.path.isfile(args.msg):
-            message = open(args.msg).read().strip("\n")
+            with open(args.msg) as fp:
+                message = fp.read().strip("\n")
         else:
             message = args.msg
 
