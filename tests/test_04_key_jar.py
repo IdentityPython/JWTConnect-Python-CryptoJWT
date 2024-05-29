@@ -370,7 +370,7 @@ class TestKeyJar:
         assert ks.get("enc", "oct", "http://www.example.org/")
 
     def test_dump_issuer_keys(self):
-        kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks", ["sig"])
+        kb = keybundle_from_local_file(f"file://{BASE_PATH}/jwk.json", "jwks", ["sig"])
         assert len(kb) == 1
         kj = KeyJar()
         kj.add_kb("", kb)
@@ -405,14 +405,11 @@ class TestKeyJar:
     def test_provider(self):
         kj = KeyJar()
         _url = "https://connect-op.herokuapp.com/jwks.json"
-        kj.load_keys(
-            "https://connect-op.heroku.com",
-            jwks_uri=_url,
-        )
+        kj.load_keys("https://connect-op.heroku.com", jwks_uri=_url)
         iss_keys = kj.get_issuer_keys("https://connect-op.heroku.com")
         if not iss_keys:
             _msg = f"{_url} is not available at this moment!"
-            warnings.warn(_msg)
+            warnings.warn(_msg, stacklevel=1)
         else:
             assert iss_keys[0].keys()
 

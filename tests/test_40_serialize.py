@@ -15,7 +15,7 @@ CERT = full_path("cert.pem")
 
 
 def test_key_issuer():
-    kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks", ["sig"])
+    kb = keybundle_from_local_file(f"file://{BASE_PATH}/jwk.json", "jwks", ["sig"])
     assert len(kb) == 1
     issuer = KeyIssuer()
     issuer.add(kb)

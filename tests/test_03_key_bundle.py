@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring,no-self-use
+import contextlib
 import json
 import os
 import shutil
@@ -408,7 +409,7 @@ def test_mark_as_inactive():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -420,7 +421,7 @@ def test_copy():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -482,7 +483,7 @@ def test_httpc_params_1():
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
         updated, _ = kb._do_remote()
-        assert updated == True
+        assert updated is True
 
 
 @pytest.mark.network
@@ -908,7 +909,7 @@ def test_export_inactive():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -976,7 +977,7 @@ def test_remote_not_modified():
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
         updated, _ = kb._do_remote()
-        assert updated == True
+        assert updated is True
         assert kb.last_remote == headers.get("Last-Modified")
         timeout1 = kb.time_out
 
@@ -1019,20 +1020,18 @@ def test_ignore_errors_period():
             ignore_errors_period=ignore_errors_period,
         )
         res, _ = kb._do_remote()
-        assert res == True
+        assert res is True
         assert kb.ignore_errors_until is None
 
         # refetch, but fail by using a bad source
         kb.source = source_bad
-        try:
+        with contextlib.suppress(UpdateFailed):
             res, _ = kb._do_remote()
-        except UpdateFailed:
-            pass
 
         # retry should fail silently as we're in holddown
         res, _ = kb._do_remote()
         assert kb.ignore_errors_until is not None
-        assert res == False
+        assert res is False
 
         # wait until holddown
         time.sleep(ignore_errors_period + 1)
@@ -1040,7 +1039,7 @@ def test_ignore_errors_period():
         # try again
         kb.source = source_good
         res, _ = kb._do_remote()
-        assert res == True
+        assert res is True
 
 
 def test_ignore_invalid_keys():

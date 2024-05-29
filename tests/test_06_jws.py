@@ -572,7 +572,7 @@ def test_signer_ps256_fail():
     except BadSignature:
         pass
     else:
-        assert False
+        raise AssertionError
 
 
 def test_signer_ps384():
@@ -645,11 +645,11 @@ def test_signer_eddsa_fail():
     _pubkey = OKPKey().load_key(okp2.public_key())
     _rj = JWS(alg="Ed25519")
     try:
-        info = _rj.verify_compact(_jwt, [_pubkey])
+        _ = _rj.verify_compact(_jwt, [_pubkey])
     except BadSignature:
         pass
     else:
-        assert False
+        raise AssertionError
 
 
 def test_no_alg_and_alg_none_same():
@@ -904,7 +904,7 @@ def test_rs256_rm_signature():
     except WrongNumberOfParts:
         pass
     else:
-        assert False
+        raise AssertionError
 
 
 def test_pick_alg_assume_alg_from_single_key():

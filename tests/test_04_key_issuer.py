@@ -287,7 +287,7 @@ class TestKeyJar:
         assert issuer.get("enc", "oct")
 
     def test_dump_issuer_keys(self):
-        kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks", ["sig"])
+        kb = keybundle_from_local_file(f"file://{BASE_PATH}/jwk.json", "jwks", ["sig"])
         assert len(kb) == 1
         issuer = KeyIssuer()
         issuer.add_kb(kb)
@@ -701,7 +701,7 @@ def test_localhost_url():
     kb = issuer.find(url)
     assert len(kb) == 1
     assert "verify" in kb[0].httpc_params
-    assert kb[0].httpc_params["verify"] == False
+    assert kb[0].httpc_params["verify"] is False
 
 
 def test_add_url():

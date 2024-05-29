@@ -68,10 +68,10 @@ def _eq(l1, l2):
 
 
 def test_urlsafe_base64decode():
-    l = base64_to_long(N)
+    length = base64_to_long(N)
     # convert it to base64
-    bys = long2intarr(l)
-    data = struct.pack("%sB" % len(bys), *bys)
+    bys = long2intarr(length)
+    data = struct.pack(f"{len(bys)}B", *bys)
     if not len(data):
         data = "\x00"
     s0 = base64.b64encode(data)
@@ -81,8 +81,8 @@ def test_urlsafe_base64decode():
         base64url_to_long(s0)
 
     # Not else, should not raise exception
-    l = base64_to_long(s0)
-    assert l
+    length = base64_to_long(s0)
+    assert length
 
 
 def test_import_rsa_key_from_cert_file():
@@ -246,7 +246,8 @@ def test_get_key():
 def test_private_rsa_key_from_jwk():
     keys = []
 
-    kspec = json.loads(open(full_path("jwk_private_key.json")).read())
+    with open(full_path("jwk_private_key.json")) as fp:
+        kspec = json.loads(fp.read())
     keys.append(key_from_jwk_dict(kspec))
 
     key = keys[0]
@@ -272,7 +273,8 @@ def test_private_rsa_key_from_jwk():
 def test_public_key_from_jwk():
     keys = []
 
-    kspec = json.loads(open(full_path("jwk_private_key.json")).read())
+    with open(full_path("jwk_private_key.json")) as fp:
+        kspec = json.loads(fp.read())
     keys.append(key_from_jwk_dict(kspec, private=False))
 
     key = keys[0]
@@ -288,7 +290,8 @@ def test_public_key_from_jwk():
 def test_ec_private_key_from_jwk():
     keys = []
 
-    kspec = json.loads(open(full_path("jwk_private_ec_key.json")).read())
+    with open(full_path("jwk_private_ec_key.json")) as fp:
+        kspec = json.loads(fp.read())
     keys.append(key_from_jwk_dict(kspec))
 
     key = keys[0]
@@ -306,7 +309,8 @@ def test_ec_private_key_from_jwk():
 def test_ec_public_key_from_jwk():
     keys = []
 
-    kspec = json.loads(open(full_path("jwk_private_ec_key.json")).read())
+    with open(full_path("jwk_private_ec_key.json")) as fp:
+        kspec = json.loads(fp.read())
     keys.append(key_from_jwk_dict(kspec, private=False))
 
     key = keys[0]

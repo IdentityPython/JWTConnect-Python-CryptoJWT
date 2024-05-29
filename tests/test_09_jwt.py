@@ -156,7 +156,7 @@ def test_jwt_pack_and_unpack_unknown_key():
     kj.add_kb(ALICE, KeyBundle())
     bob = JWT(key_jar=kj, iss=BOB, allowed_sign_algs=["RS256"])
     with pytest.raises(NoSuitableSigningKeys):
-        info = bob.unpack(_jwt)
+        _ = bob.unpack(_jwt)
 
 
 def test_jwt_pack_and_unpack_with_lifetime():
