@@ -1,5 +1,6 @@
 """Basic JSON Web Token implementation."""
 
+import contextlib
 import json
 import logging
 import time
@@ -143,10 +144,8 @@ class JWT:
     def my_keys(self, issuer_id="", use="sig"):
         _k = self.key_jar.get(use, issuer_id=issuer_id)
         if issuer_id != "":
-            try:
+            with contextlib.suppress(KeyError):
                 _k.extend(self.key_jar.get(use, issuer_id=""))
-            except KeyError:
-                pass
         return _k
 
     def _encrypt(self, payload, recv, cty="JWT", zip=""):
@@ -442,9 +441,7 @@ def remove_jwt_parameters(arg):
     """
 
     for param in JWT.jwt_parameters:
-        try:
+        with contextlib.suppress(KeyError):
             del arg[param]
-        except KeyError:
-            pass
 
     return arg

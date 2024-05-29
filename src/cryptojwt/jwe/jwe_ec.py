@@ -1,3 +1,4 @@
+import contextlib
 import struct
 
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -190,10 +191,8 @@ class JWE_EC(JWEKey):
         _msg = as_bytes(self.msg)
 
         _args = self._dict
-        try:
+        with contextlib.suppress(KeyError):
             _args["kid"] = kwargs["kid"]
-        except KeyError:
-            pass
 
         if "params" in kwargs:
             if "apu" in kwargs["params"]:

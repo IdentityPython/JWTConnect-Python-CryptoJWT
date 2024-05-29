@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 from typing import List
@@ -669,10 +670,8 @@ class KeyJar:
 
         if exclude_attributes:
             for attr in exclude_attributes:
-                try:
+                with contextlib.suppress(KeyError):
                     del info[attr]
-                except KeyError:
-                    pass
 
         if exclude_attributes is None or "issuers" not in exclude_attributes:
             info["issuers"] = self._dump_issuers(

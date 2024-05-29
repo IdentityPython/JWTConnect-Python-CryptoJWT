@@ -1,5 +1,6 @@
 """Implementation of a Key Bundle."""
 
+import contextlib
 import copy
 import json
 import logging
@@ -8,7 +9,8 @@ import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
 import requests
 
@@ -17,19 +19,23 @@ from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.okp import OKP_CRV2PUBLIC
 from cryptojwt.jwk.x509 import import_private_key_from_pem_file
 
-from .exception import (
-    JWKException,
-    UnknownKeyType,
-    UnsupportedAlgorithm,
-    UnsupportedECurve,
-    UpdateFailed,
-)
-from .jwk.ec import ECKey, new_ec_key
+from .exception import JWKException
+from .exception import UnknownKeyType
+from .exception import UnsupportedAlgorithm
+from .exception import UnsupportedECurve
+from .exception import UpdateFailed
+from .jwk.ec import ECKey
+from .jwk.ec import new_ec_key
 from .jwk.hmac import SYMKey
-from .jwk.jwk import dump_jwk, import_jwk
-from .jwk.okp import OKPKey, new_okp_key
-from .jwk.rsa import RSAKey, new_rsa_key
-from .utils import as_unicode, check_content_type, httpc_params_loader
+from .jwk.jwk import dump_jwk
+from .jwk.jwk import import_jwk
+from .jwk.okp import OKPKey
+from .jwk.okp import new_okp_key
+from .jwk.rsa import RSAKey
+from .jwk.rsa import new_rsa_key
+from .utils import as_unicode
+from .utils import check_content_type
+from .utils import httpc_params_loader
 
 __author__ = "Roland Hedberg"
 
@@ -685,10 +691,8 @@ class KeyBundle:
 
         :param key: The key that should be removed
         """
-        try:
+        with contextlib.suppress(ValueError):
             self._keys.remove(key)
-        except ValueError:
-            pass
 
     def __len__(self):
         """

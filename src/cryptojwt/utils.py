@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import functools
 import importlib
 import json
@@ -140,10 +141,8 @@ def as_bytes(s):
     :param s: Unicode / bytes string
     :return: bytes string
     """
-    try:
+    with contextlib.suppress(AttributeError, UnicodeDecodeError):
         s = s.encode()
-    except (AttributeError, UnicodeDecodeError):
-        pass
     return s
 
 
@@ -154,10 +153,8 @@ def as_unicode(b):
     :param b: byte string
     :return: unicode string
     """
-    try:
+    with contextlib.suppress(AttributeError, UnicodeDecodeError):
         b = b.decode()
-    except (AttributeError, UnicodeDecodeError):
-        pass
     return b
 
 

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import zlib
 
@@ -34,10 +35,8 @@ class JWE_SYM(JWEKey):
         _msg = as_bytes(self.msg)
 
         _args = self._dict
-        try:
+        with contextlib.suppress(KeyError):
             _args["kid"] = kwargs["kid"]
-        except KeyError:
-            pass
 
         jwe = JWEnc(**_args)
 

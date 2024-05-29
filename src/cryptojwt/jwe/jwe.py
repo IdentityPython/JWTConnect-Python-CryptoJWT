@@ -1,3 +1,4 @@
+import contextlib
 import logging
 
 from ..jwk.asym import AsymmetricKey
@@ -157,10 +158,8 @@ class JWE(JWx):
         else:
             keys = self.pick_keys(self._get_keys(), use="enc", alg=_alg)
 
-        try:
+        with contextlib.suppress(KeyError):
             keys.append(key_from_jwk_dict(_jwe.headers["jwk"]))
-        except KeyError:
-            pass
 
         if not keys and not cek:
             raise NoSuitableDecryptionKey(_alg)

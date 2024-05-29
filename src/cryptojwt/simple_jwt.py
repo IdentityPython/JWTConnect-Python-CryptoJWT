@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 
@@ -36,10 +37,8 @@ class SimpleJWT:
             against.
         """
         if isinstance(token, str):
-            try:
+            with contextlib.suppress(UnicodeDecodeError):
                 token = token.encode("utf-8")
-            except UnicodeDecodeError:
-                pass
 
         part = split_token(token)
         self.b64part = part
@@ -98,10 +97,8 @@ class SimpleJWT:
         if "cty" in self.headers and self.headers["cty"].lower() != "jwt":
             pass
         else:
-            try:
+            with contextlib.suppress(ValueError):
                 _msg = json.loads(_msg)
-            except ValueError:
-                pass
 
         return _msg
 
