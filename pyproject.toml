@@ -38,7 +38,7 @@ jwkconv = "cryptojwt.tools.keyconv:main"
 jwtpeek = "cryptojwt.tools.jwtpeek:main"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 cryptography = ">=3.4.6"
 requests = "^2.25.1"
 
