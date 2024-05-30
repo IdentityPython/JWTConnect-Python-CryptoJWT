@@ -203,7 +203,7 @@ class JWE_EC(JWEKey):
                 _args["epk"] = kwargs["params"]["epk"]
 
         jwe = JWEnc(**_args)
-        ctxt, tag, cek = super(JWE_EC, self).enc_setup(
+        ctxt, tag, cek = super().enc_setup(
             self["enc"], _msg, auth_data=jwe.b64_encode_header(), key=cek, iv=iv
         )
         if "encrypted_key" in kwargs:
@@ -216,7 +216,7 @@ class JWE_EC(JWEKey):
         if not self.cek:
             raise Exception("Content Encryption Key is Not Yet Set")
 
-        msg = super(JWE_EC, self)._decrypt(
+        msg = super()._decrypt(
             self.headers["enc"],
             self.cek,
             self.ctxt,
