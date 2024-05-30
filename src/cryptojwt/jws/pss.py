@@ -64,7 +64,7 @@ class PSSSigner(Signer):
                 ),
                 self.hash_algorithm(),
             )
-        except InvalidSignature as err:
-            raise BadSignature(err)
+        except InvalidSignature as exc:
+            raise BadSignature(exc) from exc
         else:
             return True

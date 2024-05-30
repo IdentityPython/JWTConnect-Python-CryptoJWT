@@ -62,7 +62,7 @@ class EDDSASigner(Signer):
 
         try:
             key.verify(sig, msg)
-        except InvalidSignature as err:
-            raise BadSignature(err)
+        except InvalidSignature as exc:
+            raise BadSignature(exc) from exc
         else:
             return True

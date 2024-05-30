@@ -67,10 +67,7 @@ class SimpleJWT:
         :return:
         """
         if not headers:
-            if self.headers:
-                headers = self.headers
-            else:
-                headers = {"alg": "none"}
+            headers = self.headers if self.headers else {"alg": "none"}
 
         logging.debug(f"(pack) JWT header: {headers}")
 

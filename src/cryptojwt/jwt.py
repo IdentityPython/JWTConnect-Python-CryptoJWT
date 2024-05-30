@@ -51,10 +51,7 @@ def pick_key(keys, use, alg="", key_type="", kid=""):
     """
     res = []
     if not key_type:
-        if use == "sig":
-            key_type = jws_alg2keytype(alg)
-        else:
-            key_type = jwe_alg2keytype(alg)
+        key_type = jws_alg2keytype(alg) if use == "sig" else jwe_alg2keytype(alg)
 
     for key in keys:
         if key.use and key.use != use:
@@ -263,11 +260,7 @@ class JWT:
             issuer_id = self.iss
 
         if self.sign:
-            if self.alg != "none":
-                _key = self.pack_key(issuer_id, kid)
-                # _args['kid'] = _key.kid
-            else:
-                _key = None
+            _key = self.pack_key(issuer_id, kid) if self.alg != "none" else None
 
             jws_headers = jws_headers or {}
 

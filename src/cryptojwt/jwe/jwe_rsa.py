@@ -92,10 +92,7 @@ class JWE_RSA(JWEKey):
         :param cek: Ephemeral cipher key
         :return: The decrypted message
         """
-        if not isinstance(token, JWEnc):
-            jwe = JWEnc().unpack(token)
-        else:
-            jwe = token
+        jwe = JWEnc().unpack(token) if not isinstance(token, JWEnc) else token
 
         self.jwt = jwe.encrypted_key()
         jek = jwe.encrypted_key()

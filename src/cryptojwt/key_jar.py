@@ -414,8 +414,8 @@ class KeyJar:
         """
         try:
             _keys = jwks["keys"]
-        except KeyError:
-            raise ValueError("Not a proper JWKS")
+        except KeyError as exc:
+            raise ValueError("Not a proper JWKS") from exc
 
         if _keys:
             _issuer = self.return_issuer(issuer_id=issuer_id)

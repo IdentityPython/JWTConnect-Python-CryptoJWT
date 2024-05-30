@@ -75,8 +75,8 @@ class ECDSASigner(Signer):
             (r, s) = self._split_raw_signature(sig)
             asn1sig = encode_dss_signature(r, s)
             key.verify(asn1sig, msg, ec.ECDSA(self.hash_algorithm()))
-        except InvalidSignature as err:
-            raise BadSignature(err)
+        except InvalidSignature as exc:
+            raise BadSignature(exc) from exc
         else:
             return True
 

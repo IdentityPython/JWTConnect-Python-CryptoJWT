@@ -100,10 +100,7 @@ def main():
 
     args = parser.parse_args()
 
-    if args.kid:
-        _kid = args.kid
-    else:
-        _kid = ""
+    _kid = args.kid if args.kid else ""
 
     keys = []
     if args.rsa_file:

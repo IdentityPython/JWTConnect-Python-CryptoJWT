@@ -111,8 +111,8 @@ class JWE_EC(JWEKey):
         if self.alg == "ECDH-ES":
             try:
                 dk_len = KEY_LEN[self.enc]
-            except KeyError:
-                raise ValueError("Unknown key length for algorithm %s" % self.enc)
+            except KeyError as exc:
+                raise ValueError("Unknown key length for algorithm %s" % self.enc) from exc
 
             cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
@@ -153,8 +153,8 @@ class JWE_EC(JWEKey):
         if self.headers["alg"] == "ECDH-ES":
             try:
                 dk_len = KEY_LEN[self.headers["enc"]]
-            except KeyError:
-                raise Exception("Unknown key length for algorithm")
+            except KeyError as exc:
+                raise Exception("Unknown key length for algorithm") from exc
 
             self.cek = ecdh_derive_key(
                 key,
@@ -211,10 +211,7 @@ class JWE_EC(JWEKey):
         return jwe.pack(parts=[iv, ctxt, tag])
 
     def decrypt(self, token=None, **kwargs):
-        if isinstance(token, JWEnc):
-            jwe = token
-        else:
-            jwe = JWEnc().unpack(token)
+        jwe = token if isinstance(token, JWEnc) else JWEnc().unpack(token)
 
         if not self.cek:
             raise Exception("Content Encryption Key is Not Yet Set")

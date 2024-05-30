@@ -322,8 +322,8 @@ class RSAKey(AsymmetricKey):
                     self.pub_key = self.priv_key.public_key()
                 else:
                     self.pub_key = rsa_construct_public(numbers)
-            except ValueError as err:
-                raise DeSerializationNotPossible("%s" % err)
+            except ValueError as exc:
+                raise DeSerializationNotPossible(str(exc)) from exc
 
         if self.x5c:
             _cert_chain = []

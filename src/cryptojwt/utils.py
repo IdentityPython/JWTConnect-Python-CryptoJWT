@@ -197,10 +197,7 @@ def deser(val):
     :param val: The string representation of the long integer.
     :return: The long integer.
     """
-    if isinstance(val, str):
-        _val = val.encode("utf-8")
-    else:
-        _val = val
+    _val = val.encode("utf-8") if isinstance(val, str) else val
 
     return base64_to_long(_val)
 

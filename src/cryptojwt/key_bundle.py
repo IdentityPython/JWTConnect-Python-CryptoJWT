@@ -278,10 +278,7 @@ class KeyBundle:
         if keys:
             self.source = None
             if isinstance(keys, dict):
-                if "keys" in keys:
-                    initial_keys = keys["keys"]
-                else:
-                    initial_keys = [keys]
+                initial_keys = keys["keys"] if "keys" in keys else [keys]
             else:
                 initial_keys = keys
             self._keys = self.jwk_dicts_as_keys(initial_keys)
@@ -373,9 +370,9 @@ class KeyBundle:
             for _use in _usage:
                 try:
                     _key = K2C[_typ](use=_use, **inst)
-                except KeyError:
+                except KeyError as exc:
                     if not self.ignore_invalid_keys:
-                        raise UnknownKeyType(inst)
+                        raise UnknownKeyType(inst) from exc
                     _error = f"UnknownKeyType: {_typ}"
                     continue
                 except (UnsupportedECurve, UnsupportedAlgorithm) as err:
@@ -485,7 +482,7 @@ class KeyBundle:
             _http_resp = self.httpc("GET", self.source, **httpc_params)
         except Exception as err:
             LOGGER.error(err)
-            raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err)))
+            raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err))) from err
 
         new_keys = None
         load_successful = _http_resp.status_code == 200
@@ -501,10 +498,10 @@ class KeyBundle:
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
                 new_keys = self.jwk_dicts_as_keys(self.imp_jwks["keys"])
-            except KeyError:
+            except KeyError as exc:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
-                raise UpdateFailed(MALFORMED.format(self.source))
+                raise UpdateFailed(MALFORMED.format(self.source)) from exc
 
             if hasattr(_http_resp, "headers"):
                 headers = _http_resp.headers

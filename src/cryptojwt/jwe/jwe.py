@@ -191,10 +191,7 @@ class JWE(JWx):
                 return msg
 
         for key in keys:
-            if isinstance(key, AsymmetricKey):
-                _key = key.private_key()
-            else:
-                _key = key.key
+            _key = key.private_key() if isinstance(key, AsymmetricKey) else key.key
 
             try:
                 msg = decrypter.decrypt(_jwe, _key)

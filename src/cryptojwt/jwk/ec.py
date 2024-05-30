@@ -45,8 +45,8 @@ def ec_construct_public(num):
     """
     try:
         _sec_crv = NIST2SEC[as_unicode(num["crv"])]
-    except KeyError:
-        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"]))
+    except KeyError as exc:
+        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"])) from exc
 
     ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], _sec_crv())
     return ecpn.public_key()
@@ -152,8 +152,8 @@ class ECKey(AsymmetricKey):
                         {"x": _x, "y": _y, "crv": self.crv, "d": _d}
                     )
                     self.pub_key = self.priv_key.public_key()
-            except ValueError as err:
-                raise DeSerializationNotPossible(str(err))
+            except ValueError as exc:
+                raise DeSerializationNotPossible(str(exc)) from exc
         else:
             self.pub_key = ec_construct_public({"x": _x, "y": _y, "crv": self.crv})
 

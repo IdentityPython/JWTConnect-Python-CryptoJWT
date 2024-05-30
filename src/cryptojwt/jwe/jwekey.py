@@ -29,8 +29,8 @@ class JWEKey(JWx):
         except KeyError:
             try:
                 _key = get_random_bytes(KEY_LEN_BYTES[encalg])
-            except KeyError:
-                raise ValueError("Unsupported encryption algorithm %s" % encalg)
+            except KeyError as exc:
+                raise ValueError("Unsupported encryption algorithm %s" % encalg) from exc
 
         return _key
 

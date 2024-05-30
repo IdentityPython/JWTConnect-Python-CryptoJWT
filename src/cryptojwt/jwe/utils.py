@@ -18,8 +18,8 @@ def get_keys_seclen_dgst(key, iv):
     # Select the digest to use based on key length
     try:
         seclen, hash_method = LENMET[len(key)]
-    except KeyError:
-        raise Exception("Invalid CBC+HMAC key length: %s bytes" % len(key))
+    except KeyError as exc:
+        raise Exception("Invalid CBC+HMAC key length: %s bytes" % len(key)) from exc
 
     # Split the key
     ka = key[:seclen]

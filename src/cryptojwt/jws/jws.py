@@ -133,8 +133,8 @@ class JWS(JWx):
         # All other cases
         try:
             _signer = SIGNER_ALGS[_alg]
-        except KeyError:
-            raise UnknownAlgorithm(_alg)
+        except KeyError as exc:
+            raise UnknownAlgorithm(_alg) from exc
 
         _input = jwt.pack(parts=[self.msg])
 
@@ -211,10 +211,7 @@ class JWS(JWx):
 
         self["alg"] = _alg
 
-        if keys:
-            _keys = self.pick_keys(keys)
-        else:
-            _keys = self.pick_keys(self._get_keys())
+        _keys = self.pick_keys(keys) if keys else self.pick_keys(self._get_keys())
 
         if not _keys:
             if "kid" in self:
@@ -227,10 +224,7 @@ class JWS(JWx):
         verifier = SIGNER_ALGS[_alg]
 
         for key in _keys:
-            if isinstance(key, AsymmetricKey):
-                _key = key.public_key()
-            else:
-                _key = key.key
+            _key = key.public_key() if isinstance(key, AsymmetricKey) else key.key
 
             try:
                 if not verifier.verify(jwt.sign_input(), jwt.signature(), _key):
@@ -310,8 +304,8 @@ class JWS(JWx):
 
         try:
             _payload = _jwss["payload"]
-        except KeyError:
-            raise FormatError("Missing payload")
+        except KeyError as exc:
+            raise FormatError("Missing payload") from exc
 
         try:
             _signs = _jwss["signatures"]

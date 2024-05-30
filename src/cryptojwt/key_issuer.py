@@ -232,8 +232,8 @@ class KeyIssuer:
         """
         try:
             _keys = jwks["keys"]
-        except KeyError:
-            raise ValueError("Not a proper JWKS")
+        except KeyError as exc:
+            raise ValueError("Not a proper JWKS") from exc
         else:
             self._bundles.append(
                 self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params)
@@ -285,10 +285,7 @@ class KeyIssuer:
         :return: A possibly empty list of keys
         """
 
-        if key_use in ["dec", "enc"]:
-            use = "enc"
-        else:
-            use = "sig"
+        use = "enc" if key_use in ["dec", "enc"] else "sig"
 
         if not key_type:
             if alg:

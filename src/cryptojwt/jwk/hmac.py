@@ -81,8 +81,8 @@ class SYMKey(JWK):
         """
         try:
             _use = USE[usage]
-        except:
-            raise ValueError("Unknown key usage")
+        except Exception as exc:
+            raise ValueError("Unknown key usage") from exc
         else:
             if not self.use or self.use == _use:
                 if _use == "sig":
@@ -106,8 +106,8 @@ class SYMKey(JWK):
 
         try:
             tsize = ALG2KEYLEN[alg]
-        except KeyError:
-            raise UnsupportedAlgorithm(alg)
+        except KeyError as exc:
+            raise UnsupportedAlgorithm(alg) from exc
 
         if tsize <= 32:
             # SHA256
