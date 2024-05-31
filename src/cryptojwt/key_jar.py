@@ -304,7 +304,7 @@ class KeyJar:
         :param url: A URL
         :return: An issue entity ID that exists in the Key jar
         """
-        _iss = [i for i in self._issuers.keys() if i.startswith(url)]
+        _iss = [i for i in self._issuers.keys() if i.startswith(url)]  # noqa: SIM118
         if _iss:
             return _iss[0]
 
@@ -386,7 +386,7 @@ class KeyJar:
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in kb.keys()
+                    for k in kb.keys()  # noqa: SIM118
                     if k.inactive_since == 0
                     and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]

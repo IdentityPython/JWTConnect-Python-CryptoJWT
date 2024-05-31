@@ -918,12 +918,18 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
     keys = []
     for _bundle in kbl:
         if symmetric_too:
-            keys.extend([k.serialize(private) for k in _bundle.keys() if not k.inactive_since])
+            keys.extend(
+                [
+                    k.serialize(private)
+                    for k in _bundle.keys()  # noqa: SIM118
+                    if not k.inactive_since
+                ]
+            )
         else:
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in _bundle.keys()
+                    for k in _bundle.keys()  # noqa: SIM118
                     if k.kty != "oct" and not k.inactive_since
                 ]
             )
@@ -945,7 +951,7 @@ def _set_kid(spec, bundle, kid_template, kid):
         _keys = bundle.keys()
         _keys[0].kid = spec["kid"]
     else:
-        for k in bundle.keys():
+        for k in bundle.keys():  # noqa: SIM118
             if kid_template:
                 k.kid = kid_template % kid
                 kid += 1

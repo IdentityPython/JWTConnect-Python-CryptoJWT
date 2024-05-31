@@ -208,7 +208,7 @@ class KeyIssuer:
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in kb.keys()
+                    for k in kb.keys()  # noqa: SIM118
                     if k.inactive_since == 0
                     and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
@@ -438,7 +438,7 @@ class KeyIssuer:
         """
         key_list = []
         for kb in self._bundles:
-            for key in kb.keys():
+            for key in kb.keys():  # noqa: SIM118
                 if key.inactive_since:
                     key_list.append(f"*{key.kty}:{key.use}:{key.kid}")
                 else:
