@@ -460,11 +460,7 @@ class KeyIssuer:
             if k not in other:
                 return False
 
-        for k in other.all_keys():
-            if k not in self:
-                return False
-
-        return True
+        return all(k in self for k in other.all_keys())
 
     def rotate_keys(self, key_conf, kid_template=""):
         """
