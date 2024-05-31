@@ -277,10 +277,7 @@ class KeyBundle:
 
         if keys:
             self.source = None
-            if isinstance(keys, dict):
-                initial_keys = keys["keys"] if "keys" in keys else [keys]
-            else:
-                initial_keys = keys
+            initial_keys = keys.get("keys", [keys]) if isinstance(keys, dict) else keys
             self._keys = self.jwk_dicts_as_keys(initial_keys)
         else:
             self._set_source(source, fileformat)
