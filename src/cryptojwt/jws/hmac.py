@@ -44,5 +44,5 @@ class HMACSigner(Signer):
             h.update(msg)
             h.verify(sig)
             return True
-        except:
+        except Exception:
             return False
