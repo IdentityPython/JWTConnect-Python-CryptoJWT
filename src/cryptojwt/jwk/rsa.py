@@ -117,13 +117,7 @@ def rsa_eq(key1, key2):
     :param key2:
     :return:
     """
-    pn1 = key1.public_numbers()
-    pn2 = key2.public_numbers()
-    # Check if two RSA keys are in fact the same
-    if pn1 == pn2:
-        return True
-    else:
-        return False
+    return key1.public_numbers() == key2.public_numbers()
 
 
 def x509_rsa_load(txt):

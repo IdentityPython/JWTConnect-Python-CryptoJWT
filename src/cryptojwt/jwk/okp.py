@@ -278,10 +278,8 @@ class OKPKey(AsymmetricKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, _private_cls):
                     return True
-            elif self.private_key():
-                return False
             else:
-                return True
+                return not self.private_key()
 
         return False
 

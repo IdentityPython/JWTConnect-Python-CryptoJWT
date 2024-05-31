@@ -58,10 +58,7 @@ class AsymmetricKey(JWK):
 
         :return: True/False
         """
-        if self.priv_key:
-            return True
-        else:
-            return False
+        return bool(self.priv_key)
 
     def public_key(self):
         """

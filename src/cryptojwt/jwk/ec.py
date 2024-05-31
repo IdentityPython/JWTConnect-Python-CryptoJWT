@@ -249,10 +249,8 @@ class ECKey(AsymmetricKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, ec.EllipticCurvePrivateKey):
                     return True
-            elif self.private_key():
-                return False
             else:
-                return True
+                return not self.private_key()
 
         return False
 

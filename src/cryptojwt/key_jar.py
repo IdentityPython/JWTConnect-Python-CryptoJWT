@@ -256,10 +256,7 @@ class KeyJar:
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __contains__(self, issuer_id):
         _iss = self._get_issuer(issuer_id)
-        if _iss is None:
-            return False
-        else:
-            return True
+        return not _iss is None
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __getitem__(self, issuer_id=""):
