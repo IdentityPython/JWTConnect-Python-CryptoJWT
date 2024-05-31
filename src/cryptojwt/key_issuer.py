@@ -155,10 +155,7 @@ class KeyIssuer:
         return res
 
     def __contains__(self, item):
-        for kb in self._bundles:
-            if item in kb:
-                return True
-        return False
+        return any(item in kb for kb in self._bundles)
 
     def items(self):
         _res = {}

@@ -447,11 +447,7 @@ class KeyJar:
             return False
 
         # Keys per issuer must be the same
-        for iss in self.owners():
-            if self[iss] != other[iss]:
-                return False
-
-        return True
+        return all(self[iss] == other[iss] for iss in self.owners())
 
     def __delitem__(self, key):
         del self._issuers[key]

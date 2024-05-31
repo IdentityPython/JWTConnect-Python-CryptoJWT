@@ -208,10 +208,7 @@ def cmp_private_numbers(pn1, pn2):
     if not cmp_public_numbers(pn1.public_numbers, pn2.public_numbers):
         return False
 
-    for param in ["d", "p", "q"]:
-        if getattr(pn1, param) != getattr(pn2, param):
-            return False
-    return True
+    return all(getattr(pn1, param) == getattr(pn2, param) for param in ["d", "p", "q"])
 
 
 class RSAKey(AsymmetricKey):
