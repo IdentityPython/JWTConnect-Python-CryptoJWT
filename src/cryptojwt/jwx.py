@@ -95,7 +95,7 @@ class JWx:
                 else:
                     self._dict[key] = _val
                 if key in DEPRECATED and _val in DEPRECATED[key]:
-                    warnings.warn(f"{key}={_val} deprecated")
+                    warnings.warn(f"{key}={_val} deprecated", stacklevel=1)
 
     def _set_jwk(self, val):
         if isinstance(val, dict):
