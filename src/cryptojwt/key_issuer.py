@@ -443,8 +443,7 @@ class KeyIssuer:
         return ", ".join(key_list)
 
     def __iter__(self):
-        for bundle in self._bundles:
-            yield bundle
+        yield from self._bundles
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
