@@ -826,7 +826,7 @@ class KeyBundle:
                 _keys.append(_ser)
             res["keys"] = _keys
 
-        for attr, default in self.params.items():
+        for attr in self.params:
             if attr in exclude_attributes:
                 continue
             val = getattr(self, attr)
@@ -849,7 +849,7 @@ class KeyBundle:
             self._keys.extend(self.jwk_dicts_as_keys(_keys))
             self.last_updated = time.time()
 
-        for attr, default in self.params.items():
+        for attr in self.params:
             val = spec.get(attr)
             if val:
                 setattr(self, attr, val)

@@ -366,7 +366,7 @@ class KeyIssuer:
             exclude_attributes = []
 
         info = {}
-        for attr, default in self.params.items():
+        for attr in self.params:
             if attr in exclude_attributes:
                 continue
             val = getattr(self, attr)
@@ -388,7 +388,7 @@ class KeyIssuer:
         :param items: A dictionary with the information to load
         :return:
         """
-        for attr, default in self.params.items():
+        for attr in self.params:
             val = info.get(attr)
             if val:
                 if attr == "keybundle_cls":
