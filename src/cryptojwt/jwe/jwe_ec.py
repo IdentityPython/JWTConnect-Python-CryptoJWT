@@ -112,7 +112,7 @@ class JWE_EC(JWEKey):
             try:
                 dk_len = KEY_LEN[self.enc]
             except KeyError as exc:
-                raise ValueError("Unknown key length for algorithm %s" % self.enc) from exc
+                raise ValueError(f"Unknown key length for algorithm {self.enc}") from exc
 
             cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
@@ -122,7 +122,7 @@ class JWE_EC(JWEKey):
             cek = self._generate_key(self.enc, cek=cek)
             encrypted_key = aes_key_wrap(kek, cek)
         else:
-            raise Exception("Unsupported algorithm %s" % self.alg)
+            raise Exception(f"Unsupported algorithm {self.alg}")
 
         return cek, encrypted_key, iv, params, epk
 
@@ -174,7 +174,7 @@ class JWE_EC(JWEKey):
             kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
             self.cek = aes_key_unwrap(kek, token.encrypted_key())
         else:
-            raise Exception("Unsupported algorithm %s" % self.headers["alg"])
+            raise Exception("Unsupported algorithm {}".format(self.headers["alg"]))
 
         return self.cek
 

@@ -93,10 +93,10 @@ class JWS(JWx):
         else:
             if "kid" in self:
                 raise NoSuitableSigningKeys(
-                    "No key for algorithm: %s and kid: %s" % (_alg, self["kid"])
+                    "No key for algorithm: {} and kid: {}".format(_alg, self["kid"])
                 )
             else:
-                raise NoSuitableSigningKeys("No key for algorithm: %s" % _alg)
+                raise NoSuitableSigningKeys(f"No key for algorithm: {_alg}")
 
         return key, xargs, _alg
 
@@ -137,7 +137,7 @@ class JWS(JWx):
         else:
             sig = _signer.sign(_input.encode("utf-8"), key.key)
 
-        logger.debug("Signed message using key with kid=%s" % key.kid)
+        logger.debug(f"Signed message using key with kid={key.kid}")
         return ".".join([_input, b64encode_item(sig).decode("utf-8")])
 
     def verify_compact(self, jws=None, keys=None, allow_none=False, sigalg=None):
@@ -209,11 +209,11 @@ class JWS(JWx):
 
         if not _keys:
             if "kid" in self:
-                raise NoSuitableSigningKeys("No key with kid: %s" % (self["kid"]))
+                raise NoSuitableSigningKeys("No key with kid: {}".format(self["kid"]))
             elif "kid" in self.jwt.headers:
-                raise NoSuitableSigningKeys("No key with kid: %s" % (self.jwt.headers["kid"]))
+                raise NoSuitableSigningKeys("No key with kid: {}".format(self.jwt.headers["kid"]))
             else:
-                raise NoSuitableSigningKeys("No key for algorithm: %s" % _alg)
+                raise NoSuitableSigningKeys(f"No key for algorithm: {_alg}")
 
         verifier = SIGNER_ALGS[_alg]
 
@@ -228,7 +228,7 @@ class JWS(JWx):
             except (ValueError, TypeError) as err:
                 logger.warning(f'Exception "{err}" caught')
             else:
-                logger.debug("Verified message using key with kid=%s" % key.kid)
+                logger.debug(f"Verified message using key with kid={key.kid}")
                 self.msg = jwt.payload()
                 self.key = key
                 self._protected_headers = jwt.headers.copy()
@@ -408,7 +408,7 @@ class JWS(JWx):
             jwt.headers["alg"] = "none"
 
         if jwt.headers["alg"] not in SIGNER_ALGS:
-            logger.debug("UnknownSignerAlg: %s" % jwt.headers["alg"])
+            logger.debug("UnknownSignerAlg: {}".format(jwt.headers["alg"]))
             return False
 
         self.jwt = jwt

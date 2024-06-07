@@ -106,9 +106,9 @@ def load_x509_cert(url, httpc, spec2key, **get_args):
             elif isinstance(public_key, ec.EllipticCurvePublicKey):
                 return {"ec": public_key}
         else:
-            raise Exception("HTTP Get error: %s" % r.status_code)
+            raise Exception(f"HTTP Get error: {r.status_code}")
     except Exception as err:  # not a RSA key
-        logger.warning("Can't load key: %s" % err)
+        logger.warning(f"Can't load key: {err}")
         return []
 
 

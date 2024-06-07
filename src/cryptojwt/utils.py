@@ -20,11 +20,11 @@ DEFAULT_HTTPC_TIMEOUT = 10
 
 
 def intarr2bin(arr):
-    return unhexlify("".join(["%02x" % byte for byte in arr]))
+    return unhexlify("".join([f"{byte:02x}" for byte in arr]))
 
 
 def intarr2long(arr):
-    return int("".join(["%02x" % byte for byte in arr]), 16)
+    return int("".join([f"{byte:02x}" for byte in arr]), 16)
 
 
 def intarr2str(arr):
@@ -45,7 +45,7 @@ def long_to_base64(n, mlen=0):
         _len = mlen - len(bys)
         if _len:
             bys = [0] * _len + bys
-    data = struct.pack("%sB" % len(bys), *bys)
+    data = struct.pack(f"{len(bys)}B", *bys)
     if not len(data):
         data = b"\x00"
     s = base64.urlsafe_b64encode(data).rstrip(b"=")
@@ -58,7 +58,7 @@ def base64_to_long(data):
 
     # urlsafe_b64decode will happily convert b64encoded data
     _d = base64.urlsafe_b64decode(as_bytes(data) + b"==")
-    return intarr2long(struct.unpack("%sB" % len(_d), _d))
+    return intarr2long(struct.unpack(f"{len(_d)}B", _d))
 
 
 def base64url_to_long(data):
@@ -75,7 +75,7 @@ def base64url_to_long(data):
     # that is no '+' and '/' characters and not trailing "="s.
     if [e for e in [b"+", b"/", b"="] if e in _data]:
         raise ValueError("Not base64url encoded")
-    return intarr2long(struct.unpack("%sB" % len(_d), _d))
+    return intarr2long(struct.unpack(f"{len(_d)}B", _d))
 
 
 # =============================================================================

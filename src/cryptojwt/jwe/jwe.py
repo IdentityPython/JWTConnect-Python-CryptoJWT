@@ -199,7 +199,7 @@ class JWE(JWx):
             except (KeyError, DecryptionFailed):
                 pass
             else:
-                logger.debug("Decrypted message using key with kid=%s" % key.kid)
+                logger.debug(f"Decrypted message using key with kid={key.kid}")
                 return msg
 
         raise DecryptionFailed("No available key that could decrypt the message")

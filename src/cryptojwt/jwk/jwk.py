@@ -100,7 +100,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
         if _jwk_dict["crv"] in NIST2SEC:
             curve = NIST2SEC[_jwk_dict["crv"]]()
         else:
-            raise UnsupportedAlgorithm("Unknown curve: %s" % (_jwk_dict["crv"]))
+            raise UnsupportedAlgorithm("Unknown curve: {}".format(_jwk_dict["crv"]))
 
         if _jwk_dict.get("d", None) is not None:
             # Ecdsa private key.

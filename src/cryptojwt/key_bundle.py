@@ -1007,7 +1007,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],
@@ -1018,7 +1018,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],
@@ -1029,7 +1029,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],

@@ -19,7 +19,7 @@ def get_keys_seclen_dgst(key, iv):
     try:
         seclen, hash_method = LENMET[len(key)]
     except KeyError as exc:
-        raise Exception("Invalid CBC+HMAC key length: %s bytes" % len(key)) from exc
+        raise Exception(f"Invalid CBC+HMAC key length: {len(key)} bytes") from exc
 
     # Split the key
     ka = key[:seclen]
