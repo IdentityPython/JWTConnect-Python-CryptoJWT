@@ -183,7 +183,7 @@ def jwk_wrap(key, use="", kid=""):
     :param kid: A key id
     :return: The Key instance
     """
-    if isinstance(key, rsa.RSAPublicKey) or isinstance(key, rsa.RSAPrivateKey):
+    if isinstance(key, (rsa.RSAPublicKey, rsa.RSAPrivateKey)):
         kspec = RSAKey(use=use, kid=kid).load_key(key)
     elif isinstance(key, str):
         kspec = SYMKey(key=key, use=use, kid=kid)
