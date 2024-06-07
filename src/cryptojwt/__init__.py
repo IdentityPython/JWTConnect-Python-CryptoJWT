@@ -19,6 +19,21 @@ from .utils import split_token
 
 __version__ = pkg_resources.get_distribution("cryptojwt").version
 
+__all__ = [
+    "JWE",
+    "JWE",
+    "JWK",
+    "JWS",
+    "JWT",
+    "KeyBundle",
+    "KeyJar",
+    "BadSyntax",
+    "as_unicode",
+    "b64d",
+    "b64encode_item",
+    "split_token",
+]
+
 logger = logging.getLogger(__name__)
 
 JWT_TYPES = ("JWT", "application/jws", "JWS", "JWE")
