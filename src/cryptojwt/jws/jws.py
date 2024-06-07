@@ -24,12 +24,6 @@ from .pss import PSSSigner
 from .rsa import RSASigner
 from .utils import alg2keytype
 
-try:
-    from builtins import object
-    from builtins import str
-except ImportError:
-    pass
-
 logger = logging.getLogger(__name__)
 
 KDESC = ["use", "kid", "kty"]

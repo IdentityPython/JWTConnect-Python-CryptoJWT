@@ -17,13 +17,6 @@ from .utils import b64d
 from .utils import b64encode_item
 from .utils import split_token
 
-try:
-    from builtins import hex
-    from builtins import str
-    from builtins import zip
-except ImportError:
-    pass
-
 __version__ = pkg_resources.get_distribution("cryptojwt").version
 
 logger = logging.getLogger(__name__)
