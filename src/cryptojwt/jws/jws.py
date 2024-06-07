@@ -201,7 +201,7 @@ class JWS(JWx):
                 )
 
         if sigalg and sigalg != _alg:
-            raise SignerAlgError("Expected {0} got {1}".format(sigalg, jwt.headers["alg"]))
+            raise SignerAlgError("Expected {} got {}".format(sigalg, jwt.headers["alg"]))
 
         self["alg"] = _alg
 
