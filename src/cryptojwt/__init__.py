@@ -1,8 +1,7 @@
 """JSON Web Token"""
 
 import logging
-
-import pkg_resources
+from importlib.metadata import version
 
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwk import JWK
@@ -17,7 +16,7 @@ from .utils import b64d
 from .utils import b64encode_item
 from .utils import split_token
 
-__version__ = pkg_resources.get_distribution("cryptojwt").version
+__version__ = version("cryptojwt")
 
 __all__ = [
     "JWE",
