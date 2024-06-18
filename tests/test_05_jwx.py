@@ -50,7 +50,8 @@ def test_jws_set_jku():
 
 
 def test_jwx_set_x5c():
-    jwx = JWx(x5c=open(full_path("cert.pem")).read())
+    with open(full_path("cert.pem")) as fp:
+        jwx = JWx(x5c=fp.read())
     keys = jwx._get_keys()
     assert len(keys)
     assert isinstance(keys[0], RSAKey)

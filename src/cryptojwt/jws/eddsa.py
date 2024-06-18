@@ -1,11 +1,8 @@
-import sys
-
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed448
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 from ..exception import BadSignature
-from ..exception import Unsupported
 from . import Signer
 
 
@@ -65,7 +62,7 @@ class EDDSASigner(Signer):
 
         try:
             key.verify(sig, msg)
-        except InvalidSignature as err:
-            raise BadSignature(err)
+        except InvalidSignature as exc:
+            raise BadSignature(exc) from exc
         else:
             return True

@@ -105,7 +105,7 @@ def import_rsa_key(pem_data):
 
 
 def import_rsa_key_from_cert_file(pem_file):
-    with open(pem_file, "r") as cert_file:
+    with open(pem_file) as cert_file:
         return import_rsa_key(cert_file.read())
 
 
@@ -117,13 +117,7 @@ def rsa_eq(key1, key2):
     :param key2:
     :return:
     """
-    pn1 = key1.public_numbers()
-    pn2 = key2.public_numbers()
-    # Check if two RSA keys are in fact the same
-    if pn1 == pn2:
-        return True
-    else:
-        return False
+    return key1.public_numbers() == key2.public_numbers()
 
 
 def x509_rsa_load(txt):
@@ -208,10 +202,7 @@ def cmp_private_numbers(pn1, pn2):
     if not cmp_public_numbers(pn1.public_numbers, pn2.public_numbers):
         return False
 
-    for param in ["d", "p", "q"]:
-        if getattr(pn1, param) != getattr(pn2, param):
-            return False
-    return True
+    return all(getattr(pn1, param) == getattr(pn2, param) for param in ["d", "p", "q"])
 
 
 class RSAKey(AsymmetricKey):
@@ -284,9 +275,7 @@ class RSAKey(AsymmetricKey):
             self.pub_key = self.priv_key.public_key()
         elif self.pub_key:
             self._serialize(self.pub_key)
-        elif has_public_key_parts:
-            self.deserialize()
-        elif has_x509_cert_chain:
+        elif has_public_key_parts or has_x509_cert_chain:
             self.deserialize()
         elif not self.n and not self.e:
             pass
@@ -324,8 +313,8 @@ class RSAKey(AsymmetricKey):
                     self.pub_key = self.priv_key.public_key()
                 else:
                     self.pub_key = rsa_construct_public(numbers)
-            except ValueError as err:
-                raise DeSerializationNotPossible("%s" % err)
+            except ValueError as exc:
+                raise DeSerializationNotPossible(str(exc)) from exc
 
         if self.x5c:
             _cert_chain = []

@@ -47,9 +47,7 @@ def alg2keytype(alg):
         return "RSA"
     elif alg.startswith("HS") or alg.startswith("A"):
         return "oct"
-    elif alg == "Ed25519":
-        return "OKP"
-    elif alg == "Ed448":
+    elif alg == "Ed25519" or alg == "Ed448":
         return "OKP"
     elif alg.startswith("ES") or alg.startswith("ECDH-ES"):
         return "EC"
@@ -91,4 +89,4 @@ def parse_rsa_algorithm(algorithm):
             padding.PSS(mgf=padding.MGF1(hashes.SHA512()), salt_length=padding.PSS.MAX_LENGTH),
         )
     else:
-        raise UnsupportedAlgorithm("Unknown algorithm: {}".format(algorithm))
+        raise UnsupportedAlgorithm(f"Unknown algorithm: {algorithm}")

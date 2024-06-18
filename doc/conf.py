@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+#
+# ruff: noqa
 # -*- coding: utf-8 -*-
 #
 # CryptoJWT documentation build configuration file, created by

@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 
@@ -13,7 +14,7 @@ __author__ = "Roland Hedberg"
 logger = logging.getLogger(__name__)
 
 
-class SimpleJWT(object):
+class SimpleJWT:
     """
     Basic JSON Web Token class that doesn't make any assumptions as to what
     can or should be in the payload
@@ -36,10 +37,8 @@ class SimpleJWT(object):
             against.
         """
         if isinstance(token, str):
-            try:
+            with contextlib.suppress(UnicodeDecodeError):
                 token = token.encode("utf-8")
-            except UnicodeDecodeError:
-                pass
 
         part = split_token(token)
         self.b64part = part
@@ -55,9 +54,7 @@ class SimpleJWT(object):
                 raise
             else:
                 if not _ok:
-                    raise HeaderError(
-                        'Expected "{}" to be "{}", was "{}"'.format(key, val, self.headers[key])
-                    )
+                    raise HeaderError(f'Expected "{key}" to be "{val}", was "{self.headers[key]}"')
 
         return self
 
@@ -70,12 +67,9 @@ class SimpleJWT(object):
         :return:
         """
         if not headers:
-            if self.headers:
-                headers = self.headers
-            else:
-                headers = {"alg": "none"}
+            headers = self.headers if self.headers else {"alg": "none"}
 
-        logging.debug("(pack) JWT header: {}".format(headers))
+        logging.debug(f"(pack) JWT header: {headers}")
 
         if not parts:
             return ".".join([a.decode() for a in self.b64part])
@@ -100,10 +94,8 @@ class SimpleJWT(object):
         if "cty" in self.headers and self.headers["cty"].lower() != "jwt":
             pass
         else:
-            try:
+            with contextlib.suppress(ValueError):
                 _msg = json.loads(_msg)
-            except ValueError:
-                pass
 
         return _msg
 
@@ -119,15 +111,9 @@ class SimpleJWT(object):
         """
 
         if isinstance(val, list):
-            if self.headers[key] in val:
-                return True
-            else:
-                return False
+            return self.headers[key] in val
         else:
-            if self.headers[key] == val:
-                return True
-            else:
-                return False
+            return self.headers[key] == val
 
     def verify_headers(self, check_presence=True, **kwargs):
         """

@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import functools
 import importlib
 import json
@@ -19,11 +20,11 @@ DEFAULT_HTTPC_TIMEOUT = 10
 
 
 def intarr2bin(arr):
-    return unhexlify("".join(["%02x" % byte for byte in arr]))
+    return unhexlify("".join([f"{byte:02x}" for byte in arr]))
 
 
 def intarr2long(arr):
-    return int("".join(["%02x" % byte for byte in arr]), 16)
+    return int("".join([f"{byte:02x}" for byte in arr]), 16)
 
 
 def intarr2str(arr):
@@ -44,7 +45,7 @@ def long_to_base64(n, mlen=0):
         _len = mlen - len(bys)
         if _len:
             bys = [0] * _len + bys
-    data = struct.pack("%sB" % len(bys), *bys)
+    data = struct.pack(f"{len(bys)}B", *bys)
     if not len(data):
         data = b"\x00"
     s = base64.urlsafe_b64encode(data).rstrip(b"=")
@@ -57,7 +58,7 @@ def base64_to_long(data):
 
     # urlsafe_b64decode will happily convert b64encoded data
     _d = base64.urlsafe_b64decode(as_bytes(data) + b"==")
-    return intarr2long(struct.unpack("%sB" % len(_d), _d))
+    return intarr2long(struct.unpack(f"{len(_d)}B", _d))
 
 
 def base64url_to_long(data):
@@ -74,7 +75,7 @@ def base64url_to_long(data):
     # that is no '+' and '/' characters and not trailing "="s.
     if [e for e in [b"+", b"/", b"="] if e in _data]:
         raise ValueError("Not base64url encoded")
-    return intarr2long(struct.unpack("%sB" % len(_d), _d))
+    return intarr2long(struct.unpack(f"{len(_d)}B", _d))
 
 
 # =============================================================================
@@ -140,10 +141,8 @@ def as_bytes(s):
     :param s: Unicode / bytes string
     :return: bytes string
     """
-    try:
+    with contextlib.suppress(AttributeError, UnicodeDecodeError):
         s = s.encode()
-    except (AttributeError, UnicodeDecodeError):
-        pass
     return s
 
 
@@ -154,10 +153,8 @@ def as_unicode(b):
     :param b: byte string
     :return: unicode string
     """
-    try:
+    with contextlib.suppress(AttributeError, UnicodeDecodeError):
         b = b.decode()
-    except (AttributeError, UnicodeDecodeError):
-        pass
     return b
 
 
@@ -172,7 +169,7 @@ def bytes2str_conv(item):
     elif isinstance(item, dict):
         return dict([(k, bytes2str_conv(v)) for k, v in item.items()])
 
-    raise ValueError("Can't convert {}.".format(repr(item)))
+    raise ValueError(f"Can't convert {repr(item)}.")
 
 
 def b64encode_item(item):
@@ -200,10 +197,7 @@ def deser(val):
     :param val: The string representation of the long integer.
     :return: The long integer.
     """
-    if isinstance(val, str):
-        _val = val.encode("utf-8")
-    else:
-        _val = val
+    _val = val.encode("utf-8") if isinstance(val, str) else val
 
     return base64_to_long(_val)
 
@@ -256,8 +250,8 @@ def rename_kwargs(func_name, kwargs, aliases):
     for alias, new in aliases.items():
         if alias in kwargs:
             if new in kwargs:
-                raise TypeError("{} received both {} and {}".format(func_name, alias, new))
-            warnings.warn("{} is deprecated; use {}".format(alias, new), DeprecationWarning)
+                raise TypeError(f"{func_name} received both {alias} and {new}")
+            warnings.warn(f"{alias} is deprecated; use {new}", DeprecationWarning, stacklevel=1)
             kwargs[new] = kwargs.pop(alias)
 
 

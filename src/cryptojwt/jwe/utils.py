@@ -7,8 +7,6 @@ from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.hashes import SHA384
 from cryptography.hazmat.primitives.hashes import SHA512
 
-from ..utils import b64e
-
 LENMET = {32: (16, SHA256), 48: (24, SHA384), 64: (32, SHA512)}
 
 
@@ -20,8 +18,8 @@ def get_keys_seclen_dgst(key, iv):
     # Select the digest to use based on key length
     try:
         seclen, hash_method = LENMET[len(key)]
-    except KeyError:
-        raise Exception("Invalid CBC+HMAC key length: %s bytes" % len(key))
+    except KeyError as exc:
+        raise Exception(f"Invalid CBC+HMAC key length: {len(key)} bytes") from exc
 
     # Split the key
     ka = key[:seclen]

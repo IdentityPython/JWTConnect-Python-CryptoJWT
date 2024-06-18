@@ -1,14 +1,13 @@
+import contextlib
 import logging
 
 from ..jwk.asym import AsymmetricKey
 from ..jwk.ec import ECKey
 from ..jwk.hmac import SYMKey
 from ..jwk.jwk import key_from_jwk_dict
-from ..jwk.rsa import RSAKey
 from ..jwx import JWx
 from .exception import DecryptionFailed
 from .exception import NoSuitableDecryptionKey
-from .exception import NoSuitableECDHKey
 from .exception import NoSuitableEncryptionKey
 from .exception import NotSupportedAlgorithm
 from .exception import WrongEncryptionAlgorithm
@@ -133,7 +132,7 @@ class JWE(JWx):
             except TypeError as err:
                 raise err
             else:
-                logger.debug("Encrypted message using key with kid={}".format(key.kid))
+                logger.debug(f"Encrypted message using key with kid={key.kid}")
                 return token
 
         # logger.error("Could not find any suitable encryption key")
@@ -159,10 +158,8 @@ class JWE(JWx):
         else:
             keys = self.pick_keys(self._get_keys(), use="enc", alg=_alg)
 
-        try:
+        with contextlib.suppress(KeyError):
             keys.append(key_from_jwk_dict(_jwe.headers["jwk"]))
-        except KeyError:
-            pass
 
         if not keys and not cek:
             raise NoSuitableDecryptionKey(_alg)
@@ -194,10 +191,7 @@ class JWE(JWx):
                 return msg
 
         for key in keys:
-            if isinstance(key, AsymmetricKey):
-                _key = key.private_key()
-            else:
-                _key = key.key
+            _key = key.private_key() if isinstance(key, AsymmetricKey) else key.key
 
             try:
                 msg = decrypter.decrypt(_jwe, _key)
@@ -205,7 +199,7 @@ class JWE(JWx):
             except (KeyError, DecryptionFailed):
                 pass
             else:
-                logger.debug("Decrypted message using key with kid=%s" % key.kid)
+                logger.debug(f"Decrypted message using key with kid={key.kid}")
                 return msg
 
         raise DecryptionFailed("No available key that could decrypt the message")

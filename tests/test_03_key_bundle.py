@@ -1,4 +1,5 @@
 # pylint: disable=missing-docstring,no-self-use
+import contextlib
 import json
 import os
 import shutil
@@ -15,7 +16,6 @@ from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.ec import new_ec_key
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwk.okp import OKPKey
-from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import RSAKey
 from cryptojwt.jwk.rsa import import_rsa_key_from_cert_file
 from cryptojwt.jwk.rsa import new_rsa_key
@@ -269,7 +269,7 @@ def test_get_all():
 
 
 def test_keybundle_from_local_der():
-    kb = keybundle_from_local_file("{}".format(RSA0), "der", ["enc"])
+    kb = keybundle_from_local_file(f"{RSA0}", "der", ["enc"])
     assert len(kb) == 1
     keys = kb.get("rsa")
     assert len(keys) == 1
@@ -279,7 +279,7 @@ def test_keybundle_from_local_der():
 
 
 def test_ec_keybundle_from_local_der():
-    kb = keybundle_from_local_file("{}".format(EC0), "der", ["enc"], keytype="EC")
+    kb = keybundle_from_local_file(f"{EC0}", "der", ["enc"], keytype="EC")
     assert len(kb) == 1
     keys = kb.get("ec")
     assert len(keys) == 1
@@ -289,7 +289,7 @@ def test_ec_keybundle_from_local_der():
 
 
 def test_keybundle_from_local_der_update():
-    kb = keybundle_from_local_file("file://{}".format(RSA0), "der", ["enc"])
+    kb = keybundle_from_local_file(f"file://{RSA0}", "der", ["enc"])
     assert len(kb) == 1
     keys = kb.get("rsa")
     assert len(keys) == 1
@@ -409,7 +409,7 @@ def test_mark_as_inactive():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -421,7 +421,7 @@ def test_copy():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -433,14 +433,14 @@ def test_copy():
 
 def test_local_jwk():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     assert kb
 
 
 def test_local_jwk_update():
     cache_time = 0.1
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path), cache_time=cache_time)
+    kb = KeyBundle(source=f"file://{_path}", cache_time=cache_time)
     assert kb
     _ = kb.keys()
     last1 = kb.last_local
@@ -456,7 +456,7 @@ def test_local_jwk_update():
 
 def test_local_jwk_copy():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     kb2 = kb.copy()
     assert kb2.source == kb.source
 
@@ -483,7 +483,7 @@ def test_httpc_params_1():
         httpc_params = {"timeout": (2, 2)}  # connect, read timeouts in seconds
         kb = KeyBundle(source=source, httpc=requests.request, httpc_params=httpc_params)
         updated, _ = kb._do_remote()
-        assert updated == True
+        assert updated is True
 
 
 @pytest.mark.network
@@ -506,7 +506,7 @@ def test_update_2():
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
-    kb = KeyBundle(source="file://{}".format(fname), fileformat="jwks")
+    kb = KeyBundle(source=f"file://{fname}", fileformat="jwks")
     assert len(kb) == 1
 
     # Added one more key
@@ -528,7 +528,7 @@ def test_update_mark_inactive():
     with open(fname, "w") as fp:
         fp.write(json.dumps(_jwks))
 
-    kb = KeyBundle(source="file://{}".format(fname), fileformat="jwks")
+    kb = KeyBundle(source=f"file://{fname}", fileformat="jwks")
     assert len(kb) == 1
 
     # new set of keys
@@ -909,7 +909,7 @@ def test_export_inactive():
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "sig"}
     kb = KeyBundle([desc])
     assert len(kb.keys()) == 1
-    for k in kb.keys():
+    for k in kb.keys():  # noqa
         kb.mark_as_inactive(k.kid)
     desc = {"kty": "oct", "key": "highestsupersecret", "use": "enc"}
     kb.add_jwk_dicts([desc])
@@ -977,7 +977,7 @@ def test_remote_not_modified():
     with responses.RequestsMock() as rsps:
         rsps.add(method="GET", url=source, json=JWKS_DICT, status=200, headers=headers)
         updated, _ = kb._do_remote()
-        assert updated == True
+        assert updated is True
         assert kb.last_remote == headers.get("Last-Modified")
         timeout1 = kb.time_out
 
@@ -1020,20 +1020,18 @@ def test_ignore_errors_period():
             ignore_errors_period=ignore_errors_period,
         )
         res, _ = kb._do_remote()
-        assert res == True
+        assert res is True
         assert kb.ignore_errors_until is None
 
         # refetch, but fail by using a bad source
         kb.source = source_bad
-        try:
+        with contextlib.suppress(UpdateFailed):
             res, _ = kb._do_remote()
-        except UpdateFailed:
-            pass
 
         # retry should fail silently as we're in holddown
         res, _ = kb._do_remote()
         assert kb.ignore_errors_until is not None
-        assert res == False
+        assert res is False
 
         # wait until holddown
         time.sleep(ignore_errors_period + 1)
@@ -1041,7 +1039,7 @@ def test_ignore_errors_period():
         # try again
         kb.source = source_good
         res, _ = kb._do_remote()
-        assert res == True
+        assert res is True
 
 
 def test_ignore_invalid_keys():

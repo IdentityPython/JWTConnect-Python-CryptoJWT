@@ -42,8 +42,8 @@ class RSASigner(Signer):
             raise TypeError("The public key must be an instance of RSAPublicKey")
         try:
             key.verify(signature, msg, self.padding, self.hash)
-        except InvalidSignature as err:
-            raise BadSignature(str(err))
+        except InvalidSignature as exc:
+            raise BadSignature(str(exc)) from exc
         except AttributeError:
             return False
         else:

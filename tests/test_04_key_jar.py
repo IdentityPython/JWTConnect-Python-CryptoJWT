@@ -215,7 +215,7 @@ def test_build_EC_keyjar_from_file(tmpdir):
     assert len(key_jar[""]) == 2
 
 
-class TestKeyJar(object):
+class TestKeyJar:
     def test_keyjar_add(self):
         kj = KeyJar()
         kb = keybundle_from_local_file(RSAKEY, "der", ["ver", "sig"])
@@ -370,7 +370,7 @@ class TestKeyJar(object):
         assert ks.get("enc", "oct", "http://www.example.org/")
 
     def test_dump_issuer_keys(self):
-        kb = keybundle_from_local_file("file://%s/jwk.json" % BASE_PATH, "jwks", ["sig"])
+        kb = keybundle_from_local_file(f"file://{BASE_PATH}/jwk.json", "jwks", ["sig"])
         assert len(kb) == 1
         kj = KeyJar()
         kj.add_kb("", kb)
@@ -405,14 +405,11 @@ class TestKeyJar(object):
     def test_provider(self):
         kj = KeyJar()
         _url = "https://connect-op.herokuapp.com/jwks.json"
-        kj.load_keys(
-            "https://connect-op.heroku.com",
-            jwks_uri=_url,
-        )
+        kj.load_keys("https://connect-op.heroku.com", jwks_uri=_url)
         iss_keys = kj.get_issuer_keys("https://connect-op.heroku.com")
         if not iss_keys:
-            _msg = "{} is not available at this moment!".format(_url)
-            warnings.warn(_msg)
+            _msg = f"{_url} is not available at this moment!"
+            warnings.warn(_msg, stacklevel=1)
         else:
             assert iss_keys[0].keys()
 
@@ -628,7 +625,7 @@ def test_keys_by_alg_and_usage():
     assert len(k) == 2
 
 
-class TestVerifyJWTKeys(object):
+class TestVerifyJWTKeys:
     @pytest.fixture(autouse=True)
     def setup(self):
         mkey = [
@@ -789,7 +786,7 @@ def test_str():
     kj = KeyJar()
     kj.add_kb("Alice", KeyBundle(JWK0["keys"]))
 
-    desc = "{}".format(kj)
+    desc = f"{kj}"
     _cont = json.loads(desc)
     assert set(_cont.keys()) == {"Alice"}
 
@@ -803,13 +800,13 @@ def test_load_keys():
 
 def test_find():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     kj = KeyJar()
     kj.add_kb("Alice", kb)
 
-    assert kj.find("{}".format(_path), "Alice")
+    assert kj.find(f"{_path}", "Alice")
     assert kj.find("https://example.com", "Alice") == []
-    assert kj.find("{}".format(_path), "Bob") is None
+    assert kj.find(f"{_path}", "Bob") is None
 
 
 def test_get_decrypt_keys():
@@ -839,7 +836,7 @@ def test_get_decrypt_keys():
 
 def test_update_keyjar():
     _path = full_path("jwk_private_key.json")
-    kb = KeyBundle(source="file://{}".format(_path))
+    kb = KeyBundle(source=f"file://{_path}")
     kj = KeyJar()
     kj.add_kb("Alice", kb)
 
@@ -856,8 +853,8 @@ def test_key_summary():
     assert out == "RSA::abc"
 
 
-PUBLIC_FILE = "{}/public_jwks.json".format(BASEDIR)
-PRIVATE_FILE = "{}/private_jwks.json".format(BASEDIR)
+PUBLIC_FILE = f"{BASEDIR}/public_jwks.json"
+PRIVATE_FILE = f"{BASEDIR}/private_jwks.json"
 KEYSPEC = [
     {"type": "RSA", "use": ["sig"]},
     {"type": "EC", "crv": "P-256", "use": ["sig"]},
@@ -977,17 +974,17 @@ def test_init_key_jar_update():
 
 
 OIDC_KEYS = {
-    "private_path": "{}/priv/jwks.json".format(BASEDIR),
+    "private_path": f"{BASEDIR}/priv/jwks.json",
     "key_defs": KEYSPEC,
-    "public_path": "{}/public/jwks.json".format(BASEDIR),
+    "public_path": f"{BASEDIR}/public/jwks.json",
 }
 
 
 def test_init_key_jar_create_directories():
     # make sure the directories are gone
     for _dir in ["priv", "public"]:
-        if os.path.isdir("{}/{}".format(BASEDIR, _dir)):
-            shutil.rmtree("{}/{}".format(BASEDIR, _dir))
+        if os.path.isdir(f"{BASEDIR}/{_dir}"):
+            shutil.rmtree(f"{BASEDIR}/{_dir}")
 
     _keyjar = init_key_jar(**OIDC_KEYS)
     assert len(_keyjar.get_signing_key("RSA")) == 1

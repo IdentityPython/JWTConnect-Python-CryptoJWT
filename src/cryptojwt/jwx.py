@@ -89,13 +89,13 @@ class JWx:
                     try:
                         _spec = load_x509_cert(self["x5u"], self.httpc, {})
                         self._jwk = RSAKey(pub_key=_spec["rsa"]).to_dict()
-                    except Exception:
+                    except Exception as exc:
                         # ca_chain = load_x509_cert_chain(self["x5u"])
-                        raise ValueError("x5u")
+                        raise ValueError("x5u") from exc
                 else:
                     self._dict[key] = _val
                 if key in DEPRECATED and _val in DEPRECATED[key]:
-                    warnings.warn(f"{key}={_val} deprecated")
+                    warnings.warn(f"{key}={_val} deprecated", stacklevel=1)
 
     def _set_jwk(self, val):
         if isinstance(val, dict):
@@ -123,8 +123,8 @@ class JWx:
     def __getattr__(self, item):
         try:
             return self._dict[item]
-        except KeyError:
-            raise AttributeError(item)
+        except KeyError as exc:
+            raise AttributeError(item) from exc
 
     def keys(self):
         """Return all keys."""

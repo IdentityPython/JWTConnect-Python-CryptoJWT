@@ -1,3 +1,4 @@
+import contextlib
 import struct
 
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -110,8 +111,8 @@ class JWE_EC(JWEKey):
         if self.alg == "ECDH-ES":
             try:
                 dk_len = KEY_LEN[self.enc]
-            except KeyError:
-                raise ValueError("Unknown key length for algorithm %s" % self.enc)
+            except KeyError as exc:
+                raise ValueError(f"Unknown key length for algorithm {self.enc}") from exc
 
             cek = ecdh_derive_key(_epk, key.pub_key, apu, apv, str(self.enc).encode(), dk_len)
         elif self.alg in ["ECDH-ES+A128KW", "ECDH-ES+A192KW", "ECDH-ES+A256KW"]:
@@ -121,7 +122,7 @@ class JWE_EC(JWEKey):
             cek = self._generate_key(self.enc, cek=cek)
             encrypted_key = aes_key_wrap(kek, cek)
         else:
-            raise Exception("Unsupported algorithm %s" % self.alg)
+            raise Exception(f"Unsupported algorithm {self.alg}")
 
         return cek, encrypted_key, iv, params, epk
 
@@ -152,8 +153,8 @@ class JWE_EC(JWEKey):
         if self.headers["alg"] == "ECDH-ES":
             try:
                 dk_len = KEY_LEN[self.headers["enc"]]
-            except KeyError:
-                raise Exception("Unknown key length for algorithm")
+            except KeyError as exc:
+                raise Exception("Unknown key length for algorithm") from exc
 
             self.cek = ecdh_derive_key(
                 key,
@@ -173,7 +174,7 @@ class JWE_EC(JWEKey):
             kek = ecdh_derive_key(key, epubkey.pub_key, apu, apv, str(_post).encode(), klen)
             self.cek = aes_key_unwrap(kek, token.encrypted_key())
         else:
-            raise Exception("Unsupported algorithm %s" % self.headers["alg"])
+            raise Exception("Unsupported algorithm {}".format(self.headers["alg"]))
 
         return self.cek
 
@@ -190,10 +191,8 @@ class JWE_EC(JWEKey):
         _msg = as_bytes(self.msg)
 
         _args = self._dict
-        try:
+        with contextlib.suppress(KeyError):
             _args["kid"] = kwargs["kid"]
-        except KeyError:
-            pass
 
         if "params" in kwargs:
             if "apu" in kwargs["params"]:
@@ -204,7 +203,7 @@ class JWE_EC(JWEKey):
                 _args["epk"] = kwargs["params"]["epk"]
 
         jwe = JWEnc(**_args)
-        ctxt, tag, cek = super(JWE_EC, self).enc_setup(
+        ctxt, tag, cek = super().enc_setup(
             self["enc"], _msg, auth_data=jwe.b64_encode_header(), key=cek, iv=iv
         )
         if "encrypted_key" in kwargs:
@@ -212,15 +211,12 @@ class JWE_EC(JWEKey):
         return jwe.pack(parts=[iv, ctxt, tag])
 
     def decrypt(self, token=None, **kwargs):
-        if isinstance(token, JWEnc):
-            jwe = token
-        else:
-            jwe = JWEnc().unpack(token)
+        jwe = token if isinstance(token, JWEnc) else JWEnc().unpack(token)
 
         if not self.cek:
             raise Exception("Content Encryption Key is Not Yet Set")
 
-        msg = super(JWE_EC, self)._decrypt(
+        msg = super()._decrypt(
             self.headers["enc"],
             self.cek,
             self.ctxt,

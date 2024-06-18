@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import zlib
 
@@ -34,10 +35,8 @@ class JWE_SYM(JWEKey):
         _msg = as_bytes(self.msg)
 
         _args = self._dict
-        try:
+        with contextlib.suppress(KeyError):
             _args["kid"] = kwargs["kid"]
-        except KeyError:
-            pass
 
         jwe = JWEnc(**_args)
 
@@ -68,10 +67,7 @@ class JWE_SYM(JWEKey):
         if not key and not cek:
             raise MissingKey("On of key or cek must be specified")
 
-        if isinstance(token, JWEnc):
-            jwe = token
-        else:
-            jwe = JWEnc().unpack(token)
+        jwe = token if isinstance(token, JWEnc) else JWEnc().unpack(token)
 
         if len(jwe) != 5:
             raise WrongNumberOfParts(len(jwe))

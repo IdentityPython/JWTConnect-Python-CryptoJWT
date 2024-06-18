@@ -10,7 +10,7 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 def jwk_from_file(filename: str, private: bool = True) -> JWK:
     """Read JWK from file"""
-    with open(filename, mode="rt") as input_file:
+    with open(filename) as input_file:
         jwk_dict = json.loads(input_file.read())
     return key_from_jwk_dict(jwk_dict, private=private)
 

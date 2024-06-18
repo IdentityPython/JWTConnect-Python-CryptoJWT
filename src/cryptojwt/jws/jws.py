@@ -24,12 +24,6 @@ from .pss import PSSSigner
 from .rsa import RSASigner
 from .utils import alg2keytype
 
-try:
-    from builtins import object
-    from builtins import str
-except ImportError:
-    pass
-
 logger = logging.getLogger(__name__)
 
 KDESC = ["use", "kid", "kty"]
@@ -99,10 +93,10 @@ class JWS(JWx):
         else:
             if "kid" in self:
                 raise NoSuitableSigningKeys(
-                    "No key for algorithm: %s and kid: %s" % (_alg, self["kid"])
+                    "No key for algorithm: {} and kid: {}".format(_alg, self["kid"])
                 )
             else:
-                raise NoSuitableSigningKeys("No key for algorithm: %s" % _alg)
+                raise NoSuitableSigningKeys(f"No key for algorithm: {_alg}")
 
         return key, xargs, _alg
 
@@ -133,8 +127,8 @@ class JWS(JWx):
         # All other cases
         try:
             _signer = SIGNER_ALGS[_alg]
-        except KeyError:
-            raise UnknownAlgorithm(_alg)
+        except KeyError as exc:
+            raise UnknownAlgorithm(_alg) from exc
 
         _input = jwt.pack(parts=[self.msg])
 
@@ -143,7 +137,7 @@ class JWS(JWx):
         else:
             sig = _signer.sign(_input.encode("utf-8"), key.key)
 
-        logger.debug("Signed message using key with kid=%s" % key.kid)
+        logger.debug(f"Signed message using key with kid={key.kid}")
         return ".".join([_input, b64encode_item(sig).decode("utf-8")])
 
     def verify_compact(self, jws=None, keys=None, allow_none=False, sigalg=None):
@@ -207,30 +201,24 @@ class JWS(JWx):
                 )
 
         if sigalg and sigalg != _alg:
-            raise SignerAlgError("Expected {0} got {1}".format(sigalg, jwt.headers["alg"]))
+            raise SignerAlgError("Expected {} got {}".format(sigalg, jwt.headers["alg"]))
 
         self["alg"] = _alg
 
-        if keys:
-            _keys = self.pick_keys(keys)
-        else:
-            _keys = self.pick_keys(self._get_keys())
+        _keys = self.pick_keys(keys) if keys else self.pick_keys(self._get_keys())
 
         if not _keys:
             if "kid" in self:
-                raise NoSuitableSigningKeys("No key with kid: %s" % (self["kid"]))
+                raise NoSuitableSigningKeys("No key with kid: {}".format(self["kid"]))
             elif "kid" in self.jwt.headers:
-                raise NoSuitableSigningKeys("No key with kid: %s" % (self.jwt.headers["kid"]))
+                raise NoSuitableSigningKeys("No key with kid: {}".format(self.jwt.headers["kid"]))
             else:
-                raise NoSuitableSigningKeys("No key for algorithm: %s" % _alg)
+                raise NoSuitableSigningKeys(f"No key for algorithm: {_alg}")
 
         verifier = SIGNER_ALGS[_alg]
 
         for key in _keys:
-            if isinstance(key, AsymmetricKey):
-                _key = key.public_key()
-            else:
-                _key = key.key
+            _key = key.public_key() if isinstance(key, AsymmetricKey) else key.key
 
             try:
                 if not verifier.verify(jwt.sign_input(), jwt.signature(), _key):
@@ -238,9 +226,9 @@ class JWS(JWx):
             except (BadSignature, IndexError):
                 pass
             except (ValueError, TypeError) as err:
-                logger.warning('Exception "{}" caught'.format(err))
+                logger.warning(f'Exception "{err}" caught')
             else:
-                logger.debug("Verified message using key with kid=%s" % key.kid)
+                logger.debug(f"Verified message using key with kid={key.kid}")
                 self.msg = jwt.payload()
                 self.key = key
                 self._protected_headers = jwt.headers.copy()
@@ -310,8 +298,8 @@ class JWS(JWx):
 
         try:
             _payload = _jwss["payload"]
-        except KeyError:
-            raise FormatError("Missing payload")
+        except KeyError as exc:
+            raise FormatError("Missing payload") from exc
 
         try:
             _signs = _jwss["signatures"]
@@ -347,13 +335,11 @@ class JWS(JWx):
                 _tmp = self.verify_compact(token, keys, allow_none)
             except NoSuitableSigningKeys:
                 if at_least_one is True:
-                    logger.warning(
-                        "Could not verify signature with headers: {}".format(all_headers)
-                    )
+                    logger.warning(f"Could not verify signature with headers: {all_headers}")
                     continue
                 else:
                     raise
-            except JWSException as err:
+            except JWSException:
                 raise
 
             if _claim is None:
@@ -412,7 +398,7 @@ class JWS(JWx):
         try:
             jwt = JWSig().unpack(jws)
         except Exception as err:
-            logger.warning("Could not parse JWS: {}".format(err))
+            logger.warning(f"Could not parse JWS: {err}")
             return False
 
         if "alg" not in jwt.headers:
@@ -422,7 +408,7 @@ class JWS(JWx):
             jwt.headers["alg"] = "none"
 
         if jwt.headers["alg"] not in SIGNER_ALGS:
-            logger.debug("UnknownSignerAlg: %s" % jwt.headers["alg"])
+            logger.debug("UnknownSignerAlg: {}".format(jwt.headers["alg"]))
             return False
 
         self.jwt = jwt

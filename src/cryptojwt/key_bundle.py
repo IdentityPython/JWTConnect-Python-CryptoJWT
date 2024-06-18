@@ -1,5 +1,6 @@
 """Implementation of a Key Bundle."""
 
+import contextlib
 import copy
 import json
 import logging
@@ -276,13 +277,7 @@ class KeyBundle:
 
         if keys:
             self.source = None
-            if isinstance(keys, dict):
-                if "keys" in keys:
-                    initial_keys = keys["keys"]
-                else:
-                    initial_keys = [keys]
-            else:
-                initial_keys = keys
+            initial_keys = keys.get("keys", [keys]) if isinstance(keys, dict) else keys
             self._keys = self.jwk_dicts_as_keys(initial_keys)
         else:
             self._set_source(source, fileformat)
@@ -372,10 +367,10 @@ class KeyBundle:
             for _use in _usage:
                 try:
                     _key = K2C[_typ](use=_use, **inst)
-                except KeyError:
+                except KeyError as exc:
                     if not self.ignore_invalid_keys:
-                        raise UnknownKeyType(inst)
-                    _error = "UnknownKeyType: {}".format(_typ)
+                        raise UnknownKeyType(inst) from exc
+                    _error = f"UnknownKeyType: {_typ}"
                     continue
                 except (UnsupportedECurve, UnsupportedAlgorithm) as err:
                     if not self.ignore_invalid_keys:
@@ -441,7 +436,7 @@ class KeyBundle:
             key_args["priv_key"] = _key
             key_args["pub_key"] = _key.public_key()
         else:
-            raise NotImplementedError("No support for DER decoding of key type {}".format(_kty))
+            raise NotImplementedError(f"No support for DER decoding of key type {_kty}")
 
         if not keyusage:
             key_args["use"] = ["enc", "sig"]
@@ -484,7 +479,7 @@ class KeyBundle:
             _http_resp = self.httpc("GET", self.source, **httpc_params)
         except Exception as err:
             LOGGER.error(err)
-            raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err)))
+            raise UpdateFailed(REMOTE_FAILED.format(self.source, str(err))) from err
 
         new_keys = None
         load_successful = _http_resp.status_code == 200
@@ -500,13 +495,13 @@ class KeyBundle:
             LOGGER.debug("Loaded JWKS: %s from %s", _http_resp.text, self.source)
             try:
                 new_keys = self.jwk_dicts_as_keys(self.imp_jwks["keys"])
-            except KeyError:
+            except KeyError as exc:
                 LOGGER.error("No 'keys' keyword in JWKS")
                 self.ignore_errors_until = time.time() + self.ignore_errors_period
-                raise UpdateFailed(MALFORMED.format(self.source))
+                raise UpdateFailed(MALFORMED.format(self.source)) from exc
 
             if hasattr(_http_resp, "headers"):
-                headers = getattr(_http_resp, "headers")
+                headers = _http_resp.headers
                 self.last_remote = headers.get("last-modified") or headers.get("date")
         elif not_modified:
             LOGGER.debug("%s not modified since %s", self.source, self.last_remote)
@@ -646,7 +641,7 @@ class KeyBundle:
         :param typ: Type of key (rsa, ec, oct, ..)
         """
         _typs = [typ.lower(), typ.upper()]
-        self._keys = [k for k in self._keys if not k.kty in _typs]
+        self._keys = [k for k in self._keys if k.kty not in _typs]
 
     def __str__(self):
         return str(self.jwks())
@@ -690,10 +685,8 @@ class KeyBundle:
 
         :param key: The key that should be removed
         """
-        try:
+        with contextlib.suppress(ValueError):
             self._keys.remove(key)
-        except ValueError:
-            pass
 
     def __len__(self):
         """
@@ -833,7 +826,7 @@ class KeyBundle:
                 _keys.append(_ser)
             res["keys"] = _keys
 
-        for attr, default in self.params.items():
+        for attr in self.params:
             if attr in exclude_attributes:
                 continue
             val = getattr(self, attr)
@@ -856,7 +849,7 @@ class KeyBundle:
             self._keys.extend(self.jwk_dicts_as_keys(_keys))
             self.last_updated = time.time()
 
-        for attr, default in self.params.items():
+        for attr in self.params:
             val = spec.get(attr)
             if val:
                 setattr(self, attr, val)
@@ -922,12 +915,18 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
     keys = []
     for _bundle in kbl:
         if symmetric_too:
-            keys.extend([k.serialize(private) for k in _bundle.keys() if not k.inactive_since])
+            keys.extend(
+                [
+                    k.serialize(private)
+                    for k in _bundle.keys()  # noqa: SIM118
+                    if not k.inactive_since
+                ]
+            )
         else:
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in _bundle.keys()
+                    for k in _bundle.keys()  # noqa: SIM118
                     if k.kty != "oct" and not k.inactive_since
                 ]
             )
@@ -935,15 +934,13 @@ def dump_jwks(kbl, target, private=False, symmetric_too=False):
     res = {"keys": keys}
 
     try:
-        _fp = open(target, "w")
-    except IOError:
+        with open(target, "w") as fp:
+            json.dump(res, fp)
+    except OSError:
         head, _ = os.path.split(target)
         os.makedirs(head)
-        _fp = open(target, "w")
-
-    _txt = json.dumps(res)
-    _fp.write(_txt)
-    _fp.close()
+        with open(target, "w") as fp:
+            json.dump(res, fp)
 
 
 def _set_kid(spec, bundle, kid_template, kid):
@@ -951,7 +948,7 @@ def _set_kid(spec, bundle, kid_template, kid):
         _keys = bundle.keys()
         _keys[0].kid = spec["kid"]
     else:
-        for k in bundle.keys():
+        for k in bundle.keys():  # noqa: SIM118
             if kid_template:
                 k.kid = kid_template % kid
                 kid += 1
@@ -1010,7 +1007,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],
@@ -1021,7 +1018,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],
@@ -1032,7 +1029,7 @@ def build_key_bundle(key_conf, kid_template=""):
             if "key" in spec and spec["key"]:
                 if os.path.isfile(spec["key"]):
                     _bundle = KeyBundle(
-                        source="file://%s" % spec["key"],
+                        source="file://{}".format(spec["key"]),
                         fileformat="der",
                         keytype=typ,
                         keyusage=spec["use"],
@@ -1325,13 +1322,13 @@ def key_gen(type, **kwargs):
         crv = kwargs.get("crv", DEFAULT_EC_CURVE)
         if crv not in NIST2SEC:
             logging.error("Unknown curve: %s", crv)
-            raise ValueError("Unknown curve: {}".format(crv))
+            raise ValueError(f"Unknown curve: {crv}")
         _key = new_ec_key(crv=crv, **kargs)
     elif type.upper() == "OKP":
         crv = kwargs.get("crv", DEFAULT_OKP_CURVE)
         if crv not in OKP_CRV2PUBLIC:
             logging.error("Unknown curve: %s", crv)
-            raise ValueError("Unknown curve: {}".format(crv))
+            raise ValueError(f"Unknown curve: {crv}")
         _key = new_okp_key(crv=crv, **kargs)
     elif type.lower() in ["sym", "oct"]:
         keysize = kwargs.get("bytes", 24)
@@ -1339,7 +1336,7 @@ def key_gen(type, **kwargs):
         _key = SYMKey(key=randomkey, **kargs)
     else:
         logging.error("Unknown key type: %s", type)
-        raise ValueError("Unknown key type: %s".format(type))
+        raise ValueError("Unknown key type: %s".format())
 
     return _key
 
@@ -1374,4 +1371,4 @@ def key_by_alg(alg: str):
     elif alg.startswith("HS"):
         return key_gen("sym")
 
-    raise ValueError("Don't know who to create a key to use with '{}'".format(alg))
+    raise ValueError(f"Don't know who to create a key to use with '{alg}'")

@@ -19,8 +19,8 @@ def wrap_key(key: JWK, wrapping_key: JWK, wrap_params: dict = DEFAULT_WRAP_PARAM
     message = json.dumps(key.serialize(private=True)).encode()
     try:
         enc_params = wrap_params[wrapping_key.kty]
-    except KeyError:
-        raise ValueError("Unsupported wrapping key type")
+    except KeyError as exc:
+        raise ValueError("Unsupported wrapping key type") from exc
     _jwe = JWE(msg=message, **enc_params)
     return _jwe.encrypt(keys=[wrapping_key], kid=wrapping_key.kid)
 

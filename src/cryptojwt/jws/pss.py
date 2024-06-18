@@ -21,7 +21,7 @@ class PSSSigner(Signer):
         elif algorithm == "SHA512":
             self.hash_algorithm = hashes.SHA512
         else:
-            raise Unsupported("algorithm: {}".format(algorithm))
+            raise Unsupported(f"algorithm: {algorithm}")
 
     def sign(self, msg, key):
         """
@@ -64,7 +64,7 @@ class PSSSigner(Signer):
                 ),
                 self.hash_algorithm(),
             )
-        except InvalidSignature as err:
-            raise BadSignature(err)
+        except InvalidSignature as exc:
+            raise BadSignature(exc) from exc
         else:
             return True

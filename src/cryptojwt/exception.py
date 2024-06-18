@@ -20,7 +20,7 @@ class BadSyntax(Invalid):
         self.msg = msg
 
     def __str__(self):
-        return "%s: %r" % (self.msg, self.value)
+        return f"{self.msg}: {self.value!r}"
 
 
 class BadSignature(Invalid):

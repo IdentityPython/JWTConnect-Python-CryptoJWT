@@ -14,7 +14,7 @@ from .utils import DIGEST_HASH
 USE = {"sign": "sig", "decrypt": "enc", "encrypt": "enc", "verify": "sig"}
 
 
-class JWK(object):
+class JWK:
     """
     Basic JSON Web key class. Jason Web keys are described in
     RFC 7517 (https://tools.ietf.org/html/rfc7517).
@@ -56,7 +56,7 @@ class JWK(object):
                     "ECDH-ES+A192KW",
                     "ECDH-ES+A256KW",
                 ]:
-                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
+                    raise UnsupportedAlgorithm(f"Unknown algorithm: {alg}")
             elif use == "sig":
                 # The list comes from https://tools.ietf.org/html/rfc7518#page-6
                 # Should map against SIGNER_ALGS in cryptojwt.jws.jws
@@ -79,7 +79,7 @@ class JWK(object):
                     "Ed448",
                     "none",
                 ]:
-                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
+                    raise UnsupportedAlgorithm(f"Unknown algorithm: {alg}")
             else:  # potentially used both for encryption and signing
                 if alg not in [
                     "HS256",
@@ -110,7 +110,7 @@ class JWK(object):
                     "ECDH-ES+A192KW",
                     "ECDH-ES+A256KW",
                 ]:
-                    raise UnsupportedAlgorithm("Unknown algorithm: {}".format(alg))
+                    raise UnsupportedAlgorithm(f"Unknown algorithm: {alg}")
         self.alg = alg
 
         if isinstance(use, str):
@@ -271,7 +271,7 @@ class JWK(object):
             else:
                 if isinstance(_val, bytes):
                     _val = as_unicode(_val)
-                _se.append('"{}":{}'.format(elem, json.dumps(_val)))
+                _se.append(f'"{elem}":{json.dumps(_val)}')
         _json = "{{{}}}".format(",".join(_se))
 
         return b64e(DIGEST_HASH[hash_function](_json))
@@ -298,7 +298,7 @@ class JWK(object):
         pass
 
     def key_len(self):
-        raise NotImplemented
+        raise NotImplementedError
 
 
 def pems_to_x5c(cert_chain):
@@ -360,7 +360,7 @@ def certificate_fingerprint(der, hash="sha256"):
 
 
 def pem_hash(pem_file):
-    with open(pem_file, "r") as fp:
+    with open(pem_file) as fp:
         pem = fp.read()
 
     der = ssl.PEM_cert_to_DER_cert(pem)

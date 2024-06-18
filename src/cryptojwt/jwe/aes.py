@@ -30,7 +30,7 @@ class AES_CBCEncrypter(Encrypter):
             self.padder = PKCS7(128).padder()
             self.unpadder = PKCS7(128).unpadder()
         else:
-            raise Unsupported("Message padding: {}".format(msg_padding))
+            raise Unsupported(f"Message padding: {msg_padding}")
 
         self.iv = None
 

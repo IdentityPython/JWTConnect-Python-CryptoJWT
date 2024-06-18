@@ -38,8 +38,8 @@ class AsymmetricKey(JWK):
         """
         try:
             _use = USE[usage]
-        except KeyError:
-            raise ValueError("Unknown key usage")
+        except KeyError as exc:
+            raise ValueError("Unknown key usage") from exc
         else:
             if usage in ["sign", "decrypt"]:
                 if not self.use or _use == self.use:
@@ -58,10 +58,7 @@ class AsymmetricKey(JWK):
 
         :return: True/False
         """
-        if self.priv_key:
-            return True
-        else:
-            return False
+        return bool(self.priv_key)
 
     def public_key(self):
         """
