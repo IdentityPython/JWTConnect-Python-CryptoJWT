@@ -171,10 +171,11 @@ class JWE(JWx):
         elif _alg.startswith("ECDH-ES"):
             decrypter = JWE_EC(**self._dict)
 
-            if isinstance(keys[0], AsymmetricKey):
-                _key = keys[0].private_key()
-            else:
-                _key = keys[0].key
+            _key = (
+                keys[0].private_key()
+                if isinstance(keys[0], AsymmetricKey)
+                else keys[0].key
+            )
 
             cek = decrypter.dec_setup(_jwe, key=_key)
         else:
