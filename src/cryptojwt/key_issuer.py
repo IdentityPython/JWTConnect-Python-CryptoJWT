@@ -286,10 +286,7 @@ class KeyIssuer:
 
         if not key_type:
             if alg:
-                if use == "sig":
-                    key_type = jws_alg2keytype(alg)
-                else:
-                    key_type = jwe_alg2keytype(alg)
+                key_type = jws_alg2keytype(alg) if use == "sig" else jwe_alg2keytype(alg)
 
         lst = []
         for bundle in self._bundles:

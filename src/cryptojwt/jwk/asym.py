@@ -19,7 +19,7 @@ class AsymmetricKey(JWK):
         k="",
         pub_key=None,
         priv_key=None,
-        **kwargs
+        **kwargs,
     ):
         JWK.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.k = k

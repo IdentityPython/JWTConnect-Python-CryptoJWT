@@ -236,11 +236,7 @@ class JWK:
         if set(self.__dict__.keys()) != set(other.__dict__.keys()):
             return False
 
-        for key in self.public_members:
-            if getattr(other, key) != getattr(self, key):
-                return False
-
-        return True
+        return all(getattr(other, key) == getattr(self, key) for key in self.public_members)
 
     def keys(self):
         return list(self.to_dict().keys())

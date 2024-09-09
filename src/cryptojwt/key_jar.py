@@ -233,10 +233,7 @@ class KeyJar:
         :param usage: What the key should be used for
         :return: A possibly empty list of keys
         """
-        if usage in ["sig", "ver"]:
-            ktype = jws_alg2keytype(alg)
-        else:
-            ktype = jwe_alg2keytype(alg)
+        ktype = jws_alg2keytype(alg) if usage in ["sig", "ver"] else jwe_alg2keytype(alg)
 
         return self.get(usage, ktype, issuer_id)
 

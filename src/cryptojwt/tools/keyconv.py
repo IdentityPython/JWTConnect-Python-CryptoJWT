@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """Convert JWK from/to PEM and other formats"""
+
 import argparse
 import json
 from binascii import hexlify

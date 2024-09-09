@@ -254,7 +254,7 @@ class RSAKey(AsymmetricKey):
         dq="",
         di="",
         qi="",
-        **kwargs
+        **kwargs,
     ):
         AsymmetricKey.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.n = n
@@ -322,10 +322,7 @@ class RSAKey(AsymmetricKey):
                 _cert_chain.append(der_cert(base64.b64decode(der_data)))
 
             if self.x5t:  # verify the cert thumbprint
-                if isinstance(self.x5t, bytes):
-                    _x5t = self.x5t
-                else:
-                    _x5t = self.x5t.encode("ascii")
+                _x5t = self.x5t if isinstance(self.x5t, bytes) else self.x5t.encode("ascii")
                 if _x5t != x5t_calculation(self.x5c[0]):
                     raise DeSerializationNotPossible(
                         "The thumbprint 'x5t' does not match the certificate."

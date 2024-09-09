@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """JSON Web Key (JWK) Generator"""
+
 import argparse
 import json
 import sys
