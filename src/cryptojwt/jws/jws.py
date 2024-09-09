@@ -60,10 +60,7 @@ class JWSig(SimpleJWT):
         return len(self.part)
 
     def valid(self):
-        if len(self) != 3:
-            return False
-
-        return True
+        return len(self) == 3
 
 
 class JWS(JWx):
@@ -153,7 +150,9 @@ class JWS(JWx):
         """
         return self.verify_compact_verbose(jws, keys, allow_none, sigalg)["msg"]
 
-    def verify_compact_verbose(self, jws=None, keys=None, allow_none=False, sigalg=None):
+    def verify_compact_verbose(
+        self, jws=None, keys=None, allow_none=False, sigalg=None
+    ):
         """
         Verify a JWT signature and return dict with validation results
 
@@ -193,15 +192,21 @@ class JWS(JWx):
             if isinstance(self["alg"], list):
                 if _alg not in self["alg"]:
                     raise SignerAlgError(
-                        "Wrong signing algorithm, expected {} got {}".format(self["alg"], _alg)
+                        "Wrong signing algorithm, expected {} got {}".format(
+                            self["alg"], _alg
+                        )
                     )
             elif _alg != self["alg"]:
                 raise SignerAlgError(
-                    "Wrong signing algorithm, expected {} got {}".format(self["alg"], _alg)
+                    "Wrong signing algorithm, expected {} got {}".format(
+                        self["alg"], _alg
+                    )
                 )
 
         if sigalg and sigalg != _alg:
-            raise SignerAlgError("Expected {} got {}".format(sigalg, jwt.headers["alg"]))
+            raise SignerAlgError(
+                "Expected {} got {}".format(sigalg, jwt.headers["alg"])
+            )
 
         self["alg"] = _alg
 
@@ -211,7 +216,9 @@ class JWS(JWx):
             if "kid" in self:
                 raise NoSuitableSigningKeys("No key with kid: {}".format(self["kid"]))
             elif "kid" in self.jwt.headers:
-                raise NoSuitableSigningKeys("No key with kid: {}".format(self.jwt.headers["kid"]))
+                raise NoSuitableSigningKeys(
+                    "No key with kid: {}".format(self.jwt.headers["kid"])
+                )
             else:
                 raise NoSuitableSigningKeys(f"No key for algorithm: {_alg}")
 
@@ -335,7 +342,9 @@ class JWS(JWx):
                 _tmp = self.verify_compact(token, keys, allow_none)
             except NoSuitableSigningKeys:
                 if at_least_one is True:
-                    logger.warning(f"Could not verify signature with headers: {all_headers}")
+                    logger.warning(
+                        f"Could not verify signature with headers: {all_headers}"
+                    )
                     continue
                 else:
                     raise
@@ -382,11 +391,10 @@ class JWS(JWx):
         """
         json_ser_keys = {"payload", "signatures"}
         flattened_json_ser_keys = {"payload", "signature"}
-        if not json_ser_keys.issubset(json_jws.keys()) and not flattened_json_ser_keys.issubset(
-            json_jws.keys()
-        ):
-            return False
-        return True
+        return not (
+            not json_ser_keys.issubset(json_jws.keys())
+            and not flattened_json_ser_keys.issubset(json_jws.keys())
+        )
 
     def _is_compact_jws(self, jws):
         """
