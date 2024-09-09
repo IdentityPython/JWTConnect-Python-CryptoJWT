@@ -29,8 +29,8 @@ class JWEKey(JWx):
         except KeyError:
             try:
                 _key = get_random_bytes(KEY_LEN_BYTES[encalg])
-            except KeyError:
-                raise ValueError("Unsupported encryption algorithm %s" % encalg)
+            except KeyError as exc:
+                raise ValueError(f"Unsupported encryption algorithm {encalg}") from exc
 
         return _key
 
@@ -77,7 +77,7 @@ class JWEKey(JWx):
         elif enc in ["A128CBC-HS256", "A192CBC-HS384", "A256CBC-HS512"]:
             aes = AES_CBCEncrypter(key=key)
         else:
-            raise Exception("Unsupported encryption algorithm %s" % enc)
+            raise Exception(f"Unsupported encryption algorithm {enc}")
 
         try:
             return aes.decrypt(ctxt, iv=iv, auth_data=auth_data, tag=tag)

@@ -49,7 +49,7 @@ class JWE_RSA(JWEKey):
             if self["zip"] == "DEF":
                 _msg = zlib.compress(_msg)
             else:
-                raise ParameterError("Zip has unknown value: %s" % self["zip"])
+                raise ParameterError("Zip has unknown value: {}".format(self["zip"]))
 
         kwarg_cek = cek or None
 
@@ -58,7 +58,7 @@ class JWE_RSA(JWEKey):
         cek = self._generate_key(_enc, cek)
         self["cek"] = cek
 
-        logger.debug("cek: %s, iv: %s" % ([c for c in cek], [c for c in iv]))
+        logger.debug(f"cek: {[c for c in cek]}, iv: {[c for c in iv]}")
 
         _encrypt = RSAEncrypter(self.with_digest).encrypt
 
@@ -92,10 +92,7 @@ class JWE_RSA(JWEKey):
         :param cek: Ephemeral cipher key
         :return: The decrypted message
         """
-        if not isinstance(token, JWEnc):
-            jwe = JWEnc().unpack(token)
-        else:
-            jwe = token
+        jwe = JWEnc().unpack(token) if not isinstance(token, JWEnc) else token
 
         self.jwt = jwe.encrypted_key()
         jek = jwe.encrypted_key()

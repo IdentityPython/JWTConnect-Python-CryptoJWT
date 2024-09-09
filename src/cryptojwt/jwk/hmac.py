@@ -81,8 +81,8 @@ class SYMKey(JWK):
         """
         try:
             _use = USE[usage]
-        except:
-            raise ValueError("Unknown key usage")
+        except Exception as exc:
+            raise ValueError("Unknown key usage") from exc
         else:
             if not self.use or self.use == _use:
                 if _use == "sig":
@@ -90,7 +90,7 @@ class SYMKey(JWK):
                 else:
                     return self.encryption_key(alg)
 
-            raise WrongUsage("This key can't be used for {}".format(usage))
+            raise WrongUsage(f"This key can't be used for {usage}")
 
     def encryption_key(self, alg, **kwargs):
         """
@@ -106,8 +106,8 @@ class SYMKey(JWK):
 
         try:
             tsize = ALG2KEYLEN[alg]
-        except KeyError:
-            raise UnsupportedAlgorithm(alg)
+        except KeyError as exc:
+            raise UnsupportedAlgorithm(alg) from exc
 
         if tsize <= 32:
             # SHA256
@@ -121,7 +121,7 @@ class SYMKey(JWK):
         else:
             raise JWKException("No support for symmetric keys > 512 bits")
 
-        logger.debug("Symmetric encryption key: {}".format(as_unicode(b64e(_enc_key))))
+        logger.debug(f"Symmetric encryption key: {as_unicode(b64e(_enc_key))}")
 
         return _enc_key
 

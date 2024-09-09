@@ -16,14 +16,22 @@ from .utils import b64d
 from .utils import b64encode_item
 from .utils import split_token
 
-try:
-    from builtins import hex
-    from builtins import str
-    from builtins import zip
-except ImportError:
-    pass
-
 __version__ = version("cryptojwt")
+
+__all__ = [
+    "JWE",
+    "JWE",
+    "JWK",
+    "JWS",
+    "JWT",
+    "KeyBundle",
+    "KeyJar",
+    "BadSyntax",
+    "as_unicode",
+    "b64d",
+    "b64encode_item",
+    "split_token",
+]
 
 logger = logging.getLogger(__name__)
 

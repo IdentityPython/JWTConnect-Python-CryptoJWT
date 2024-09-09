@@ -38,7 +38,7 @@ DEPRECATED = {
 }
 
 
-class Encrypter(object):
+class Encrypter:
     """Abstract base class for encryption algorithms."""
 
     def __init__(self, with_digest=False):

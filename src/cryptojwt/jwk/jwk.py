@@ -74,7 +74,7 @@ def ensure_params(kty, provided, required):
     """Ensure all required parameters are present in dictionary"""
     if not required <= provided:
         missing = required - provided
-        raise MissingValue("Missing properties for kty={}, {}".format(kty, str(list(missing))))
+        raise MissingValue(f"Missing properties for kty={kty}, {str(list(missing))}")
 
 
 def key_from_jwk_dict(jwk_dict, private=None):
@@ -100,7 +100,7 @@ def key_from_jwk_dict(jwk_dict, private=None):
         if _jwk_dict["crv"] in NIST2SEC:
             curve = NIST2SEC[_jwk_dict["crv"]]()
         else:
-            raise UnsupportedAlgorithm("Unknown curve: %s" % (_jwk_dict["crv"]))
+            raise UnsupportedAlgorithm("Unknown curve: {}".format(_jwk_dict["crv"]))
 
         if _jwk_dict.get("d", None) is not None:
             # Ecdsa private key.
@@ -183,7 +183,7 @@ def jwk_wrap(key, use="", kid=""):
     :param kid: A key id
     :return: The Key instance
     """
-    if isinstance(key, rsa.RSAPublicKey) or isinstance(key, rsa.RSAPrivateKey):
+    if isinstance(key, (rsa.RSAPublicKey, rsa.RSAPrivateKey)):
         kspec = RSAKey(use=use, kid=kid).load_key(key)
     elif isinstance(key, str):
         kspec = SYMKey(key=key, use=use, kid=kid)

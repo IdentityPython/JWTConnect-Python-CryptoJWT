@@ -25,7 +25,7 @@ from cryptojwt.jwx import key_from_jwk_dict
 
 def jwk_from_file(filename: str, private: bool = True) -> JWK:
     """Read JWK from file"""
-    with open(filename, mode="rt") as input_file:
+    with open(filename) as input_file:
         jwk_dict = json.loads(input_file.read())
     return key_from_jwk_dict(jwk_dict, private=private)
 
@@ -93,7 +93,7 @@ def pem2jwk(
     passphrase: Optional[str] = None,
 ) -> JWK:
     """Read PEM from filename and return JWK"""
-    with open(filename, "rt") as file:
+    with open(filename) as file:
         content = file.readlines()
     header = content[0]
 
@@ -178,7 +178,7 @@ def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) 
     """Output JWK to file"""
     serialized = jwk.serialize(private=private)
     if filename is not None:
-        with open(filename, mode="wt") as file:
+        with open(filename, mode="w") as file:
             file.write(json.dumps(serialized))
     else:
         print(json.dumps(serialized, indent=4))

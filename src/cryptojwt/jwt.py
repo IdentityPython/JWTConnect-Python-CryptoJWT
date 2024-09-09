@@ -1,5 +1,6 @@
 """Basic JSON Web Token implementation."""
 
+import contextlib
 import json
 import logging
 import time
@@ -50,10 +51,7 @@ def pick_key(keys, use, alg="", key_type="", kid=""):
     """
     res = []
     if not key_type:
-        if use == "sig":
-            key_type = jws_alg2keytype(alg)
-        else:
-            key_type = jwe_alg2keytype(alg)
+        key_type = jws_alg2keytype(alg) if use == "sig" else jwe_alg2keytype(alg)
 
     for key in keys:
         if key.use and key.use != use:
@@ -67,7 +65,7 @@ def pick_key(keys, use, alg="", key_type="", kid=""):
 
         if key.alg == "" and alg:
             if key_type == "EC":
-                if key.crv != "P-{}".format(alg[2:]):
+                if key.crv != f"P-{alg[2:]}":
                     continue
         elif alg and key.alg != alg:
             continue
@@ -143,10 +141,8 @@ class JWT:
     def my_keys(self, issuer_id="", use="sig"):
         _k = self.key_jar.get(use, issuer_id=issuer_id)
         if issuer_id != "":
-            try:
+            with contextlib.suppress(KeyError):
                 _k.extend(self.key_jar.get(use, issuer_id=""))
-            except KeyError:
-                pass
         return _k
 
     def _encrypt(self, payload, recv, cty="JWT", zip=""):
@@ -209,7 +205,7 @@ class JWT:
         keys = pick_key(self.my_keys(issuer_id, "sig"), "sig", alg=self.alg, kid=kid)
 
         if not keys:
-            raise NoSuitableSigningKeys("kid={}".format(kid))
+            raise NoSuitableSigningKeys(f"kid={kid}")
 
         return keys[0]  # Might be more then one if kid == ''
 
@@ -225,7 +221,7 @@ class JWT:
         aud: Optional[str] = None,
         iat: Optional[int] = None,
         jws_headers: Optional[Dict[str, str]] = None,
-        **kwargs
+        **kwargs,
     ) -> str:
         """
 
@@ -264,11 +260,7 @@ class JWT:
             issuer_id = self.iss
 
         if self.sign:
-            if self.alg != "none":
-                _key = self.pack_key(issuer_id, kid)
-                # _args['kid'] = _key.kid
-            else:
-                _key = None
+            _key = self.pack_key(issuer_id, kid) if self.alg != "none" else None
 
             jws_headers = jws_headers or {}
 
@@ -442,9 +434,7 @@ def remove_jwt_parameters(arg):
     """
 
     for param in JWT.jwt_parameters:
-        try:
+        with contextlib.suppress(KeyError):
             del arg[param]
-        except KeyError:
-            pass
 
     return arg

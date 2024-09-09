@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 from typing import List
@@ -24,7 +25,7 @@ __author__ = "Roland Hedberg"
 logger = logging.getLogger(__name__)
 
 
-class KeyJar(object):
+class KeyJar:
     """A keyjar contains a number of KeyBundles sorted by owner/issuer"""
 
     def __init__(
@@ -102,7 +103,7 @@ class KeyJar(object):
 
     def __repr__(self):
         issuers = self._issuer_ids()
-        return "<KeyJar(issuers={})>".format(issuers)
+        return f"<KeyJar(issuers={issuers})>"
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def return_issuer(self, issuer_id):
@@ -255,10 +256,7 @@ class KeyJar(object):
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __contains__(self, issuer_id):
         _iss = self._get_issuer(issuer_id)
-        if _iss is None:
-            return False
-        else:
-            return True
+        return _iss is not None
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
     def __getitem__(self, issuer_id=""):
@@ -303,11 +301,11 @@ class KeyJar(object):
         :param url: A URL
         :return: An issue entity ID that exists in the Key jar
         """
-        _iss = [i for i in self._issuers.keys() if i.startswith(url)]
+        _iss = [i for i in self._issuers.keys() if i.startswith(url)]  # noqa: SIM118
         if _iss:
             return _iss[0]
 
-        raise KeyError("No keys for '{}' in this keyjar".format(url))
+        raise KeyError(f"No keys for '{url}' in this keyjar")
 
     def __str__(self):
         _res = {}
@@ -385,7 +383,7 @@ class KeyJar(object):
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in kb.keys()
+                    for k in kb.keys()  # noqa: SIM118
                     if k.inactive_since == 0
                     and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
@@ -413,8 +411,8 @@ class KeyJar(object):
         """
         try:
             _keys = jwks["keys"]
-        except KeyError:
-            raise ValueError("Not a proper JWKS")
+        except KeyError as exc:
+            raise ValueError("Not a proper JWKS") from exc
 
         if _keys:
             _issuer = self.return_issuer(issuer_id=issuer_id)
@@ -446,11 +444,7 @@ class KeyJar(object):
             return False
 
         # Keys per issuer must be the same
-        for iss in self.owners():
-            if self[iss] != other[iss]:
-                return False
-
-        return True
+        return all(self[iss] == other[iss] for iss in self.owners())
 
     def __delitem__(self, key):
         del self._issuers[key]
@@ -484,10 +478,10 @@ class KeyJar(object):
     ):
         _issuer = self._get_issuer(issuer_id)
         if _issuer is None:
-            logger.error('Issuer "{}" not in keyjar'.format(issuer_id))
+            logger.error(f'Issuer "{issuer_id}" not in keyjar')
             raise IssuerNotFound(issuer_id)
 
-        logger.debug("Key summary for {}: {}".format(issuer_id, _issuer.key_summary()))
+        logger.debug(f"Key summary for {issuer_id}: {_issuer.key_summary()}")
 
         if kid:
             for _key in _issuer.get(use, kid=kid, key_type=key_type):
@@ -669,16 +663,10 @@ class KeyJar(object):
 
         if exclude_attributes:
             for attr in exclude_attributes:
-                try:
+                with contextlib.suppress(KeyError):
                     del info[attr]
-                except KeyError:
-                    pass
 
-        if exclude_attributes is None:
-            info["issuers"] = self._dump_issuers(
-                exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
-            )
-        elif "issuers" not in exclude_attributes:
+        if exclude_attributes is None or "issuers" not in exclude_attributes:
             info["issuers"] = self._dump_issuers(
                 exclude_issuers=exclude_issuers, exclude_attributes=exclude_attributes
             )
@@ -706,13 +694,13 @@ class KeyJar(object):
         :param info: A dictionary with the information
         :return:
         """
-        self.ca_certs = info.get("ca_certs", None)
-        self.httpc_params = info.get("httpc_params", None)
+        self.ca_certs = info.get("ca_certs")
+        self.httpc_params = info.get("httpc_params")
         self.keybundle_cls = importer(info.get("keybundle_cls", KeyBundle))
         self.remove_after = info.get("remove_after", 3600)
         self.spec2key = info.get("spec2key", {})
 
-        _issuers = info.get("issuers", None)
+        _issuers = info.get("issuers")
         if _issuers is None:
             self._issuers = {}
         else:

@@ -21,7 +21,7 @@ __author__ = "Roland Hedberg"
 logger = logging.getLogger(__name__)
 
 
-class KeyIssuer(object):
+class KeyIssuer:
     """A key issuer instance contains a number of KeyBundles."""
 
     params = {
@@ -65,7 +65,7 @@ class KeyIssuer(object):
         self.spec2key = {}
 
     def __repr__(self) -> str:
-        return '<KeyIssuer "{}" {}>'.format(self.name, self.key_summary())
+        return f'<KeyIssuer "{self.name}" {self.key_summary()}>'
 
     def __getitem__(self, item):
         return self.get_bundles()[item]
@@ -155,10 +155,7 @@ class KeyIssuer(object):
         return res
 
     def __contains__(self, item):
-        for kb in self._bundles:
-            if item in kb:
-                return True
-        return False
+        return any(item in kb for kb in self._bundles)
 
     def items(self):
         _res = {}
@@ -208,7 +205,7 @@ class KeyIssuer(object):
             keys.extend(
                 [
                     k.serialize(private)
-                    for k in kb.keys()
+                    for k in kb.keys()  # noqa: SIM118
                     if k.inactive_since == 0
                     and (usage is None or (hasattr(k, "use") and k.use == usage))
                 ]
@@ -232,8 +229,8 @@ class KeyIssuer(object):
         """
         try:
             _keys = jwks["keys"]
-        except KeyError:
-            raise ValueError("Not a proper JWKS")
+        except KeyError as exc:
+            raise ValueError("Not a proper JWKS") from exc
         else:
             self._bundles.append(
                 self.keybundle_cls(_keys, httpc=self.httpc, httpc_params=self.httpc_params)
@@ -285,10 +282,7 @@ class KeyIssuer(object):
         :return: A possibly empty list of keys
         """
 
-        if key_use in ["dec", "enc"]:
-            use = "enc"
-        else:
-            use = "sig"
+        use = "enc" if key_use in ["dec", "enc"] else "sig"
 
         if not key_type:
             if alg:
@@ -327,7 +321,7 @@ class KeyIssuer(object):
         # if elliptic curve, have to check if I have a key of the right curve
         if key_type and key_type.upper() == "EC":
             if alg:
-                name = "P-{}".format(alg[2:])  # the type
+                name = f"P-{alg[2:]}"  # the type
                 _lst = []
                 for key in lst:
                     if name != key.crv:
@@ -372,7 +366,7 @@ class KeyIssuer(object):
             exclude_attributes = []
 
         info = {}
-        for attr, default in self.params.items():
+        for attr in self.params:
             if attr in exclude_attributes:
                 continue
             val = getattr(self, attr)
@@ -394,7 +388,7 @@ class KeyIssuer(object):
         :param items: A dictionary with the information to load
         :return:
         """
-        for attr, default in self.params.items():
+        for attr in self.params:
             val = info.get(attr)
             if val:
                 if attr == "keybundle_cls":
@@ -441,16 +435,15 @@ class KeyIssuer(object):
         """
         key_list = []
         for kb in self._bundles:
-            for key in kb.keys():
+            for key in kb.keys():  # noqa: SIM118
                 if key.inactive_since:
-                    key_list.append("*{}:{}:{}".format(key.kty, key.use, key.kid))
+                    key_list.append(f"*{key.kty}:{key.use}:{key.kid}")
                 else:
-                    key_list.append("{}:{}:{}".format(key.kty, key.use, key.kid))
+                    key_list.append(f"{key.kty}:{key.use}:{key.kid}")
         return ", ".join(key_list)
 
     def __iter__(self):
-        for bundle in self._bundles:
-            yield bundle
+        yield from self._bundles
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -463,11 +456,7 @@ class KeyIssuer(object):
             if k not in other:
                 return False
 
-        for k in other.all_keys():
-            if k not in self:
-                return False
-
-        return True
+        return all(k in self for k in other.all_keys())
 
     def rotate_keys(self, key_conf, kid_template=""):
         """
@@ -586,7 +575,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
 
     if private_path:
         if os.path.isfile(private_path):
-            _jwks = open(private_path, "r").read()
+            with open(private_path) as fp:
+                _jwks = fp.read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -599,9 +589,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                     else:
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks(private=True)
-                        fp = open(private_path, "w")
-                        fp.write(json.dumps(jwks))
-                        fp.close()
+                        with open(private_path, "w") as fp:
+                            json.dump(jwks, fp)
         else:
             _issuer = build_keyissuer(key_defs)
             if not read_only:
@@ -609,21 +598,20 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                 head, tail = os.path.split(private_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(private_path, "w")
-                fp.write(json.dumps(jwks))
-                fp.close()
+                with open(private_path, "w") as fp:
+                    json.dump(jwks, fp)
 
         if public_path and not read_only:
             jwks = _issuer.export_jwks()  # public part
             head, tail = os.path.split(public_path)
             if head and not os.path.isdir(head):
                 os.makedirs(head)
-            fp = open(public_path, "w")
-            fp.write(json.dumps(jwks))
-            fp.close()
+            with open(public_path, "w") as fp:
+                json.dump(jwks, fp)
     elif public_path:
         if os.path.isfile(public_path):
-            _jwks = open(public_path, "r").read()
+            with open(public_path) as fp:
+                _jwks = fp.read()
             _issuer = KeyIssuer()
             _issuer.import_jwks(json.loads(_jwks))
             if key_defs:
@@ -636,9 +624,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                         update_key_bundle(_kb, _diff)
                         _issuer.set([_kb])
                         jwks = _issuer.export_jwks()
-                        fp = open(public_path, "w")
-                        fp.write(json.dumps(jwks))
-                        fp.close()
+                        with open(public_path, "w") as fp:
+                            json.dump(jwks, fp)
         else:
             _issuer = build_keyissuer(key_defs)
             if not read_only:
@@ -646,9 +633,8 @@ def init_key_issuer(public_path="", private_path="", key_defs="", read_only=True
                 head, tail = os.path.split(public_path)
                 if head and not os.path.isdir(head):
                     os.makedirs(head)
-                fp = open(public_path, "w")
-                fp.write(json.dumps(_jwks))
-                fp.close()
+                with open(public_path, "w") as fp:
+                    json.dump(_jwks, fp)
     else:
         _issuer = build_keyissuer(key_defs)
 

@@ -1,4 +1,4 @@
-class Signer(object):
+class Signer:
     """Abstract base class for signing algorithms."""
 
     def sign(self, msg, key):

@@ -11,7 +11,6 @@ from cryptojwt.jwk.hmac import new_sym_key
 from cryptojwt.jwk.okp import OKP_CRV2PUBLIC
 from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jwk.rsa import new_rsa_key
-from cryptojwt.utils import b64e
 
 DEFAULT_SYM_KEYSIZE = 32
 DEFAULT_RSA_KEYSIZE = 2048
@@ -38,7 +37,7 @@ def main():
         dest="rsa_exp",
         type=int,
         metavar="exponent",
-        help="RSA public key exponent (default {})".format(DEFAULT_RSA_EXP),
+        help=f"RSA public key exponent (default {DEFAULT_RSA_EXP})",
         default=DEFAULT_RSA_EXP,
     )
     parser.add_argument("--kid", dest="kid", metavar="id", help="Key ID")
@@ -50,12 +49,12 @@ def main():
         jwk = new_rsa_key(public_exponent=args.rsa_exp, key_size=args.keysize, kid=args.kid)
     elif args.kty.upper() == "EC":
         if args.crv not in NIST2SEC:
-            print("Unknown curve: {0}".format(args.crv), file=sys.stderr)
+            print(f"Unknown curve: {args.crv}", file=sys.stderr)
             exit(1)
         jwk = new_ec_key(crv=args.crv, kid=args.kid)
     elif args.kty.upper() == "OKP":
         if args.crv not in OKP_CRV2PUBLIC:
-            print("Unknown curve: {0}".format(args.crv), file=sys.stderr)
+            print(f"Unknown curve: {args.crv}", file=sys.stderr)
             exit(1)
         jwk = new_okp_key(crv=args.crv, kid=args.kid)
     elif args.kty.upper() == "SYM" or args.kty.upper() == "OCT":
@@ -63,7 +62,7 @@ def main():
             args.keysize = DEFAULT_SYM_KEYSIZE
         jwk = new_sym_key(bytes=args.keysize, kid=args.kid)
     else:
-        print("Unknown key type: {}".format(args.kty), file=sys.stderr)
+        print(f"Unknown key type: {args.kty}", file=sys.stderr)
         exit(1)
 
     jwk_dict = jwk.serialize(private=True)

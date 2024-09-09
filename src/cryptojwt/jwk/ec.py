@@ -45,8 +45,8 @@ def ec_construct_public(num):
     """
     try:
         _sec_crv = NIST2SEC[as_unicode(num["crv"])]
-    except KeyError:
-        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"]))
+    except KeyError as exc:
+        raise UnsupportedECurve("Unsupported elliptic curve: {}".format(num["crv"])) from exc
 
     ecpn = ec.EllipticCurvePublicNumbers(num["x"], num["y"], _sec_crv())
     return ecpn.public_key()
@@ -152,8 +152,8 @@ class ECKey(AsymmetricKey):
                         {"x": _x, "y": _y, "crv": self.crv, "d": _d}
                     )
                     self.pub_key = self.priv_key.public_key()
-            except ValueError as err:
-                raise DeSerializationNotPossible(str(err))
+            except ValueError as exc:
+                raise DeSerializationNotPossible(str(exc)) from exc
         else:
             self.pub_key = ec_construct_public({"x": _x, "y": _y, "crv": self.crv})
 
@@ -249,10 +249,8 @@ class ECKey(AsymmetricKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, ec.EllipticCurvePrivateKey):
                     return True
-            elif self.private_key():
-                return False
             else:
-                return True
+                return not self.private_key()
 
         return False
 
@@ -339,5 +337,5 @@ def import_ec_key(pem_data):
 
 
 def import_ec_key_from_cert_file(pem_file):
-    with open(pem_file, "r") as cert_file:
+    with open(pem_file) as cert_file:
         return import_ec_key(cert_file.read())

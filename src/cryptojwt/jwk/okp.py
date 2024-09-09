@@ -145,16 +145,16 @@ class OKPKey(AsymmetricKey):
                 if isinstance(self.d, (str, bytes)):
                     try:
                         self.priv_key = OKP_CRV2PRIVATE[self.crv].from_private_bytes(deser(self.d))
-                    except KeyError:
-                        raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
+                    except KeyError as exc:
+                        raise UnsupportedOKPCurve(f"Unsupported OKP curve: {self.crv}") from exc
                     self.pub_key = self.priv_key.public_key()
-            except ValueError as err:
-                raise DeSerializationNotPossible(str(err))
+            except ValueError as exc:
+                raise DeSerializationNotPossible(str(exc)) from exc
         else:
             try:
                 self.pub_key = OKP_CRV2PUBLIC[self.crv].from_public_bytes(_x)
-            except KeyError:
-                raise UnsupportedOKPCurve("Unsupported OKP curve: {}".format(self.crv))
+            except KeyError as exc:
+                raise UnsupportedOKPCurve(f"Unsupported OKP curve: {self.crv}") from exc
 
     def _serialize_public(self, key):
         self.x = b64e(
@@ -278,10 +278,8 @@ class OKPKey(AsymmetricKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, _private_cls):
                     return True
-            elif self.private_key():
-                return False
             else:
-                return True
+                return not self.private_key()
 
         return False
 
@@ -376,5 +374,5 @@ def import_okp_key(pem_data):
 
 
 def import_okp_key_from_cert_file(pem_file):
-    with open(pem_file, "r") as cert_file:
+    with open(pem_file) as cert_file:
         return import_okp_key(cert_file.read())

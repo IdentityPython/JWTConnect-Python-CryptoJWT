@@ -50,7 +50,7 @@ def import_public_key_from_pem_data(pem_data):
     :return: rsa.RSAPublicKey instance
     """
     if not pem_data.startswith(PREFIX):
-        pem_data = bytes("{}\n{}\n{}".format(PREFIX, pem_data, POSTFIX), "utf-8")
+        pem_data = bytes(f"{PREFIX}\n{pem_data}\n{POSTFIX}", "utf-8")
     else:
         pem_data = bytes(pem_data, "utf-8")
     cert = x509.load_pem_x509_certificate(pem_data)
@@ -106,9 +106,9 @@ def load_x509_cert(url, httpc, spec2key, **get_args):
             elif isinstance(public_key, ec.EllipticCurvePublicKey):
                 return {"ec": public_key}
         else:
-            raise Exception("HTTP Get error: %s" % r.status_code)
+            raise Exception(f"HTTP Get error: {r.status_code}")
     except Exception as err:  # not a RSA key
-        logger.warning("Can't load key: %s" % err)
+        logger.warning(f"Can't load key: {err}")
         return []
 
 

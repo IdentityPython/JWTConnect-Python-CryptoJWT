@@ -62,10 +62,7 @@ def str2intarr(string):
     return array.array("B", string).tolist()
 
 
-if sys.version < "3":
-    to_intarr = str2intarr
-else:
-    to_intarr = bytes2intarr
+to_intarr = str2intarr if sys.version < "3" else bytes2intarr
 
 
 def test_jwe_09_a1():
@@ -671,9 +668,9 @@ def test_fernet_symkey():
 
 def test_fernet_bad():
     with pytest.raises(TypeError):
-        encrypter = FernetEncrypter(key="xyzzy")
+        _ = FernetEncrypter(key="xyzzy")
     with pytest.raises(ValueError):
-        encrypter = FernetEncrypter(key=os.urandom(16))
+        _ = FernetEncrypter(key=os.urandom(16))
 
 
 def test_fernet_bytes():
