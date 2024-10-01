@@ -134,6 +134,7 @@ class KeyJar:
         """
 
         issuer = self.return_issuer(issuer_id)
+        issuer.httpc_params = self.httpc_params
         kb = issuer.add_url(url, **kwargs)
         return kb
 
