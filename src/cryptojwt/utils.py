@@ -294,10 +294,7 @@ def is_compact_jws(token):
     except Exception:
         return False
 
-    if "alg" not in _header:
-        return False
-
-    return True
+    return "alg" in _header
 
 
 def is_jwe(token):
@@ -324,10 +321,7 @@ def is_jwe(token):
     except Exception:
         return False
 
-    if "alg" not in _header or "enc" not in _header:
-        return False
-
-    return True
+    return not ("alg" not in _header or "enc" not in _header)
 
 
 def is_json_jws(token):

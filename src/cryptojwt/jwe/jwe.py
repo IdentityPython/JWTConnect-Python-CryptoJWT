@@ -6,11 +6,13 @@ from ..jwk.ec import ECKey
 from ..jwk.hmac import SYMKey
 from ..jwk.jwk import key_from_jwk_dict
 from ..jwx import JWx
-from .exception import DecryptionFailed
-from .exception import NoSuitableDecryptionKey
-from .exception import NoSuitableEncryptionKey
-from .exception import NotSupportedAlgorithm
-from .exception import WrongEncryptionAlgorithm
+from .exception import (
+    DecryptionFailed,
+    NoSuitableDecryptionKey,
+    NoSuitableEncryptionKey,
+    NotSupportedAlgorithm,
+    WrongEncryptionAlgorithm,
+)
 from .jwe_ec import JWE_EC
 from .jwe_hmac import JWE_SYM
 from .jwe_rsa import JWE_RSA
@@ -171,10 +173,7 @@ class JWE(JWx):
         elif _alg.startswith("ECDH-ES"):
             decrypter = JWE_EC(**self._dict)
 
-            if isinstance(keys[0], AsymmetricKey):
-                _key = keys[0].private_key()
-            else:
-                _key = keys[0].key
+            _key = keys[0].private_key() if isinstance(keys[0], AsymmetricKey) else keys[0].key
 
             cek = decrypter.dec_setup(_jwe, key=_key)
         else:

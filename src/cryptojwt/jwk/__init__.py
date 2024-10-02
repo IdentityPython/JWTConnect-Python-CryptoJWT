@@ -5,10 +5,7 @@ import ssl
 from typing import List
 
 from ..exception import UnsupportedAlgorithm
-from ..utils import as_bytes
-from ..utils import as_unicode
-from ..utils import b64e
-from ..utils import base64url_to_long
+from ..utils import as_bytes, as_unicode, b64e, base64url_to_long
 from .utils import DIGEST_HASH
 
 USE = {"sign": "sig", "decrypt": "enc", "encrypt": "enc", "verify": "sig"}
@@ -236,11 +233,7 @@ class JWK:
         if set(self.__dict__.keys()) != set(other.__dict__.keys()):
             return False
 
-        for key in self.public_members:
-            if getattr(other, key) != getattr(self, key):
-                return False
-
-        return True
+        return all(getattr(other, key) == getattr(self, key) for key in self.public_members)
 
     def keys(self):
         return list(self.to_dict().keys())

@@ -9,30 +9,24 @@ import sys
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec
 
-from cryptojwt.exception import BadSyntax
-from cryptojwt.exception import HeaderError
-from cryptojwt.exception import MissingKey
-from cryptojwt.exception import Unsupported
-from cryptojwt.exception import VerificationError
-from cryptojwt.jwe.aes import AES_CBCEncrypter
-from cryptojwt.jwe.aes import AES_GCMEncrypter
-from cryptojwt.jwe.exception import NoSuitableDecryptionKey
-from cryptojwt.jwe.exception import NoSuitableEncryptionKey
-from cryptojwt.jwe.exception import UnsupportedBitLength
-from cryptojwt.jwe.exception import WrongEncryptionAlgorithm
+from cryptojwt.exception import BadSyntax, HeaderError, MissingKey, Unsupported, VerificationError
+from cryptojwt.jwe.aes import AES_CBCEncrypter, AES_GCMEncrypter
+from cryptojwt.jwe.exception import (
+    NoSuitableDecryptionKey,
+    NoSuitableEncryptionKey,
+    UnsupportedBitLength,
+    WrongEncryptionAlgorithm,
+)
 from cryptojwt.jwe.fernet import FernetEncrypter
-from cryptojwt.jwe.jwe import JWE
-from cryptojwt.jwe.jwe import factory
+from cryptojwt.jwe.jwe import JWE, factory
 from cryptojwt.jwe.jwe_ec import JWE_EC
 from cryptojwt.jwe.jwe_hmac import JWE_SYM
 from cryptojwt.jwe.jwe_rsa import JWE_RSA
 from cryptojwt.jwe.utils import split_ctx_and_tag
 from cryptojwt.jwk.ec import ECKey
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
-from cryptojwt.utils import as_bytes
-from cryptojwt.utils import b64e
+from cryptojwt.jwk.rsa import RSAKey, import_private_rsa_key_from_file
+from cryptojwt.utils import as_bytes, b64e
 
 __author__ = "rohe0002"
 

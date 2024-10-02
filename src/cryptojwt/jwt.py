@@ -6,19 +6,13 @@ import logging
 import time
 import uuid
 from json import JSONDecodeError
-from typing import Dict
-from typing import List
-from typing import MutableMapping
-from typing import Optional
+from typing import Dict, List, MutableMapping, Optional
 
-from .exception import HeaderError
-from .exception import VerificationError
-from .jwe.jwe import JWE
-from .jwe.jwe import factory as jwe_factory
+from .exception import HeaderError, VerificationError
+from .jwe.jwe import JWE, factory as jwe_factory
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.exception import NoSuitableSigningKeys
-from .jws.jws import JWS
-from .jws.jws import factory as jws_factory
+from .jws.jws import JWS, factory as jws_factory
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .utils import as_unicode
 

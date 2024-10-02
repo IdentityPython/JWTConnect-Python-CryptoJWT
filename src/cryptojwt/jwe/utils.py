@@ -3,9 +3,7 @@ import struct
 from math import ceil
 
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.hashes import SHA384
-from cryptography.hazmat.primitives.hashes import SHA512
+from cryptography.hazmat.primitives.hashes import SHA256, SHA384, SHA512
 
 LENMET = {32: (16, SHA256), 48: (24, SHA384), 64: (32, SHA512)}
 

@@ -2,15 +2,11 @@ import os
 from struct import pack
 
 from cryptography.hazmat.primitives import hmac
-from cryptography.hazmat.primitives.ciphers import Cipher
-from cryptography.hazmat.primitives.ciphers import algorithms
-from cryptography.hazmat.primitives.ciphers import modes
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.padding import PKCS7
 
-from ..exception import MissingKey
-from ..exception import Unsupported
-from ..exception import VerificationError
+from ..exception import MissingKey, Unsupported, VerificationError
 from . import Encrypter
 from .exception import UnsupportedBitLength
 from .utils import get_keys_seclen_dgst

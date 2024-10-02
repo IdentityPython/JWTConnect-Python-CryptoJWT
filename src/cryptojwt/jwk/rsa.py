@@ -6,20 +6,22 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from cryptojwt.exception import KeyNotFound
 
-from ..exception import DeSerializationNotPossible
-from ..exception import JWKESTException
-from ..exception import SerializationNotPossible
-from ..exception import UnsupportedKeyType
-from ..utils import as_unicode
-from ..utils import deser
-from ..utils import long_to_base64
+from ..exception import (
+    DeSerializationNotPossible,
+    JWKESTException,
+    SerializationNotPossible,
+    UnsupportedKeyType,
+)
+from ..utils import as_unicode, deser, long_to_base64
 from . import JWK
 from .asym import AsymmetricKey
-from .x509 import der_cert
-from .x509 import import_private_key_from_pem_file
-from .x509 import import_public_key_from_pem_data
-from .x509 import import_public_key_from_pem_file
-from .x509 import x5t_calculation
+from .x509 import (
+    der_cert,
+    import_private_key_from_pem_file,
+    import_public_key_from_pem_data,
+    import_public_key_from_pem_file,
+    x5t_calculation,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -254,7 +256,7 @@ class RSAKey(AsymmetricKey):
         dq="",
         di="",
         qi="",
-        **kwargs
+        **kwargs,
     ):
         AsymmetricKey.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.n = n
@@ -322,10 +324,7 @@ class RSAKey(AsymmetricKey):
                 _cert_chain.append(der_cert(base64.b64decode(der_data)))
 
             if self.x5t:  # verify the cert thumbprint
-                if isinstance(self.x5t, bytes):
-                    _x5t = self.x5t
-                else:
-                    _x5t = self.x5t.encode("ascii")
+                _x5t = self.x5t if isinstance(self.x5t, bytes) else self.x5t.encode("ascii")
                 if _x5t != x5t_calculation(self.x5c[0]):
                     raise DeSerializationNotPossible(
                         "The thumbprint 'x5t' does not match the certificate."

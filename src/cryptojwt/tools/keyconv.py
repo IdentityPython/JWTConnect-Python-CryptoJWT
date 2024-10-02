@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 """Convert JWK from/to PEM and other formats"""
+
 import argparse
 import json
 from binascii import hexlify
@@ -10,16 +11,18 @@ from typing import Optional
 from cryptography.hazmat.primitives import serialization
 
 from cryptojwt.jwk import JWK
-from cryptojwt.jwk.ec import ECKey
-from cryptojwt.jwk.ec import import_private_ec_key_from_file
-from cryptojwt.jwk.ec import import_public_ec_key_from_file
+from cryptojwt.jwk.ec import ECKey, import_private_ec_key_from_file, import_public_ec_key_from_file
 from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwk.okp import OKPKey
-from cryptojwt.jwk.okp import import_private_okp_key_from_file
-from cryptojwt.jwk.okp import import_public_okp_key_from_file
-from cryptojwt.jwk.rsa import RSAKey
-from cryptojwt.jwk.rsa import import_private_rsa_key_from_file
-from cryptojwt.jwk.rsa import import_public_rsa_key_from_file
+from cryptojwt.jwk.okp import (
+    OKPKey,
+    import_private_okp_key_from_file,
+    import_public_okp_key_from_file,
+)
+from cryptojwt.jwk.rsa import (
+    RSAKey,
+    import_private_rsa_key_from_file,
+    import_public_rsa_key_from_file,
+)
 from cryptojwt.jwx import key_from_jwk_dict
 
 

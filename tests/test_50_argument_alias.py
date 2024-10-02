@@ -2,10 +2,8 @@ import os
 
 import pytest
 
-from cryptojwt.jws.jws import JWS
-from cryptojwt.jws.jws import factory
-from cryptojwt.key_jar import build_keyjar
-from cryptojwt.key_jar import init_key_jar
+from cryptojwt.jws.jws import JWS, factory
+from cryptojwt.key_jar import build_keyjar, init_key_jar
 
 __author__ = "Roland Hedberg"
 

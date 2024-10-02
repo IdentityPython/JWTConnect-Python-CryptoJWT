@@ -2,21 +2,12 @@ import copy
 import json
 import os
 
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives.asymmetric import ed448
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1
-from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmq1
-from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_iqmp
+from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, rsa
+from cryptography.hazmat.primitives.asymmetric.rsa import rsa_crt_dmp1, rsa_crt_dmq1, rsa_crt_iqmp
 
-from ..exception import MissingValue
-from ..exception import UnknownKeyType
-from ..exception import UnsupportedAlgorithm
-from ..exception import WrongKeyType
+from ..exception import MissingValue, UnknownKeyType, UnsupportedAlgorithm, WrongKeyType
 from ..utils import base64url_to_long
-from .ec import NIST2SEC
-from .ec import ECKey
+from .ec import NIST2SEC, ECKey
 from .hmac import SYMKey
 from .okp import OKPKey
 from .rsa import RSAKey

@@ -1,8 +1,7 @@
 import contextlib
 import json
 import logging
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from requests import request
 
@@ -12,13 +11,8 @@ from .exception import IssuerNotFound
 from .jwe.jwe import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
 from .key_bundle import KeyBundle
-from .key_issuer import KeyIssuer
-from .key_issuer import build_keyissuer
-from .key_issuer import init_key_issuer
-from .utils import deprecated_alias
-from .utils import httpc_params_loader
-from .utils import importer
-from .utils import qualified_name
+from .key_issuer import KeyIssuer, build_keyissuer, init_key_issuer
+from .utils import deprecated_alias, httpc_params_loader, importer, qualified_name
 
 __author__ = "Roland Hedberg"
 
@@ -234,10 +228,7 @@ class KeyJar:
         :param usage: What the key should be used for
         :return: A possibly empty list of keys
         """
-        if usage in ["sig", "ver"]:
-            ktype = jws_alg2keytype(alg)
-        else:
-            ktype = jwe_alg2keytype(alg)
+        ktype = jws_alg2keytype(alg) if usage in ["sig", "ver"] else jwe_alg2keytype(alg)
 
         return self.get(usage, ktype, issuer_id)
 

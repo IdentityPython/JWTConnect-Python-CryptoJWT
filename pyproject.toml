@@ -1,25 +1,5 @@
 # PEP 518: https://www.python.org/dev/peps/pep-0518/
 
-[tool.black]
-line-length = 100
-
-[tool.isort]
-force_single_line = true
-known_first_party = "cryptojwt"
-include_trailing_comma = true
-force_grid_wrap = 0
-use_parentheses = true
-line_length = 100
-
-[tool.coverage.run]
-branch = true
-
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: no cover",
-    "raise NotImplementedError",
-]
-
 [tool.poetry]
 name = "cryptojwt"
 version = "1.9.2"
@@ -44,22 +24,30 @@ requests = "^2.25.1"
 
 [tool.poetry.group.dev.dependencies]
 alabaster = "^0.7.12"
-black = "^24.4.2"
-isort = "^5.13.2"
 pytest = "^8.2.1"
-pytest-black = "^0.3.12"
-pytest-isort = "^4.0.0"
 pytest-cov = "^4.0.0"
 responses = "^0.13.0"
 sphinx = "^3.5.2"
 sphinx-autobuild = "^2021.3.14"
 coverage = "^7"
-ruff = "^0.4.6"
+ruff = "^0.6.3"
 pytest-ruff = "^0.3.2"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+line-length = 100
 
 [tool.ruff.lint]
 select = [
@@ -78,3 +66,9 @@ select = [
 ]
 ignore = ["E501", "I001", "SIM102"]
 exclude = ["examples/*"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = false
+combine-as-imports = true
+split-on-trailing-comma = false
+known-first-party = ["cryptojwt"]
