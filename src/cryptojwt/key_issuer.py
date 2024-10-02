@@ -1,20 +1,14 @@
 import json
 import logging
 import os
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from requests import request
 
 from .jwe.utils import alg2keytype as jwe_alg2keytype
 from .jws.utils import alg2keytype as jws_alg2keytype
-from .key_bundle import KeyBundle
-from .key_bundle import build_key_bundle
-from .key_bundle import key_diff
-from .key_bundle import update_key_bundle
-from .utils import httpc_params_loader
-from .utils import importer
-from .utils import qualified_name
+from .key_bundle import KeyBundle, build_key_bundle, key_diff, update_key_bundle
+from .utils import httpc_params_loader, importer, qualified_name
 
 __author__ = "Roland Hedberg"
 

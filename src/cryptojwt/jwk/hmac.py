@@ -3,18 +3,10 @@ import os
 
 from cryptojwt.exception import KeyNotFound
 
-from ..exception import JWKException
-from ..exception import UnsupportedAlgorithm
-from ..exception import WrongUsage
-from ..utils import as_bytes
-from ..utils import as_unicode
-from ..utils import b64d
-from ..utils import b64e
-from . import JWK
-from . import USE
-from .utils import sha256_digest
-from .utils import sha384_digest
-from .utils import sha512_digest
+from ..exception import JWKException, UnsupportedAlgorithm, WrongUsage
+from ..utils import as_bytes, as_unicode, b64d, b64e
+from . import JWK, USE
+from .utils import sha256_digest, sha384_digest, sha512_digest
 
 logger = logging.getLogger(__name__)
 

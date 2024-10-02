@@ -11,10 +11,7 @@ from cryptojwt.key_bundle import KeyBundle
 from cryptojwt.key_jar import KeyJar
 
 from .exception import BadSyntax
-from .utils import as_unicode
-from .utils import b64d
-from .utils import b64encode_item
-from .utils import split_token
+from .utils import as_unicode, b64d, b64encode_item, split_token
 
 __version__ = version("cryptojwt")
 

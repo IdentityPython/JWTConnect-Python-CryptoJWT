@@ -6,20 +6,22 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from cryptojwt.exception import KeyNotFound
 
-from ..exception import DeSerializationNotPossible
-from ..exception import JWKESTException
-from ..exception import SerializationNotPossible
-from ..exception import UnsupportedKeyType
-from ..utils import as_unicode
-from ..utils import deser
-from ..utils import long_to_base64
+from ..exception import (
+    DeSerializationNotPossible,
+    JWKESTException,
+    SerializationNotPossible,
+    UnsupportedKeyType,
+)
+from ..utils import as_unicode, deser, long_to_base64
 from . import JWK
 from .asym import AsymmetricKey
-from .x509 import der_cert
-from .x509 import import_private_key_from_pem_file
-from .x509 import import_public_key_from_pem_data
-from .x509 import import_public_key_from_pem_file
-from .x509 import x5t_calculation
+from .x509 import (
+    der_cert,
+    import_private_key_from_pem_file,
+    import_public_key_from_pem_data,
+    import_public_key_from_pem_file,
+    x5t_calculation,
+)
 
 logger = logging.getLogger(__name__)
 

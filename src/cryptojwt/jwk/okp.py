@@ -1,22 +1,18 @@
 from typing import Union
 
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import ed448
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives.asymmetric import x448
-from cryptography.hazmat.primitives.asymmetric import x25519
+from cryptography.hazmat.primitives.asymmetric import ed448, ed25519, x448, x25519
 
 from cryptojwt.exception import KeyNotFound
 
-from ..exception import DeSerializationNotPossible
-from ..exception import JWKESTException
-from ..exception import UnsupportedOKPCurve
-from ..utils import b64d
-from ..utils import b64e
+from ..exception import DeSerializationNotPossible, JWKESTException, UnsupportedOKPCurve
+from ..utils import b64d, b64e
 from .asym import AsymmetricKey
-from .x509 import import_private_key_from_pem_file
-from .x509 import import_public_key_from_pem_data
-from .x509 import import_public_key_from_pem_file
+from .x509 import (
+    import_private_key_from_pem_file,
+    import_public_key_from_pem_data,
+    import_public_key_from_pem_file,
+)
 
 OKPPublicKey = Union[
     ed25519.Ed25519PublicKey, ed448.Ed448PublicKey, x25519.X25519PublicKey, x448.X448PublicKey

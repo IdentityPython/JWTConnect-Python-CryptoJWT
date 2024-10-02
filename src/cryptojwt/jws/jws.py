@@ -5,20 +5,14 @@ import logging
 
 from cryptojwt.jws.exception import JWSException
 
-from ..exception import BadSignature
-from ..exception import UnknownAlgorithm
-from ..exception import WrongNumberOfParts
+from ..exception import BadSignature, UnknownAlgorithm, WrongNumberOfParts
 from ..jwk.asym import AsymmetricKey
 from ..jwx import JWx
 from ..simple_jwt import SimpleJWT
-from ..utils import b64d_enc_dec
-from ..utils import b64e_enc_dec
-from ..utils import b64encode_item
+from ..utils import b64d_enc_dec, b64e_enc_dec, b64encode_item
 from .dsa import ECDSASigner
 from .eddsa import EDDSASigner
-from .exception import FormatError
-from .exception import NoSuitableSigningKeys
-from .exception import SignerAlgError
+from .exception import FormatError, NoSuitableSigningKeys, SignerAlgError
 from .hmac import HMACSigner
 from .pss import PSSSigner
 from .rsa import RSASigner

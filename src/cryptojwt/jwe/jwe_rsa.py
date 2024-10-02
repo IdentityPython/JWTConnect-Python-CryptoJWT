@@ -3,8 +3,7 @@ import zlib
 
 from ..utils import as_bytes
 from . import SUPPORTED
-from .exception import NotSupportedAlgorithm
-from .exception import ParameterError
+from .exception import NotSupportedAlgorithm, ParameterError
 from .jwekey import JWEKey
 from .jwenc import JWEnc
 from .rsa import RSAEncrypter

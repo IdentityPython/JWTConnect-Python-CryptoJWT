@@ -6,18 +6,11 @@ import warnings
 
 import pytest
 
-from cryptojwt.exception import IssuerNotFound
-from cryptojwt.exception import JWKESTException
+from cryptojwt.exception import IssuerNotFound, JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
-from cryptojwt.jws.jws import JWS
-from cryptojwt.jws.jws import factory
-from cryptojwt.key_bundle import KeyBundle
-from cryptojwt.key_bundle import keybundle_from_local_file
-from cryptojwt.key_bundle import rsa_init
-from cryptojwt.key_jar import KeyJar
-from cryptojwt.key_jar import build_keyjar
-from cryptojwt.key_jar import init_key_jar
-from cryptojwt.key_jar import rotate_keys
+from cryptojwt.jws.jws import JWS, factory
+from cryptojwt.key_bundle import KeyBundle, keybundle_from_local_file, rsa_init
+from cryptojwt.key_jar import KeyJar, build_keyjar, init_key_jar, rotate_keys
 
 __author__ = "Roland Hedberg"
 
