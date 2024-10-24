@@ -446,11 +446,12 @@ def test_ecdh_encrypt_decrypt_direct_key():
 def test_ecdh_encrypt_decrypt_direct_key_wo_apu_apv():
     # Alice starts of
     jwenc = JWE_EC(plain, alg="ECDH-ES", enc="A128GCM")
-    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, key=eck_bob, apu=b"", apv=b"")
 
-    # Remove agreement information about sending and receiving parties
-    del params["apv"]
-    del params["apu"]
+    # Don't supply agreement party information.
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, key=eck_bob, apu=b"", apv=b"")
+    # Assert they are not randomized
+    assert params["apv"] == b""
+    assert params["apu"] == b""
 
     kwargs = {"params": params, "cek": cek, "iv": iv, "encrypted_key": encrypted_key}
     jwt = jwenc.encrypt(**kwargs)
