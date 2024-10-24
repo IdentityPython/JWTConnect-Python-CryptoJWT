@@ -453,6 +453,10 @@ def test_ecdh_encrypt_decrypt_direct_key_wo_apu_apv():
     assert params["apv"] == b""
     assert params["apu"] == b""
 
+    # Delete agreement party information
+    del params["apv"]
+    del params["apu"]
+
     kwargs = {"params": params, "cek": cek, "iv": iv, "encrypted_key": encrypted_key}
     jwt = jwenc.encrypt(**kwargs)
 
