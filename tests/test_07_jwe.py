@@ -443,6 +443,32 @@ def test_ecdh_encrypt_decrypt_direct_key():
     assert msg == plain
 
 
+def test_ecdh_encrypt_decrypt_direct_key_wo_apu_apv():
+    # Alice starts of
+    jwenc = JWE_EC(plain, alg="ECDH-ES", enc="A128GCM")
+
+    # Don't supply agreement party information.
+    cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, key=eck_bob, apu=b"", apv=b"")
+    # Assert they are not randomized
+    assert params["apv"] == b""
+    assert params["apu"] == b""
+
+    # Delete agreement party information
+    del params["apv"]
+    del params["apu"]
+
+    kwargs = {"params": params, "cek": cek, "iv": iv, "encrypted_key": encrypted_key}
+    jwt = jwenc.encrypt(**kwargs)
+
+    # Bob decrypts
+    ret_jwe = factory(jwt, alg="ECDH-ES", enc="A128GCM")
+    jwdec = JWE_EC()
+    jwdec.dec_setup(ret_jwe.jwt, key=bob)
+    msg = jwdec.decrypt(ret_jwe.jwt)
+
+    assert msg == plain
+
+
 def test_ecdh_encrypt_decrypt_keywrapped_key():
     jwenc = JWE_EC(plain, alg="ECDH-ES+A128KW", enc="A128GCM")
     cek, encrypted_key, iv, params, ret_epk = jwenc.enc_setup(plain, key=eck_bob)

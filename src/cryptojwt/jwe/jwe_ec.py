@@ -138,7 +138,7 @@ class JWE_EC(JWEKey):
             raise Exception("Ephemeral Public Key Missing in ECDH-ES Computation")
 
         epubkey = ECKey(**self.headers["epk"])
-        apu = apv = ""
+        apu = apv = b""
         if "apu" in self.headers:
             apu = b64d(self.headers["apu"].encode())
         if "apv" in self.headers:
