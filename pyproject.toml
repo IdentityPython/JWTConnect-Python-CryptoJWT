@@ -64,7 +64,7 @@ select = [
     # isort
     "I",
 ]
-ignore = ["E501", "I001", "SIM102"]
+ignore = ["E501", "I001", "SIM102", "UP006", "UP035"]
 exclude = ["examples/*"]
 
 [tool.ruff.lint.isort]
