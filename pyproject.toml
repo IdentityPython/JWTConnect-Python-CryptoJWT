@@ -30,7 +30,7 @@ responses = "^0.13.0"
 sphinx = "^3.5.2"
 sphinx-autobuild = "^2021.3.14"
 coverage = "^7"
-ruff = "^0.6.3"
+ruff = ">=0.8.0"
 pytest-ruff = "^0.3.2"
 
 [build-system]
