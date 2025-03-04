@@ -262,12 +262,17 @@ def httpc_params_loader(httpc_params):
     return httpc_params
 
 
-def check_content_type(content_type, mime_type):
+def check_content_type(content_type: str, mime_type: str | list[str] | set[str]):
     """Return True if the content type contains the MIME type"""
     msg = EmailMessage()
     msg["content-type"] = content_type
     mt = msg.get_content_type()
-    return mime_type == mt
+    if isinstance(mime_type, str):
+        return mt == mime_type
+    elif isinstance(mime_type, (list, set)):
+        return mt in mime_type
+    else:
+        raise ValueError("Invalid MIME type argument")
 
 
 def is_compact_jws(token):
