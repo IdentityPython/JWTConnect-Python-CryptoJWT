@@ -418,7 +418,7 @@ def test_a_1_1a():
 
 
 def test_a_1_1b():
-    payload = b'{"iss":"joe",\r\n "exp":1300819380,' b'\r\n "http://example.com/is_root":true}'
+    payload = b'{"iss":"joe",\r\n "exp":1300819380,\r\n "http://example.com/is_root":true}'
     val = b64e(payload)
     assert val == (
         b"eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9"
@@ -430,7 +430,7 @@ def test_a_1_1c():
     hmac = intarr2bin(HMAC_KEY)
     signer = SIGNER_ALGS["HS256"]
     header = b'{"typ":"JWT",\r\n "alg":"HS256"}'
-    payload = b'{"iss":"joe",\r\n "exp":1300819380,' b'\r\n "http://example.com/is_root":true}'
+    payload = b'{"iss":"joe",\r\n "exp":1300819380,\r\n "http://example.com/is_root":true}'
     sign_input = b64e(header) + b"." + b64e(payload)
     sig = signer.sign(sign_input, hmac)
     assert b64e(sig) == b"dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
