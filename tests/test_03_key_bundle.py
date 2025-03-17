@@ -74,7 +74,7 @@ JWK1 = {
             "kid": "rsa1",
         },
         {
-            "k": "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNT" "Y0NzMzYjE",
+            "k": "YTEyZjBlMDgxMGI4YWU4Y2JjZDFiYTFlZTBjYzljNDU3YWM0ZWNiNzhmNmFlYTNkNTY0NzMzYjE",
             "kty": "oct",
         },
     ]
