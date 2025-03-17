@@ -40,6 +40,8 @@ MALFORMED = "Remote key update from {} failed, malformed JWKS."
 
 LOGGER = logging.getLogger(__name__)
 
+JWKS_CONTENT_TYPES = set(["application/json", "application/jwk-set+json"])
+
 # def raise_exception(excep, descr, error='service_error'):
 #     _err = json.dumps({'error': error, 'error_description': descr})
 #     raise excep(_err, 'application/json')
@@ -528,8 +530,8 @@ class KeyBundle:
         """
         # Check if the content type is the right one.
         try:
-            if not check_content_type(response.headers["Content-Type"], "application/json"):
-                LOGGER.warning("Wrong Content_type (%s)", response.headers["Content-Type"])
+            if not check_content_type(response.headers["Content-Type"], JWKS_CONTENT_TYPES):
+                LOGGER.warning("Wrong Content-Type (%s)", response.headers["Content-Type"])
         except KeyError:
             pass
 
