@@ -17,10 +17,13 @@ class PSSSigner(Signer):
     def __init__(self, algorithm="SHA256"):
         if algorithm == "SHA256":
             self.hash_algorithm = hashes.SHA256
+            self.salt_length = 32
         elif algorithm == "SHA384":
             self.hash_algorithm = hashes.SHA384
+            self.salt_length = 48
         elif algorithm == "SHA512":
             self.hash_algorithm = hashes.SHA512
+            self.salt_length = 64
         else:
             raise Unsupported("algorithm: {}".format(algorithm))
 
@@ -39,7 +42,7 @@ class PSSSigner(Signer):
             digest,
             padding.PSS(
                 mgf=padding.MGF1(self.hash_algorithm()),
-                salt_length=padding.PSS.MAX_LENGTH,
+                salt_length=self.salt_length,
             ),
             utils.Prehashed(self.hash_algorithm()),
         )
@@ -51,7 +54,7 @@ class PSSSigner(Signer):
 
         :param msg: The message
         :param sig: A signature
-        :param key: A ec.EllipticCurvePublicKey to use for the verification.
+        :param key: A rsa._RSAPublicKey to use for the verification.
         :raises: BadSignature if the signature can't be verified.
         :return: True
         """
@@ -61,7 +64,7 @@ class PSSSigner(Signer):
                 msg,
                 padding.PSS(
                     mgf=padding.MGF1(self.hash_algorithm()),
-                    salt_length=padding.PSS.MAX_LENGTH,
+                    salt_length=self.salt_length,
                 ),
                 self.hash_algorithm(),
             )
