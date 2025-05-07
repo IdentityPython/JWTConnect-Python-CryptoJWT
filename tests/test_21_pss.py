@@ -7,10 +7,7 @@ from cryptojwt.jws.jws import JWS
 import test_vector
 
 
-@pytest.mark.parametrize(
-    "alg",
-    ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512"]
-)
+@pytest.mark.parametrize("alg", ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512"])
 def test_jws_rsa_signer_and_verifier(alg):
     _jwk_dict = json.loads(test_vector.json_rsa_priv_key)
     _key = key_from_jwk_dict(_jwk_dict)
