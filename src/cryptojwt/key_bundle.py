@@ -1134,8 +1134,8 @@ def sort_func(kd1, kd2):
 
 def order_key_defs(key_def):
     """
-    Sort a set of key definitions. A key definition that defines more then
-    one usage type are splitted into as many definitions as the number of
+    Sort a set of key definitions. A key definition that defines more than
+    one usage type are split into as many definitions as the number of
     usage types specified. One key definition per usage type.
 
     :param key_def: A set of key definitions
@@ -1144,7 +1144,7 @@ def order_key_defs(key_def):
     _int = []
     # First make sure all defs only reference one usage
     for _def in key_def:
-        if len(_def["use"]) > 1:
+        if isinstance(_def, list) and len(_def["use"]) > 1:
             for _use in _def["use"]:
                 _kd = _def.copy()
                 _kd["use"] = _use
