@@ -1138,19 +1138,20 @@ def order_key_defs(key_def):
     one usage type are split into as many definitions as the number of
     usage types specified. One key definition per usage type.
 
-    :param key_def: A set of key definitions
+    :param key_def: A set of key definitions. List of dictionaries
     :return: The set of definitions as a sorted list
     """
     _int = []
     # First make sure all defs only reference one usage
     for _def in key_def:
-        if isinstance(_def, list) and len(_def["use"]) > 1:
-            for _use in _def["use"]:
-                _kd = _def.copy()
-                _kd["use"] = _use
-                _int.append(_kd)
-        else:
-            _int.append(_def)
+        if isinstance(_def, dict):
+            if len(_def["use"]) > 1:
+                for _use in _def["use"]:
+                    _kd = _def.copy()
+                    _kd["use"] = _use
+                    _int.append(_kd)
+            else:
+                _int.append(_def)
 
     _int.sort(key=cmp_to_key(sort_func))
 
