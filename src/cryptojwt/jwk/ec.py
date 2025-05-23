@@ -26,6 +26,9 @@ NIST2SEC = {
     "P-224": ec.SECP224R1,
     "P-192": ec.SECP192R1,
     "P-256K": ec.SECP256K1,
+    "brainpoolp256r1": ec.BrainpoolP256R1,
+    "brainpoolp384r1": ec.BrainpoolP384R1,
+    "brainpoolp512r1": ec.BrainpoolP512R1,
 }
 
 # Inverted NIST2SEC dictionary

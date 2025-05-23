@@ -200,6 +200,12 @@ def test_create_eckey():
     assert _eq(list(exp_key.keys()), ["y", "x", "crv", "kty", "kid"])
 
 
+def test_create_eckey_brainpoolp256r1():
+    ec = new_ec_key("brainpoolp256r1")
+    exp_key = ec.serialize()
+    assert _eq(list(exp_key.keys()), ["y", "x", "crv", "kty", "kid"])
+
+
 def test_cmp_neq_ec():
     ec_key = new_ec_key("P-256")
     _key1 = ECKey(priv_key=ec_key.priv_key)
