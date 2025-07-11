@@ -243,6 +243,20 @@ class ECKey(AsymmetricKey):
         if self.__class__ != other.__class__:
             return False
 
+        if self.use and other.use:
+            if self.use != other.use:
+                return False
+
+        if self.kid:
+            if other.kid:
+                if self.kid != other.kid:
+                    return False
+            else:
+                return False
+        else:
+            if other.kid:
+                return False
+
         if cmp_keys(self.pub_key, other.pub_key, ec.EllipticCurvePublicKey):
             if other.private_key():
                 if cmp_keys(self.priv_key, other.priv_key, ec.EllipticCurvePrivateKey):
