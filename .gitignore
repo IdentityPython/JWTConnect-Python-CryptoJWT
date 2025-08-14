@@ -137,5 +137,4 @@ tests/pyoidc
 tests/pyoidc.pub
 tests/xtest_usage.py
 
-# Poetry
-poetry.lock
+*.lock

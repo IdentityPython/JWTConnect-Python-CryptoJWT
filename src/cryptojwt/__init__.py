@@ -1,7 +1,7 @@
 """JSON Web Token"""
 
 import logging
-from importlib.metadata import version
+from importlib.metadata import version, PackageNotFoundError
 
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwk import JWK
@@ -13,7 +13,10 @@ from cryptojwt.key_jar import KeyJar
 from .exception import BadSyntax
 from .utils import as_unicode, b64d, b64encode_item, split_token
 
-__version__ = version("cryptojwt")
+try:
+    __version__ = version("cryptojwt")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 __all__ = [
     "JWE",
