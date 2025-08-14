@@ -1,8 +1,8 @@
 all:
 
 test:
-	poetry run pytest --ruff --ruff-format --cov
+	uv run pytest --ruff --ruff-format --cov
 
 reformat:
-	poetry run ruff check --select I --fix src tests
-	poetry run ruff format src tests
+	uv run ruff check --select I --fix src tests
+	uv run ruff format src tests

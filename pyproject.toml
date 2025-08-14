@@ -1,41 +1,51 @@
 # PEP 518: https://www.python.org/dev/peps/pep-0518/
 
-[tool.poetry]
+[project]
 name = "cryptojwt"
-version = "1.9.5"
+dynamic = ["version"]
 description = "Python implementation of JWT, JWE, JWS and JWK"
-authors = ["Roland Hedberg <roland@catalogix.se>"]
+authors = [
+    {name="Roland Hedberg", email = "roland@catalogix.se"}
+]
 license = "Apache-2.0"
 repository = "https://github.com/IdentityPython/JWTConnect-Python-CryptoJWT"
 readme = "README.md"
 packages = [
     { include = "cryptojwt", from = "src" }
 ]
+requires-python = ">=3.9,<4.0"
+dependencies = [
+    "cryptography>=3.4.6",
+    "requests>=2.25.1"
+]
 
-[tool.poetry.scripts]
+[project.scripts]
 jwkgen = "cryptojwt.tools.keygen:main"
 jwkconv = "cryptojwt.tools.keyconv:main"
 jwtpeek = "cryptojwt.tools.jwtpeek:main"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-cryptography = ">=3.4.6"
-requests = "^2.25.1"
-
-[tool.poetry.group.dev.dependencies]
-alabaster = "^0.7.12"
-pytest = "^8.2.1"
-pytest-cov = "^4.0.0"
-responses = "^0.13.0"
-sphinx = "^3.5.2"
-sphinx-autobuild = "^2021.3.14"
-coverage = "^7"
-ruff = ">=0.9.9"
-pytest-ruff = "^0.3.2"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[dependency-groups]
+dev = [
+    "alabaster>=0.7.12",
+    "pytest>=8.2.1",
+    "pytest-cov>=4.0.0",
+    "responses>=0.13.0",
+    "sphinx>=3.5.2",
+    "sphinx-autobuild>=2021.3.14",
+    "coverage>=7",
+    "ruff>=0.9.9",
+    "pytest-ruff>=0.3.2"
+]
 
 [tool.coverage.run]
 branch = true

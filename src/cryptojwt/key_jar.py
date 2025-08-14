@@ -492,7 +492,9 @@ class KeyJar:
                     if _add_keys[0] not in keys:
                         keys.append(_add_keys[0])
                 elif allow_missing_kid:
-                    keys.extend(_add_keys)
+                    for _key in _add_keys:
+                        if _key and _key not in keys:
+                            keys.append(_key)
                 elif no_kid_issuer:
                     try:
                         allowed_kids = no_kid_issuer[issuer_id]

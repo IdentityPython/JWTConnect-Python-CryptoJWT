@@ -216,6 +216,22 @@ def test_cmp_eq_ec():
     assert _key1 == _key2
 
 
+def test_cmp_eq_ec_kid():
+    ec_key = new_ec_key("P-256")
+    _key1 = ECKey(priv_key=ec_key.priv_key, kid="foo")
+    _key2 = ECKey(priv_key=ec_key.priv_key, kid="bar")
+
+    assert _key1 != _key2
+
+
+def test_cmp_eq_rsa_kid():
+    rsa_key = new_rsa_key()
+    _key1 = RSAKey(priv_key=rsa_key.priv_key, kid="foo")
+    _key2 = RSAKey(priv_key=rsa_key.priv_key, kid="bar")
+
+    assert _key1 != _key2
+
+
 def test_get_key():
     ec_key = new_ec_key("P-256")
     asym_private_key = ECKey(priv_key=ec_key.priv_key)
