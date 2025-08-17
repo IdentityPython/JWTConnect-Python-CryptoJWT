@@ -274,7 +274,7 @@ class JWK:
         Construct a Key ID using the thumbprint method and add it to
         the key attributes.
         """
-        self.kid = b64e(self.thumbprint("SHA-256")).decode("utf8")
+        self.kid = self.thumbprint("SHA-256").decode("utf8")
 
     def appropriate_for(self, usage, **kwargs):
         """
