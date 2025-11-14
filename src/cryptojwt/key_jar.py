@@ -1,7 +1,6 @@
 import contextlib
 import json
 import logging
-from typing import Optional
 
 from requests import request
 
@@ -64,7 +63,7 @@ class KeyJar:
         return list(self._issuers.keys())
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
-    def _get_issuer(self, issuer_id: str) -> Optional[KeyIssuer]:
+    def _get_issuer(self, issuer_id: str) -> KeyIssuer | None:
         """
         Return the KeyIssuer instance that has name == issuer_id
 
@@ -623,8 +622,8 @@ class KeyJar:
 
     def _dump_issuers(
         self,
-        exclude_issuers: Optional[list[str]] = None,
-        exclude_attributes: Optional[list[str]] = None,
+        exclude_issuers: list[str] | None = None,
+        exclude_attributes: list[str] | None = None,
     ):
         _issuers = {}
         for _id, _issuer in self._issuers.items():
@@ -635,8 +634,8 @@ class KeyJar:
 
     def dump(
         self,
-        exclude_issuers: Optional[list[str]] = None,
-        exclude_attributes: Optional[list[str]] = None,
+        exclude_issuers: list[str] | None = None,
+        exclude_attributes: list[str] | None = None,
     ) -> dict:
         """
         Returns the key jar content as dictionary
@@ -667,7 +666,7 @@ class KeyJar:
 
         return info
 
-    def dumps(self, exclude_issuers: Optional[list[str]] = None):
+    def dumps(self, exclude_issuers: list[str] | None = None):
         """
         Returns a JSON representation of the key jar
 
@@ -680,8 +679,8 @@ class KeyJar:
     def load(
         self,
         info: dict,
-        init_args: Optional[dict] = None,
-        load_args: Optional[dict] = None,
+        init_args: dict | None = None,
+        load_args: dict | None = None,
     ):
         """
 

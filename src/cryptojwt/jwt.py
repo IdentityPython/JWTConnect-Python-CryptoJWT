@@ -7,7 +7,6 @@ import time
 import uuid
 from collections.abc import MutableMapping
 from json import JSONDecodeError
-from typing import Optional
 
 from .exception import HeaderError, VerificationError
 from .jwe.jwe import JWE, factory as jwe_factory
@@ -84,15 +83,15 @@ class JWT:
         encrypt: bool = False,
         enc_enc: str = "A128GCM",
         enc_alg: str = "RSA-OAEP-256",
-        msg_cls: Optional[MutableMapping] = None,
-        iss2msg_cls: Optional[dict[str, str]] = None,
-        skew: Optional[int] = 15,
-        allowed_sign_algs: Optional[list[str]] = None,
-        allowed_enc_algs: Optional[list[str]] = None,
-        allowed_enc_encs: Optional[list[str]] = None,
-        allowed_max_lifetime: Optional[int] = None,
-        zip: Optional[str] = "",
-        typ2msg_cls: Optional[dict] = None,
+        msg_cls: type[MutableMapping] | None = None,
+        iss2msg_cls: dict[str, str] | None = None,
+        skew: int | None = 15,
+        allowed_sign_algs: list[str] | None = None,
+        allowed_enc_algs: list[str] | None = None,
+        allowed_enc_encs: list[str] | None = None,
+        allowed_max_lifetime: int | None = None,
+        zip: str | None = "",
+        typ2msg_cls: dict | None = None,
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -209,13 +208,13 @@ class JWT:
 
     def pack(
         self,
-        payload: Optional[dict] = None,
-        kid: Optional[str] = "",
-        issuer_id: Optional[str] = "",
-        recv: Optional[str] = "",
-        aud: Optional[str] = None,
-        iat: Optional[int] = None,
-        jws_headers: Optional[dict[str, str]] = None,
+        payload: dict | None = None,
+        kid: str | None = "",
+        issuer_id: str | None = "",
+        recv: str | None = "",
+        aud: str | None = None,
+        iat: int | None = None,
+        jws_headers: dict[str, str] | None = None,
         **kwargs,
     ) -> str:
         """
