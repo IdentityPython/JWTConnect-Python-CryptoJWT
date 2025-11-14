@@ -5,8 +5,9 @@ import json
 import logging
 import time
 import uuid
+from collections.abc import MutableMapping
 from json import JSONDecodeError
-from typing import Dict, List, MutableMapping, Optional
+from typing import Optional
 
 from .exception import HeaderError, VerificationError
 from .jwe.jwe import JWE, factory as jwe_factory
@@ -84,14 +85,14 @@ class JWT:
         enc_enc: str = "A128GCM",
         enc_alg: str = "RSA-OAEP-256",
         msg_cls: Optional[MutableMapping] = None,
-        iss2msg_cls: Optional[Dict[str, str]] = None,
+        iss2msg_cls: Optional[dict[str, str]] = None,
         skew: Optional[int] = 15,
-        allowed_sign_algs: Optional[List[str]] = None,
-        allowed_enc_algs: Optional[List[str]] = None,
-        allowed_enc_encs: Optional[List[str]] = None,
+        allowed_sign_algs: Optional[list[str]] = None,
+        allowed_enc_algs: Optional[list[str]] = None,
+        allowed_enc_encs: Optional[list[str]] = None,
         allowed_max_lifetime: Optional[int] = None,
         zip: Optional[str] = "",
-        typ2msg_cls: Optional[Dict] = None,
+        typ2msg_cls: Optional[dict] = None,
     ):
         self.key_jar = key_jar  # KeyJar instance
         self.iss = iss  # My identifier
@@ -214,7 +215,7 @@ class JWT:
         recv: Optional[str] = "",
         aud: Optional[str] = None,
         iat: Optional[int] = None,
-        jws_headers: Optional[Dict[str, str]] = None,
+        jws_headers: Optional[dict[str, str]] = None,
         **kwargs,
     ) -> str:
         """

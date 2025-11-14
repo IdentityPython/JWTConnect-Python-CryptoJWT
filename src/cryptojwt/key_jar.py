@@ -1,7 +1,7 @@
 import contextlib
 import json
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from requests import request
 
@@ -55,7 +55,7 @@ class KeyJar:
         if not self.httpc_params:  # backward compatibility
             self.httpc_params["verify"] = verify_ssl
 
-    def _issuer_ids(self) -> List[str]:
+    def _issuer_ids(self) -> list[str]:
         """
         Returns a list of issuer identifiers
 
@@ -159,7 +159,7 @@ class KeyJar:
         issuer.add_kb(kb)
         self._issuers[issuer_id] = issuer
 
-    def add_keys(self, issuer_id: str, keys: List[JWK], **kwargs):
+    def add_keys(self, issuer_id: str, keys: list[JWK], **kwargs):
         _kb = KeyBundle(**kwargs)
         _kb.extend(keys)
         self.add_kb(issuer_id, _kb)
@@ -623,8 +623,8 @@ class KeyJar:
 
     def _dump_issuers(
         self,
-        exclude_issuers: Optional[List[str]] = None,
-        exclude_attributes: Optional[List[str]] = None,
+        exclude_issuers: Optional[list[str]] = None,
+        exclude_attributes: Optional[list[str]] = None,
     ):
         _issuers = {}
         for _id, _issuer in self._issuers.items():
@@ -635,8 +635,8 @@ class KeyJar:
 
     def dump(
         self,
-        exclude_issuers: Optional[List[str]] = None,
-        exclude_attributes: Optional[List[str]] = None,
+        exclude_issuers: Optional[list[str]] = None,
+        exclude_attributes: Optional[list[str]] = None,
     ) -> dict:
         """
         Returns the key jar content as dictionary
@@ -667,7 +667,7 @@ class KeyJar:
 
         return info
 
-    def dumps(self, exclude_issuers: Optional[List[str]] = None):
+    def dumps(self, exclude_issuers: Optional[list[str]] = None):
         """
         Returns a JSON representation of the key jar
 

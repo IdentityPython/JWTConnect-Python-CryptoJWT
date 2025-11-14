@@ -2,7 +2,6 @@ import base64
 import hashlib
 import json
 import ssl
-from typing import List
 
 from ..exception import UnsupportedAlgorithm
 from ..utils import as_bytes, as_unicode, b64e, base64url_to_long
@@ -21,12 +20,21 @@ class JWK:
     """
 
     members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
-    longs: List[str] = []
+    longs: list[str] = []
     public_members = ["kty", "alg", "use", "kid", "x5c", "x5t", "x5u", "key_ops"]
     required = ["kty"]
 
     def __init__(
-        self, kty="", alg="", use="", kid="", x5c=None, x5t="", x5u="", key_ops=None, **kwargs
+        self,
+        kty="",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        key_ops=None,
+        **kwargs,
     ):
         self.extra_args = kwargs
 
@@ -121,7 +129,7 @@ class JWK:
             self.kid = as_unicode(kid)
 
         if key_ops:
-            self.key_ops: List[str] = []
+            self.key_ops: list[str] = []
             for ops in key_ops:
                 if isinstance(ops, str):
                     self.key_ops.append(ops)

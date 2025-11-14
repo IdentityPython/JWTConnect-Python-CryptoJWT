@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from typing import List, Optional
+from typing import Optional
 
 from requests import request
 
@@ -345,7 +345,7 @@ class KeyIssuer:
             nr += len(kb)
         return nr
 
-    def dump(self, exclude_attributes: Optional[List[str]] = None) -> dict:
+    def dump(self, exclude_attributes: Optional[list[str]] = None) -> dict:
         """
         Returns the content as a dictionary.
 

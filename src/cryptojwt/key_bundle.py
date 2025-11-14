@@ -9,7 +9,7 @@ import threading
 import time
 from datetime import datetime
 from functools import cmp_to_key
-from typing import List, Optional
+from typing import Optional
 
 import requests
 
@@ -808,7 +808,7 @@ class KeyBundle:
 
         return [k for k in self.keys() if k not in bundle]
 
-    def dump(self, exclude_attributes: Optional[List[str]] = None):
+    def dump(self, exclude_attributes: Optional[list[str]] = None):
         if exclude_attributes is None:
             exclude_attributes = []
 
