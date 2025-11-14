@@ -13,7 +13,7 @@ readme = "README.md"
 packages = [
     { include = "cryptojwt", from = "src" }
 ]
-requires-python = ">=3.9,<4.0"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "cryptography>=3.4.6",
     "requests>=2.25.1"
