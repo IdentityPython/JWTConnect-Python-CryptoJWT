@@ -9,7 +9,11 @@ from collections import Counter
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, rsa
 
-from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm, WrongUsage
+from cryptojwt.exception import (
+    DeSerializationNotPossible,
+    UnsupportedAlgorithm,
+    WrongUsage,
+)
 from cryptojwt.jwk import JWK, certificate_fingerprint, pem_hash, pems_to_x5c
 from cryptojwt.jwk.ec import ECKey, new_ec_key
 from cryptojwt.jwk.hmac import SYMKey, new_sym_key, sha256_digest
@@ -735,7 +739,11 @@ def test_import_public_key_from_pem_file(filename, key_type):
     assert isinstance(pub_key, key_type)
 
 
-OKPKEY = {"crv": "Ed25519", "kty": "OKP", "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"}
+OKPKEY = {
+    "crv": "Ed25519",
+    "kty": "OKP",
+    "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+}
 OKPKEY_SHA256 = "kPrK_qmxVWaYVA9wwBF6Iuo3vVzz7TxHCTwXBygrS4k"
 
 
@@ -809,3 +817,30 @@ def test_key_from_jwk_dict_okp_ed448():
     _key = key_from_jwk_dict(jwk)
     assert isinstance(_key, OKPKey)
     assert _key.has_private_key()
+
+
+def test_jwk_set():
+    keyset: set[JWK] = set()
+
+    key_a = new_ec_key("P-256", kid="key_a")
+    key_b = new_ec_key("P-256", kid="key_b")
+    key_c = new_ec_key("P-256", kid="key_b")
+
+    key1 = ECKey(**key_a.serialize())
+    key2 = ECKey(**key_b.serialize())
+    key3 = ECKey(**key_a.serialize())
+    key4 = ECKey(**key_c.serialize())
+
+    keyset.add(key1)
+    keyset.add(key1)
+    keyset.add(key2)
+    keyset.add(key2)
+    assert len(keyset) == 2
+
+    keyset.add(key3)  # should not add a new item since key1 == key3
+    assert len(keyset) == 2
+
+    assert key1 in keyset
+    assert key2 in keyset
+    assert key3 in keyset
+    assert key4 not in keyset

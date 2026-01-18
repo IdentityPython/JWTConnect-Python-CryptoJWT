@@ -15,10 +15,16 @@ from .x509 import (
 )
 
 OKPPublicKey = Union[
-    ed25519.Ed25519PublicKey, ed448.Ed448PublicKey, x25519.X25519PublicKey, x448.X448PublicKey
+    ed25519.Ed25519PublicKey,
+    ed448.Ed448PublicKey,
+    x25519.X25519PublicKey,
+    x448.X448PublicKey,
 ]
 OKPPrivateKey = Union[
-    ed25519.Ed25519PrivateKey, ed448.Ed448PrivateKey, x25519.X25519PrivateKey, x448.X448PrivateKey
+    ed25519.Ed25519PrivateKey,
+    ed448.Ed448PrivateKey,
+    x25519.X25519PrivateKey,
+    x448.X448PrivateKey,
 ]
 
 OKP_CRV2PUBLIC = {
@@ -155,7 +161,8 @@ class OKPKey(AsymmetricKey):
     def _serialize_public(self, key):
         self.x = b64e(
             key.public_bytes(
-                encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+                encoding=serialization.Encoding.Raw,
+                format=serialization.PublicFormat.Raw,
             )
         ).decode("ascii")
 
@@ -257,6 +264,9 @@ class OKPKey(AsymmetricKey):
         """
         return self.pub_key
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __eq__(self, other):
         """
         Verify that the other key has the same properties as myself.
@@ -304,9 +314,11 @@ def cmp_keys(a, b, key_type):
                     return False
             else:
                 if a.public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+                    encoding=serialization.Encoding.Raw,
+                    format=serialization.PublicFormat.Raw,
                 ) != b.public_bytes(
-                    encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw
+                    encoding=serialization.Encoding.Raw,
+                    format=serialization.PublicFormat.Raw,
                 ):
                     return False
             return True
