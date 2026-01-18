@@ -13,7 +13,7 @@ readme = "README.md"
 packages = [
     { include = "cryptojwt", from = "src" }
 ]
-requires-python = ">=3.9,<4.0"
+requires-python = ">=3.10,<4.0"
 dependencies = [
     "cryptography>=3.4.6",
     "requests>=2.25.1"
@@ -74,7 +74,7 @@ select = [
     # isort
     "I",
 ]
-ignore = ["E501", "I001", "SIM102", "UP006", "UP035"]
+ignore = ["E501", "I001", "SIM102", "UP006", "UP035", "UP045", "UP007"]
 exclude = ["examples/*"]
 
 [tool.ruff.lint.isort]
