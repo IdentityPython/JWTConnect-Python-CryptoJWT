@@ -232,6 +232,9 @@ class ECKey(AsymmetricKey):
         """
         return self.pub_key
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __eq__(self, other):
         """
         Verify that the other key has the same properties as myself.

@@ -228,6 +228,9 @@ class JWK:
                 raise ValueError("kid of wrong value type")
         return True
 
+    def __hash__(self) -> int:
+        return hash((self.thumbprint("SHA-256"), self.kid))
+
     def __eq__(self, other):
         """
         Compare 2 Key instances to find out if they represent the same key

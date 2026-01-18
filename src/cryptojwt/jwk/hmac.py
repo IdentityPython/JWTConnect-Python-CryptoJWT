@@ -40,7 +40,17 @@ class SYMKey(JWK):
     required = ["k", "kty"]
 
     def __init__(
-        self, kty="oct", alg="", use="", kid="", x5c=None, x5t="", x5u="", k="", key="", **kwargs
+        self,
+        kty="oct",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        k="",
+        key="",
+        **kwargs,
     ):
         JWK.__init__(self, kty, alg, use, kid, x5c, x5t, x5u, **kwargs)
         self.k = k
@@ -116,6 +126,9 @@ class SYMKey(JWK):
         logger.debug(f"Symmetric encryption key: {as_unicode(b64e(_enc_key))}")
 
         return _enc_key
+
+    def __hash__(self) -> int:
+        return super().__hash__()
 
     def __eq__(self, other):
         """

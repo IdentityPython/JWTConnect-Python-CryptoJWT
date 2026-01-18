@@ -414,6 +414,9 @@ class RSAKey(AsymmetricKey):
         """
         return self.load_key(import_private_rsa_key_from_file(filename))
 
+    def __hash__(self) -> int:
+        return super().__hash__()
+
     def __eq__(self, other):
         """
         Verify that this other key is the same as myself.
