@@ -26,7 +26,16 @@ class JWK:
     required = ["kty"]
 
     def __init__(
-        self, kty="", alg="", use="", kid="", x5c=None, x5t="", x5u="", key_ops=None, **kwargs
+        self,
+        kty="",
+        alg="",
+        use="",
+        kid="",
+        x5c=None,
+        x5t="",
+        x5u="",
+        key_ops=None,
+        **kwargs,
     ):
         self.extra_args = kwargs
 
@@ -219,6 +228,9 @@ class JWK:
             if not isinstance(self.kid, str):
                 raise ValueError("kid of wrong value type")
         return True
+
+    def __hash__(self) -> int:
+        return hash((self.thumbprint("SHA-256"), self.kid))
 
     def __eq__(self, other):
         """
