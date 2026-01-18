@@ -12,18 +12,16 @@ from .x509 import (
     import_public_key_from_pem_file,
 )
 
-OKPPublicKey = Union[
-    ed25519.Ed25519PublicKey,
-    ed448.Ed448PublicKey,
-    x25519.X25519PublicKey,
-    x448.X448PublicKey,
-]
-OKPPrivateKey = Union[
-    ed25519.Ed25519PrivateKey,
-    ed448.Ed448PrivateKey,
-    x25519.X25519PrivateKey,
-    x448.X448PrivateKey,
-]
+OKPPublicKey = (
+    ed25519.Ed25519PublicKey | ed448.Ed448PublicKey | x25519.X25519PublicKey | x448.X448PublicKey
+)
+
+OKPPrivateKey = (
+    ed25519.Ed25519PrivateKey
+    | ed448.Ed448PrivateKey
+    | x25519.X25519PrivateKey
+    | x448.X448PrivateKey
+)
 
 OKP_CRV2PUBLIC = {
     "Ed25519": ed25519.Ed25519PublicKey,
