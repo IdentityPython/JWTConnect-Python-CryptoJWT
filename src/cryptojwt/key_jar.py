@@ -1,6 +1,7 @@
 import contextlib
 import json
 import logging
+from collections import defaultdict
 from typing import List, Optional
 
 from requests import request
@@ -620,6 +621,53 @@ class KeyJar:
 
     def __len__(self):
         return len(self._issuers)
+
+    def union(self, *args) -> "KeyJar":
+        """Return new KeyJar which is the union of self and all args"""
+
+        issuer_keys: dict[str, set[JWK]] = defaultdict(set)
+
+        for _id, _issuer in self._issuers.items():
+            issuer_keys[_id] |= set(_issuer.all_keys())
+
+        for key_jar in args:
+            for _id, _issuer in key_jar.items():
+                issuer_keys[_id] |= set(_issuer.all_keys())
+
+        res = KeyJar()
+        for _id, keys in issuer_keys.items():
+            kb = KeyBundle()
+            kb.set(keys)
+            res.add_kb(_id, kb)
+
+        return res
+
+    def __or__(self, other) -> "KeyJar":
+        return self.union(other)
+
+    def intersection(self, *args) -> "KeyJar":
+        """Return new KeyJar which is the intersection of self and all args"""
+
+        issuer_keys: dict[str, set[JWK]] = defaultdict(set)
+
+        for _id, _issuer in self._issuers.items():
+            issuer_keys[_id] |= set(_issuer.all_keys())
+
+        for key_jar in args:
+            for _id, _issuer in key_jar.items():
+                issuer_keys[_id] &= set(_issuer.all_keys())
+
+        res = KeyJar()
+        for _id, keys in issuer_keys.items():
+            if keys:
+                kb = KeyBundle()
+                kb.set(keys)
+                res.add_kb(_id, kb)
+
+        return res
+
+    def __and__(self, other) -> "KeyJar":
+        return self.intersection(other)
 
     def _dump_issuers(
         self,
