@@ -43,7 +43,7 @@ dev = [
     "sphinx>=3.5.2",
     "sphinx-autobuild>=2021.3.14",
     "coverage>=7",
-    "ruff>=0.9.9",
+    "ruff>=0.14.4",
     "pytest-ruff>=0.3.2"
 ]
 
@@ -74,7 +74,7 @@ select = [
     # isort
     "I",
 ]
-ignore = ["E501", "I001", "SIM102", "UP006", "UP035", "UP045", "UP007"]
+ignore = ["E501", "SIM102"]
 exclude = ["examples/*"]
 
 [tool.ruff.lint.isort]

@@ -9,11 +9,7 @@ from collections import Counter
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, rsa
 
-from cryptojwt.exception import (
-    DeSerializationNotPossible,
-    UnsupportedAlgorithm,
-    WrongUsage,
-)
+from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm, WrongUsage
 from cryptojwt.jwk import JWK, certificate_fingerprint, pem_hash, pems_to_x5c
 from cryptojwt.jwk.ec import ECKey, new_ec_key
 from cryptojwt.jwk.hmac import SYMKey, new_sym_key, sha256_digest

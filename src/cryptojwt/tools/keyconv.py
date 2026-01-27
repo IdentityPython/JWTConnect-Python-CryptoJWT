@@ -6,7 +6,6 @@ import argparse
 import json
 from binascii import hexlify
 from getpass import getpass
-from typing import Optional
 
 from cryptography.hazmat.primitives import serialization
 
@@ -35,9 +34,9 @@ def jwk_from_file(filename: str, private: bool = True) -> JWK:
 
 def pem2rsa(
     filename: str,
-    kid: Optional[str] = None,
+    kid: str | None = None,
     private: bool = False,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> JWK:
     """Convert RSA key from PEM to JWK"""
     if private:
@@ -51,9 +50,9 @@ def pem2rsa(
 
 def pem2ec(
     filename: str,
-    kid: Optional[str] = None,
+    kid: str | None = None,
     private: bool = False,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> JWK:
     """Convert EC key from PEM to JWK"""
     if private:
@@ -67,9 +66,9 @@ def pem2ec(
 
 def pem2okp(
     filename: str,
-    kid: Optional[str] = None,
+    kid: str | None = None,
     private: bool = False,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> JWK:
     """Convert OKP key from PEM to JWK"""
     if private:
@@ -90,10 +89,10 @@ def bin2jwk(filename: str, kid: str) -> JWK:
 
 def pem2jwk(
     filename: str,
-    kid: Optional[str] = None,
-    kty: Optional[str] = None,
+    kid: str | None = None,
+    kty: str | None = None,
     private: bool = False,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> JWK:
     """Read PEM from filename and return JWK"""
     with open(filename) as file:
@@ -144,7 +143,7 @@ def export_jwk(
     jwk: JWK,
     private: bool = False,
     encrypt: bool = False,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> bytes:
     """Export JWK as PEM/bin"""
 
@@ -177,7 +176,7 @@ def export_jwk(
     return serialized
 
 
-def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) -> None:
+def output_jwk(jwk: JWK, private: bool = False, filename: str | None = None) -> None:
     """Output JWK to file"""
     serialized = jwk.serialize(private=private)
     if filename is not None:
@@ -187,7 +186,7 @@ def output_jwk(jwk: JWK, private: bool = False, filename: Optional[str] = None) 
         print(json.dumps(serialized, indent=4))
 
 
-def output_bytes(data: bytes, binary: bool = False, filename: Optional[str] = None) -> None:
+def output_bytes(data: bytes, binary: bool = False, filename: str | None = None) -> None:
     """Output data to file"""
     if filename is not None:
         with open(filename, mode="wb") as file:

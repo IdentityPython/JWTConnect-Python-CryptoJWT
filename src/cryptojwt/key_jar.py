@@ -56,7 +56,7 @@ class KeyJar:
         if not self.httpc_params:  # backward compatibility
             self.httpc_params["verify"] = verify_ssl
 
-    def _issuer_ids(self) -> List[str]:
+    def _issuer_ids(self) -> list[str]:
         """
         Returns a list of issuer identifiers
 
@@ -65,7 +65,7 @@ class KeyJar:
         return list(self._issuers.keys())
 
     @deprecated_alias(issuer="issuer_id", owner="issuer_id")
-    def _get_issuer(self, issuer_id: str) -> Optional[KeyIssuer]:
+    def _get_issuer(self, issuer_id: str) -> KeyIssuer | None:
         """
         Return the KeyIssuer instance that has name == issuer_id
 
@@ -160,7 +160,7 @@ class KeyJar:
         issuer.add_kb(kb)
         self._issuers[issuer_id] = issuer
 
-    def add_keys(self, issuer_id: str, keys: List[JWK], **kwargs):
+    def add_keys(self, issuer_id: str, keys: list[JWK], **kwargs):
         _kb = KeyBundle(**kwargs)
         _kb.extend(keys)
         self.add_kb(issuer_id, _kb)
@@ -671,8 +671,8 @@ class KeyJar:
 
     def _dump_issuers(
         self,
-        exclude_issuers: Optional[List[str]] = None,
-        exclude_attributes: Optional[List[str]] = None,
+        exclude_issuers: list[str] | None = None,
+        exclude_attributes: list[str] | None = None,
     ):
         _issuers = {}
         for _id, _issuer in self._issuers.items():
@@ -683,8 +683,8 @@ class KeyJar:
 
     def dump(
         self,
-        exclude_issuers: Optional[List[str]] = None,
-        exclude_attributes: Optional[List[str]] = None,
+        exclude_issuers: list[str] | None = None,
+        exclude_attributes: list[str] | None = None,
     ) -> dict:
         """
         Returns the key jar content as dictionary
@@ -715,7 +715,7 @@ class KeyJar:
 
         return info
 
-    def dumps(self, exclude_issuers: Optional[List[str]] = None):
+    def dumps(self, exclude_issuers: list[str] | None = None):
         """
         Returns a JSON representation of the key jar
 
@@ -728,8 +728,8 @@ class KeyJar:
     def load(
         self,
         info: dict,
-        init_args: Optional[dict] = None,
-        load_args: Optional[dict] = None,
+        init_args: dict | None = None,
+        load_args: dict | None = None,
     ):
         """
 
