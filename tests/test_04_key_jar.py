@@ -8,6 +8,7 @@ import pytest
 
 from cryptojwt.exception import IssuerNotFound, JWKESTException
 from cryptojwt.jwe.jwenc import JWEnc
+from cryptojwt.jwk.okp import new_okp_key
 from cryptojwt.jws.jws import JWS, factory
 from cryptojwt.key_bundle import KeyBundle, keybundle_from_local_file, rsa_init
 from cryptojwt.key_jar import KeyJar, build_keyjar, init_key_jar, rotate_keys
@@ -1020,13 +1021,63 @@ def test_contains():
     assert "David" not in kj
 
 
-def test_similar():
-    ISSUER = "xyzzy"
+def test_union():
+    kj1 = KeyJar()
+    kj2 = KeyJar()
+    kj3 = KeyJar()
 
-    kj = KeyJar()
-    kb = KeyBundle(JWK2)
-    kj.add_kb(issuer_id=ISSUER, kb=kb)
+    alice_keys1 = [
+        new_okp_key(crv="Ed25519", kid="key1a").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key1b").serialize(private=True),
+    ]
 
-    keys1 = kj.get_issuer_keys(ISSUER)
-    keys2 = kj[ISSUER].all_keys()
-    assert keys1 == keys2
+    alice_keys2 = [
+        new_okp_key(crv="Ed25519", kid="key2a").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key2b").serialize(private=True),
+    ]
+
+    bob_keys1 = [
+        new_okp_key(crv="Ed25519", kid="key1a").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key1b").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key2a").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key2b").serialize(private=True),
+    ]
+
+    kj1.add_kb("Alice", KeyBundle(keys=alice_keys1))
+    kj2.add_kb("Alice", KeyBundle(keys=alice_keys2))
+    kj3.add_kb("Bob", KeyBundle(keys=bob_keys1))
+
+    kj = kj1 | kj2 | kj3
+
+    assert len(kj["Alice"].all_keys()) == 4
+    assert len(kj["Bob"].all_keys()) == 4
+
+
+def test_intersection():
+    kj1 = KeyJar()
+    kj2 = KeyJar()
+
+    alice_keys = [
+        new_okp_key(crv="Ed25519", kid="key1").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key2").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key3").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key4").serialize(private=True),
+    ]
+
+    bob_keys = [
+        new_okp_key(crv="Ed25519", kid="key1").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key2").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key3").serialize(private=True),
+        new_okp_key(crv="Ed25519", kid="key4").serialize(private=True),
+    ]
+
+    kj1.add_kb("Alice", KeyBundle(keys=[alice_keys[0], alice_keys[1]]))
+    kj1.add_kb("Bob", KeyBundle(keys=[bob_keys[0], bob_keys[1]]))
+
+    kj2.add_kb("Alice", KeyBundle(keys=[alice_keys[1], alice_keys[2], alice_keys[3]]))
+    kj2.add_kb("Bob", KeyBundle(keys=[bob_keys[0], bob_keys[1]]))
+
+    kj = kj1 & kj2
+
+    assert len(kj["Alice"].all_keys()) == 1
+    assert len(kj["Bob"].all_keys()) == 2
