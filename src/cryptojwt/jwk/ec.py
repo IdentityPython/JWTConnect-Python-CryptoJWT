@@ -14,12 +14,6 @@ from .x509 import (
 # This is used to translate between the curve representation in
 # Cryptography and the one used by NIST (and in RFC 7518)
 NIST2SEC = {
-    "B-571": ec.SECT571R1,
-    "K-571": ec.SECT571K1,
-    "K-409": ec.SECT409K1,
-    "K-283": ec.SECT283K1,
-    "K-233": ec.SECT233K1,
-    "K-163": ec.SECT163K1,
     "P-521": ec.SECP521R1,
     "P-384": ec.SECP384R1,
     "P-256": ec.SECP256R1,
