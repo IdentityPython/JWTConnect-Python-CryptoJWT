@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives.asymmetric import ec, ed25519, rsa
 
 from cryptojwt.exception import (
     DeSerializationNotPossible,
+    JWKException,
     UnsupportedAlgorithm,
     WrongUsage,
 )
@@ -658,6 +659,24 @@ def test_dump_load():
     assert isinstance(key, RSAKey)
     assert key.kid == "kid1"
     assert key.use == "sig"
+
+
+def test_key_init():
+    # init with only key
+    secret1 = os.urandom(16)
+    k1 = SYMKey(key=secret1, alg="HS256")
+    assert k1.k == b64e(secret1)
+
+    # init with only k (base64 encoded key)
+    secret2 = os.urandom(16)
+    k2 = SYMKey(k=b64e(secret2), alg="HS256")
+    assert k2.key == secret2
+
+    # init with different key and k should fail
+    secret3a = os.urandom(16)
+    secret3b = os.urandom(16)
+    with pytest.raises(JWKException):
+        _ = SYMKey(k=b64e(secret3a), key=secret3b, alg="HS256")
 
 
 def test_key_ops():
