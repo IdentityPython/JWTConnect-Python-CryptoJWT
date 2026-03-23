@@ -678,6 +678,11 @@ def test_key_init():
     with pytest.raises(JWKException):
         _ = SYMKey(k=b64e(secret3a), key=secret3b, alg="HS256")
 
+    # init with both matching (k as str) - should succeed
+    secret4 = os.urandom(16)
+    k4 = SYMKey(k=b64e(secret4).decode("utf-8"), key=secret4, alg="HS256")
+    assert k4.k == b64e(secret4) or bytes(k4.k) == b64e(secret4)
+
 
 def test_key_ops():
     sk = SYMKey(
