@@ -681,7 +681,7 @@ def test_key_init():
     # init with both matching (k as str) - should succeed
     secret4 = os.urandom(16)
     k4 = SYMKey(k=b64e(secret4).decode("utf-8"), key=secret4, alg="HS256")
-    assert k4.k == b64e(secret4) or bytes(k4.k) == b64e(secret4)
+    assert k4.k == b64e(secret4) or bytes(k4.k, encoding="utf-8") == b64e(secret4)
 
 
 def test_key_ops():
