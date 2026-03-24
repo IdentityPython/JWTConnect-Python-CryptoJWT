@@ -37,12 +37,12 @@ cat idtoken | ./jwtpeek.py
 
 ./jwtpeek.py -f idtoken -J keys.jwks
 
-or 
+or
 
 (3) JWT from stdin, no keys
 
 echo json.web.token | ./jwtpeek.py
- 
+
 """
 
 

@@ -1,6 +1,5 @@
 import base64
 import os
-from typing import Optional, Union
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
@@ -15,12 +14,12 @@ DEFAULT_ITERATIONS = 390000
 class FernetEncrypter(Encrypter):
     def __init__(
         self,
-        password: Optional[str] = None,
-        salt: Optional[bytes] = "",
-        key: Optional[bytes] = None,
-        hash_alg: Optional[str] = "SHA256",
-        digest_size: Optional[int] = 0,
-        iterations: Optional[int] = DEFAULT_ITERATIONS,
+        password: str | None = None,
+        salt: bytes | None = "",
+        key: bytes | None = None,
+        hash_alg: str | None = "SHA256",
+        digest_size: int | None = 0,
+        iterations: int | None = DEFAULT_ITERATIONS,
     ):
         Encrypter.__init__(self)
 
@@ -45,14 +44,14 @@ class FernetEncrypter(Encrypter):
 
         self.core = Fernet(self.key)
 
-    def encrypt(self, msg: Union[str, bytes], **kwargs) -> bytes:
+    def encrypt(self, msg: str | bytes, **kwargs) -> bytes:
         text = as_bytes(msg)
         # Padding to block size of AES
         if len(text) % 16:
             text += b" " * (16 - len(text) % 16)
         return self.core.encrypt(as_bytes(text))
 
-    def decrypt(self, msg: Union[str, bytes], **kwargs) -> bytes:
+    def decrypt(self, msg: str | bytes, **kwargs) -> bytes:
         dec_text = self.core.decrypt(as_bytes(msg))
         dec_text = dec_text.rstrip(b" ")
         return dec_text

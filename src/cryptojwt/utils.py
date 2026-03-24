@@ -8,7 +8,6 @@ import struct
 import warnings
 from binascii import unhexlify
 from email.message import EmailMessage
-from typing import List, Set, Union
 
 from cryptojwt.exception import BadSyntax
 
@@ -32,7 +31,7 @@ def intarr2str(arr):
 
 
 def long2intarr(long_int):
-    _bytes: List[int] = []
+    _bytes: list[int] = []
     while long_int:
         long_int, r = divmod(long_int, 256)
         _bytes.insert(0, r)
@@ -262,7 +261,7 @@ def httpc_params_loader(httpc_params):
     return httpc_params
 
 
-def check_content_type(content_type: str, mime_type: Union[str, List[str], Set[str]]):
+def check_content_type(content_type: str, mime_type: str | list[str] | set[str]):
     """Return True if the content type contains the MIME type"""
     msg = EmailMessage()
     msg["content-type"] = content_type

@@ -1,10 +1,10 @@
 import json
 
 import pytest
+import test_vector
 
 from cryptojwt.jwk.jwk import key_from_jwk_dict
 from cryptojwt.jws.jws import JWS
-import test_vector
 
 
 @pytest.mark.parametrize("alg", ["RS256", "RS384", "RS512", "PS256", "PS384", "PS512"])
