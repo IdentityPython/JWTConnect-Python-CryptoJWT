@@ -1,7 +1,7 @@
 """JSON Web Token"""
 
 import logging
-from importlib.metadata import version, PackageNotFoundError
+from importlib.metadata import PackageNotFoundError, version
 
 from cryptojwt.jwe.jwe import JWE
 from cryptojwt.jwk import JWK
