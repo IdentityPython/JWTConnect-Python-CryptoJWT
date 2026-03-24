@@ -9,7 +9,12 @@ from collections import Counter
 import pytest
 from cryptography.hazmat.primitives.asymmetric import ec, ed25519, rsa
 
-from cryptojwt.exception import DeSerializationNotPossible, UnsupportedAlgorithm, WrongUsage
+from cryptojwt.exception import (
+    DeSerializationNotPossible,
+    JWKException,
+    UnsupportedAlgorithm,
+    WrongUsage,
+)
 from cryptojwt.jwk import JWK, certificate_fingerprint, pem_hash, pems_to_x5c
 from cryptojwt.jwk.ec import ECKey, new_ec_key
 from cryptojwt.jwk.hmac import SYMKey, new_sym_key, sha256_digest
@@ -654,6 +659,29 @@ def test_dump_load():
     assert isinstance(key, RSAKey)
     assert key.kid == "kid1"
     assert key.use == "sig"
+
+
+def test_key_init():
+    # init with only key
+    secret1 = os.urandom(16)
+    k1 = SYMKey(key=secret1, alg="HS256")
+    assert k1.k == b64e(secret1)
+
+    # init with only k (base64 encoded key)
+    secret2 = os.urandom(16)
+    k2 = SYMKey(k=b64e(secret2), alg="HS256")
+    assert k2.key == secret2
+
+    # init with different key and k should fail
+    secret3a = os.urandom(16)
+    secret3b = os.urandom(16)
+    with pytest.raises(JWKException):
+        _ = SYMKey(k=b64e(secret3a), key=secret3b, alg="HS256")
+
+    # init with both matching (k as str) - should succeed
+    secret4 = os.urandom(16)
+    k4 = SYMKey(k=b64e(secret4).decode("utf-8"), key=secret4, alg="HS256")
+    assert k4.k == b64e(secret4) or bytes(k4.k, encoding="utf-8") == b64e(secret4)
 
 
 def test_key_ops():

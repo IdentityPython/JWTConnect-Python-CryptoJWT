@@ -59,6 +59,13 @@ class SYMKey(JWK):
             if isinstance(self.k, str):
                 self.k = self.k.encode("utf-8")
             self.key = b64d(bytes(self.k))
+        elif self.key and not self.k:
+            self.k = b64e(self.key)
+
+        if self.k and self.key:
+            _k_bytes = self.k.encode("utf-8") if isinstance(self.k, str) else self.k
+            if _k_bytes != b64e(self.key):
+                raise JWKException("k and key don't match")
 
         if len(self.key) < 16:
             raise UnsupportedAlgorithm("client_secret too short, it should be at least 16 digits")
